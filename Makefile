@@ -53,3 +53,6 @@ clean: clean_log
 clean_log:
 	rm log/* -f
 
+.PHONY: test
+test: $(SOURCES) $(INCLUDES)
+	./test.sh
