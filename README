@@ -1,0 +1,14 @@
+DEMONbLAST 0.1
+A program to compute Diagonal Einstein Metrics On Nice Lie Algebras of Surjective Type.
+Based on the following papers:
+D. Conti and F. A. Rossi, Construction of nice nilpotent Lie groups, arXiv:1803.09248
+D. Conti and F. A. Rossi, Indefinite Einstein metrics on nice Lie groups, in preparation
+
+Copyright Diego Conti 2018 diego.conti@unimib.it
+
+DEMONbLAST requires the following libraries to compile: cln, gmp, wedge, boost.
+
+Wedge is available at https://github.com/diego-conti/wedge
+
+Known to compile and run under Ubuntu Linux 17.10 with gcc 5.4.0
+
