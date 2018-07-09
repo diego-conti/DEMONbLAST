@@ -32,6 +32,7 @@ public:
   Matrix(int rows, int cols);
   Matrix(std::initializer_list<std::initializer_list<ex>> elements);
   explicit Matrix(const matrix& m);
+  ex at (int zero_based_index_i, int zero_based_index_j) const {return flat_representation[zero_based_index_i*no_cols+zero_based_index_j];}
   ex operator() (int zero_based_index_i, int zero_based_index_j) const {return flat_representation[zero_based_index_i*no_cols+zero_based_index_j];}
   ex& operator() (int zero_based_index_i, int zero_based_index_j) {return flat_representation[zero_based_index_i*no_cols+zero_based_index_j];}
   int rows() const {return no_rows;}

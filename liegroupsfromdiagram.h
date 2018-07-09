@@ -19,17 +19,51 @@
 #define LIE_GROUPS_FROM_DIAGRAM_H
 #include <wedge/liegroup.h>
 #include <wedge/liesubgroup.h>
+#include <wedge/gl.h>
 #include "ricci.h"
 #include "log.h"
+#include "weightbasis.h"
 
-
-using namespace std;
 using namespace Wedge;
 
+
+class Derivations {
+	ex generic_derivation_;
+	set<ex,ex_is_less> remaining_equations_;
+	VectorSpace<DifferentialForm> space_of_diagonal_derivations_,space_containing_offdiagonal_derivations_,space_contained_in_offdiagonal_derivations_;
+
+	void compute_offdiag(const GL& gl, const LieGroup& G);
+	void compute_diag(const GL& gl, const LieGroup& G);
+public:
+	Derivations(const GL& gl, const LieGroup& niceLieGroup);
+	exvector remaining_equations() const {
+		return {remaining_equations_.begin(), remaining_equations_.end()};
+	}
+	static exvector remaining_equations(const GL& gl, const LieGroup& niceLieGroup,ex generic_element); 
+	bool always_a_derivation() const {
+		return remaining_equations_.empty();
+	}
+	pair<int,int> dimension() const {
+		return make_pair(space_of_diagonal_derivations_.Dimension()+space_contained_in_offdiagonal_derivations_.Dimension(),
+			space_of_diagonal_derivations_.Dimension()+space_containing_offdiagonal_derivations_.Dimension());
+	}
+	VectorSpace<DifferentialForm> space_containing_offdiagonal_derivations() const {
+		return space_containing_offdiagonal_derivations_;
+	}
+	VectorSpace<DifferentialForm> space_contained_in_offdiagonal_derivations() const {
+		return space_contained_in_offdiagonal_derivations_;
+	}
+	VectorSpace<DifferentialForm> diagonal_derivations() const {
+		return space_of_diagonal_derivations_;
+	}
+};
 
 class LieGroupsFromDiagram : public LieGroupHasParameters<true>, public ConcreteManifold, public virtual Has_dTable {
 protected:
 	bool solve_linear_ddzero();
+	ex c_ijk(int i, int j, int k) const {
+		return Hook(e()[j]*e()[i],d(e()[k]));
+	}
 public:
 	using ConcreteManifold::ConcreteManifold;
 	using Has_dTable::Declare_d;
@@ -38,6 +72,11 @@ public:
 		for (exmap::const_iterator i=dTable().begin();i!=dTable().end();i++)					
 			Has_dTable::Declare_d(i->first,i->second.subs(list_of_equations));
 	}
+	Derivations derivations(const GL& gl) const;		//return the derivations as a subset of the Lie algebra gl
+	string derivations() const;	
+	
+	exvector csquared(const WeightBasis& weight_basis) const;
+	exvector c(const list<Weight>& weights) const;
 };
 
 

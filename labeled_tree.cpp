@@ -18,6 +18,9 @@
 #include "labeled_tree.h"
 #include "partitions.h"
 #include "weightbasis.h"
+#include "parsetree.h"
+
+using namespace std;
 
 list<LabeledTree> LabeledTree::labelings() const  {
 		auto node=node_with_less_unlabeled_incoming_arrows();
@@ -69,8 +72,8 @@ vector<int> LabeledTree::number_of_unlabeled_incoming_arrows() const {
 	return unlabeled_incoming_arrows;
 }
   
-const WeightBasis& LabeledTree::weight_basis() const {
-  if (weight_basis_==nullptr) weight_basis_=make_unique<WeightBasis>(*this);
+const WeightBasisAndProperties& LabeledTree::weight_basis(DiagramDataOptions diagram_data_options) const {
+  if (weight_basis_==nullptr || !weight_basis_->matches(diagram_data_options)) weight_basis_=make_unique<WeightBasisAndProperties>(*this,diagram_data_options);
   return *weight_basis_;
 }
 
@@ -94,6 +97,47 @@ int LabeledTree::node_with_less_unlabeled_incoming_arrows() const {
    auto unlabeled_incoming_arrows=number_of_unlabeled_incoming_arrows();
 	auto minimal_element=position_of_minimal_nonzero_element(unlabeled_incoming_arrows.begin(),unlabeled_incoming_arrows.end());
 	return minimal_element!=unlabeled_incoming_arrows.end()? minimal_element-unlabeled_incoming_arrows.begin() : NO_NODE;
+}
+
+void LabeledTree::canonicalize_order_increasing() {
+	static auto compare = [](LabeledArrow arrow1, LabeledArrow arrow2) {
+		return arrow1.node_out<arrow2.node_out || (arrow1.node_out==arrow2.node_out &&	min(arrow1.node_in,arrow1.label) < min(arrow2.node_in,arrow2.label));
+	};
+	sort_arrows(compare);
+}
+void LabeledTree::canonicalize_order_decreasing() {
+	static auto compare = [](LabeledArrow arrow1, LabeledArrow arrow2) {
+		return arrow1.node_out>arrow2.node_out || (arrow1.node_out==arrow2.node_out &&	max(arrow1.node_in,arrow1.label) > max(arrow2.node_in,arrow2.label));
+	};
+	sort_arrows(compare);
+}
+
+unique_ptr<LabeledTree> LabeledTree::from_stream(istream& s) {
+	using namespace DiagramParser;
+	auto token=parse_token(s);
+	if (token.type==TokenType::END) return nullptr;
+	if (token.type!=TokenType::NUMBER) throw std::invalid_argument("Diagram definition should start with number");
+	int nodes=token.data;
+	auto tree=make_unique<LabeledTree>(nodes,nodes);
+	LabeledArrow arrow;
+	while (parse_arrow(s,arrow)) {
+		tree->add_arrow(arrow);	
+		swap(arrow.node_in,arrow.label);
+		tree->add_arrow(arrow);	
+	}
+	tree->compute_hash_and_cache_result_unordered();
+	return tree;
+}
+
+string LabeledTree::as_string() const {
+	stringstream s;
+	s<<number_of_nodes();
+	char sep=':';
+	for (auto weight: weights()) {
+		s<<sep<<' '<<weight.node_in1+1<<"->["<<weight.node_in2+1<<"]"<<weight.node_out+1;
+		sep=',';
+	}
+	return s.str();
 }
 
 
@@ -177,6 +221,8 @@ ostream& operator<<(ostream& os, const DoubleIncomingArrows& d) {
 		}
 	 return os;
 }
+
+
 
 bool satisfies_formal_jacobi(const LabeledTree& tree) {
 	return DoubleIncomingArrows{tree}.formal_jacobi();	

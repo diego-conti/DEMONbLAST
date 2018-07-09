@@ -18,15 +18,18 @@
 #include "filter.h"
 #include "horizontal.h"
 
-void remove_trees(list<LabeledTree>& trees, const Filter& filter) {
+using namespace std;
+
+void remove_trees(list<LabeledTree>& trees, const Filter& filter,DiagramDataOptions options) {
   auto i=trees.begin();
   while (i!=trees.end()) 
-      if (!filter.meets(*i) || !filter.meets(WeightBasis{*i})) i=trees.erase(i); 
+      if (!filter.meets(*i,options)) 
+      	 i=trees.erase(i); 
       else ++i;
 }
 
 
-list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter) {
+list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter,DiagramDataOptions options) {
   nice_log<<"nice diagrams of partition "<<horizontal(partition)<<endl;
   if (partition[0]<2) {
     nice_log<<"no trees"<<endl;
@@ -38,10 +41,16 @@ list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter) {
 	  nice_log<<counter;
 		LabeledTree labeled_tree{tree};
 		auto labelings = labeled_tree.labelings();
-		remove_trees(labelings, filter);
+		remove_trees(labelings, filter,options);
 		remove_equivalent_trees_same_hash(labelings);
 		result.splice(result.end(),labelings);
 	}
 	return result;
+}
+
+void DiagramDataOptions::adapt_to_filter(const Filter& filter) {
+  	if(filter.require_only_nontrivial_automorphisms())
+      set(DiagramDataOption::with_automorphisms);
+    if (filter.only_with_metric_ && !with_metrics()) throw runtime_error("Filter specifies metrics, but diagram data options do not specify the type of metric");
 }
 

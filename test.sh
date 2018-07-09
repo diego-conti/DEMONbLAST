@@ -2,7 +2,7 @@ CURRENTDIR=$PWD
 
 cd `dirname $0`
 cd test
-FLAGS="-ffor-scope -Wctor-dtor-privacy -Wreorder -Wold-style-cast -Wsign-promo -Wchar-subscripts -Winit-self -Wmissing-braces -Wparentheses -Wreturn-type -Wswitch -Wtrigraphs -Wextra -Wno-sign-compare -Wno-narrowing -Wno-attributes -std=c++17"
+FLAGS="-Wctor-dtor-privacy -Wreorder -Wold-style-cast -Wsign-promo -Wchar-subscripts -Winit-self -Wmissing-braces -Wparentheses -Wreturn-type -Wswitch -Wtrigraphs -Wextra -Wno-sign-compare -Wno-narrowing -Wno-attributes -std=c++17"
 EXTRA="../log.cpp"
 for test in $(ls *.cpp); do
   executable=`basename $test .cpp`

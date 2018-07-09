@@ -1,3 +1,4 @@
+#include "automorphisms.h"
 
 template<typename ArrowType>
 string TreeBase<ArrowType>::to_dot_string(string extra_data) const {
@@ -14,15 +15,9 @@ string TreeBase<ArrowType>::to_dot_string(string extra_data) const {
 namespace tree_impl {
 	class NodePathData {
 	public:
-    void add_incoming_arrows(const NodePathData& incoming_node_data) {
-      const vector<int>&  long_incoming_arrows= incoming_node_data.no_incoming_concatenated_arrows;
-      add_long_arrows(no_incoming_concatenated_arrows,long_incoming_arrows);
-    }
-    void add_outgoing_arrows(const NodePathData& outgoing_node_data) {
-      const vector<int>& long_outgoing_arrows= outgoing_node_data.no_outgoing_concatenated_arrows;
-      add_long_arrows(no_outgoing_concatenated_arrows,long_outgoing_arrows);
-    }
     int hash() const {    
+    	if ((no_outgoing_concatenated_arrows.size()+no_incoming_concatenated_arrows.size()*4+2)>std::numeric_limits<unsigned>::digits)
+    		nice_log<<"not enough digits in an int!: "<<no_outgoing_concatenated_arrows.size()<<" "<<no_incoming_concatenated_arrows.size()<<endl;    
       int result =no_outgoing_concatenated_arrows.size();
       for (int i=0;i<no_outgoing_concatenated_arrows.size();++i)
         result=result<<4 | no_outgoing_concatenated_arrows[i];
@@ -32,15 +27,27 @@ namespace tree_impl {
     }
     void print(ostream& os) const {
       for (int i=0;i<no_outgoing_concatenated_arrows.size();++i)
-        cout<<no_outgoing_concatenated_arrows[i]<< " outgoing concatenated arrows of length "<<i<<endl;
+        os<<no_outgoing_concatenated_arrows[i]<< " outgoing concatenated arrows of length "<<i<<endl;
       for (int i=0;i<no_incoming_concatenated_arrows.size();++i)
-        cout<<no_incoming_concatenated_arrows[i]<< " incoming concatenated arrows of length "<<i<<endl;
+        os<<no_incoming_concatenated_arrows[i]<< " incoming concatenated arrows of length "<<i<<endl;
     }
-  private:
-    vector<int> no_outgoing_concatenated_arrows;
+  protected:
+    vector<int> no_outgoing_concatenated_arrows;	//TODO reserve size?
     vector<int> no_incoming_concatenated_arrows;
     static void resize_if_needed(vector<int>& v, int new_size) {
       if (v.size()<new_size) v.resize(new_size);
+    }
+	};
+
+	class NodePathDataOrdered : public NodePathData {
+	public:
+    void add_incoming_arrows(const NodePathDataOrdered& incoming_node_data) {
+      const vector<int>&  long_incoming_arrows= incoming_node_data.no_incoming_concatenated_arrows;
+      add_long_arrows(no_incoming_concatenated_arrows,long_incoming_arrows);
+    }
+    void add_outgoing_arrows(const NodePathDataOrdered& outgoing_node_data) {
+      const vector<int>& long_outgoing_arrows= outgoing_node_data.no_outgoing_concatenated_arrows;
+      add_long_arrows(no_outgoing_concatenated_arrows,long_outgoing_arrows);
     }
     static void add_long_arrows(vector<int>& no_concatenated_arrows, const vector<int>& no_long_concatenated_arrows) {
       resize_if_needed(no_concatenated_arrows,no_long_concatenated_arrows.size()+1);
@@ -50,7 +57,71 @@ namespace tree_impl {
     }
 	};
 
+	class NodePathDataUnordered : public NodePathData {
+	public:
+		void add_outgoing_power_arrow(int length) {
+			resize_if_needed(no_outgoing_concatenated_arrows,length);
+			++no_outgoing_concatenated_arrows[length-1];
+		}
+		void add_incoming_power_arrow(int length) {
+			resize_if_needed(no_incoming_concatenated_arrows,length);
+			++no_incoming_concatenated_arrows[length-1];
+		}
+	};
+	
+	class Paths {
+		using Path=list<int>;
+		list<Path> paths;
+		static Path join(Path path, int node) {
+			path.push_back(node);
+			assert(path.front()!=path.back());
+			return path;
+		}
+		static Path join(int node, Path path) {
+			path.push_front(node);
+			assert(path.front()!=path.back());
+			return path;
+		}
+		static Path join(Path path1, const Path& path2) {
+			path1.insert(path1.end(),path2.begin(),path2.end());
+			assert(path1.front()!=path1.back());
+			return path1;
+		}
+	
+		template<typename ArrowType>
+		void add_arrow(ArrowType arrow) {
+			list<Path> extendable_forward, extendable_backwards;
+			for (auto path: paths)
+				if (path.front()==arrow.node_out) extendable_backwards.push_back(path);
+				else if (path.back()==arrow.node_in) extendable_forward.push_back(path);
+			for (auto& path: extendable_forward)
+				paths.push_back(join(path,arrow.node_out));
+			for (auto& path: extendable_backwards)
+				paths.push_back(join(arrow.node_in,path));
+			for (auto& path1 : extendable_forward)
+				for (auto& path2: extendable_backwards)
+					paths.push_back(join(path1,path2));
+			paths.push_back({arrow.node_in,arrow.node_out});
+		}
+		int size;	
+	public:
+		template<typename Tree>
+		Paths(const Tree& tree) : size(tree.number_of_nodes()) {
+			for (auto arrow : tree.arrows()) add_arrow(arrow);
+		}
+
+		vector<NodePathDataUnordered> node_data() const {
+			vector<NodePathDataUnordered> result{size};		
+		  for (auto& path: paths) {
+				result[path.front()].add_outgoing_power_arrow(path.size()-1);
+				result[path.back()].add_incoming_power_arrow(path.size()-1);
+		 	}
+			 return result;
+		}
+	};		
 }
+
+
 
 template<typename Arrow> bool TreeBase<Arrow>::is_equivalent_to(const TreeBase& tree) const {
 	if (hash()!=tree.hash()) return false;
@@ -62,9 +133,9 @@ template<typename Arrow> bool TreeBase<Arrow>::is_equivalent_to(const TreeBase& 
 	  );
 }
 
-
 template<typename Arrow> list<vector<int>> TreeBase<Arrow>::nontrivial_automorphisms() const {
   list<vector<int>> automorphisms;
+  nice_log<<"hash = "<<horizontal(node_hash())<<endl;
 	auto permutations =PermutationsPreservingHash{node_hash(), node_hash()}.all_permutations(); 
   copy_if(permutations.begin(),permutations.end(),back_inserter(automorphisms),
     [this] (const vector<int>& sigma) {return matches(*this,sigma);}
@@ -73,6 +144,8 @@ template<typename Arrow> list<vector<int>> TreeBase<Arrow>::nontrivial_automorph
   return automorphisms;
 }
 
+//optimized specialization for labeled trees. TODO optimize also for unlabeled trees.
+template<> list<vector<int>> TreeBase<LabeledArrow>::nontrivial_automorphisms() const;
 
 template<typename Arrow> bool TreeBase<Arrow>::matches(const TreeBase& tree, const vector<int>& permutation) const {
 	for (Arrow arrow: arrows()) {
@@ -82,8 +155,18 @@ template<typename Arrow> bool TreeBase<Arrow>::matches(const TreeBase& tree, con
 	return true;
 }
 
-template<typename Arrow> void TreeBase<Arrow>::compute_hash_and_cache_result() const {
-  	vector<tree_impl::NodePathData> data(no_nodes);
+
+template<typename Arrow> void TreeBase<Arrow>::compute_hash_and_cache_result_unordered() const {
+	auto node_data=tree_impl::Paths {*this}.node_data();
+  tree_hash=0;
+  for (int node=0;node<no_nodes;++node)      
+    tree_hash+=(nodes_hash[node]=node_data[node].hash());
+  if (tree_hash==HASH_NOT_COMPUTED) tree_hash=~HASH_NOT_COMPUTED;
+}	
+
+template<typename Arrow> void TreeBase<Arrow>::compute_hash_and_cache_result_ordered() const {
+    for (auto& arrow: arrows()) assert(arrow.node_in>arrow.node_out);
+  	vector<tree_impl::NodePathDataOrdered> data(no_nodes);
     for (int node=no_nodes-1;node>=0;--node)
       for (auto& arrow: arrows()) 
          if (arrow.node_out==node) data[node].add_incoming_arrows(data[arrow.node_in]);
@@ -93,8 +176,8 @@ template<typename Arrow> void TreeBase<Arrow>::compute_hash_and_cache_result() c
     tree_hash=0;
     for (int node=0;node<no_nodes;++node)      
       tree_hash+=(nodes_hash[node]=data[node].hash());
-    if (tree_hash==HASH_NOT_COMPUTED) tree_hash=~HASH_NOT_COMPUTED;
-	}
+    if (tree_hash==HASH_NOT_COMPUTED) tree_hash=~HASH_NOT_COMPUTED;    
+}
 
 
 
