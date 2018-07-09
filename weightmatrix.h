@@ -57,13 +57,12 @@ class WeightMatrix {
   bool derivations_traceless=false;
  	list<SignConfiguration> sign_configurations_;
  	
-  Matrix complete_matrix_transposed_M_Delta() const {
-    ex ex_1{1};
+  Matrix complete_matrix_transposed_M_Delta(ex lambda) const {
     Matrix M(weight_matrix.cols(),weight_matrix.rows()+1);
 		for (int i=0;i<weight_matrix.rows();++i)
     for (int j=0;j<weight_matrix.cols();++j) {
        M(j,i)=weight_matrix(i,j);
-       M(j,weight_matrix.rows())=ex_1;
+       M(j,weight_matrix.rows())=lambda;
     }
 	  return M;	  
   }
@@ -83,7 +82,7 @@ class WeightMatrix {
   }
 
   void store_X_ijk() {
-    X_ijk_=solve_over_Q(complete_matrix_transposed_M_Delta(),generate_variables<StructureConstant>(N.x,weights.size()));
+    X_ijk_=solve_over_Q(complete_matrix_transposed_M_Delta(1),generate_variables<StructureConstant>(N.x,weights.size()));
     if (!X_ijk_.empty()) {
       assert(X_ijk_.size()==weights.size());
       for (int i=0;i<weights.size();++i)
@@ -238,6 +237,9 @@ public:
   }
   exvector X_ijk() const {
     return X_ijk_;
+  }
+  exvector kernel_of_MDelta_transpose() const {
+  	   return solve_over_Q(complete_matrix_transposed_M_Delta(0),generate_variables<StructureConstant>(N.x,weight_matrix.rows()));
   }
   void factor_out_automorphisms(const list<vector<int>>& nontrivial_automorphisms) {
   	if (sign_configurations_.empty()) return;

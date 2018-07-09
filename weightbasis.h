@@ -111,6 +111,7 @@ class DiagramPropertiesNonSurjectiveMDelta : public DiagramProperties {
   int no_rows;
   int rank_over_Q;
   bool X_ijk_in_coordinate_hyperplane;
+  exvector kernel_of_MDelta_transpose;
 public:
   string diagram_data() const ;
   DiagramPropertiesNonSurjectiveMDelta(const WeightMatrix& weight_matrix);

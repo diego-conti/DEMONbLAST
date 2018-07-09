@@ -62,14 +62,16 @@ DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix) :
 }
 
 DiagramPropertiesNonSurjectiveMDelta:: DiagramPropertiesNonSurjectiveMDelta(const WeightMatrix& weight_matrix) 
-  : DiagramProperties(weight_matrix), no_rows(weight_matrix.M_Delta().rows()),  rank_over_Q{weight_matrix.rank_over_Q()}
-{}
+  : DiagramProperties(weight_matrix), no_rows(weight_matrix.M_Delta().rows()),  rank_over_Q{weight_matrix.rank_over_Q()}, kernel_of_MDelta_transpose(weight_matrix.kernel_of_MDelta_transpose())
+{
+}
   
 string DiagramPropertiesNonSurjectiveMDelta::diagram_data() const {
   stringstream sstream;
 	sstream<<DiagramProperties::diagram_data(); 		
   sstream<<"rank over Q = "<<rank_over_Q;
   sstream<< "< "<< no_rows<< "(M_Delta not surjective);"<<endl;
+  sstream<<" kernel of (M_Delta)^T "<<kernel_of_MDelta_transpose<<endl;
   return sstream.str();
 }
 
