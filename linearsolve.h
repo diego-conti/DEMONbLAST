@@ -44,20 +44,9 @@ template<class Variable> lst get_variables(const lst& eqns) {
 }
 
 
-
+//represents polynomial equations possibly involving parameters
 template<class Variable>
-class PolynomialEquations {
-  lst equations;
-  lst variables;
-  lst sol;
-  
-  lst linear_equations() const {
-		list<ex> linear;
-		for (auto eq: equations) 
-		  if (eq.is_polynomial(variables) && Degree<Poly<Variable>>(eq)<=1 && !eq.is_zero()) linear.push_back(eq==0);		
-		return linear;
-	}
-  
+class AbstractPolynomialEquations {
   void update_solution(lst solution) {
     nice_log<<"solution: "<<solution<<endl;
     if (solution==lst{}) sol.remove_all();
@@ -72,13 +61,19 @@ class PolynomialEquations {
     return result;
   }
   static lst expand(lst&& eqns) {
+  	ex subs = abs(-wild()) == abs(wild());
     for (int i=0;i<eqns.nops();++i)
-      eqns.let_op(i)=eqns.op(i).expand();
+      eqns.let_op(i)=eqns.op(i).expand().subs(subs).expand();
     return std::move(eqns);
   }
+protected:
+  lst equations;
+  lst variables;
+  lst sol;
+  virtual lst linear_equations() const =0;
 public:
   template< typename ListOfEquations>
-  PolynomialEquations(ListOfEquations&& eqns) : 
+  AbstractPolynomialEquations(ListOfEquations&& eqns) : 
     equations{expand(std::forward<ListOfEquations>(eqns))},
     variables{linear_impl::get_variables<Variable>(equations)}, 
     sol{DefaultLinAlgAlgorithms::lsolve(lst{},variables)} 
@@ -91,6 +86,49 @@ public:
     return true;
   }
   lst solution() const {return sol;}
+};
+
+
+template<class Variable,class Parameter>
+class LinearEquationsWithParameters : protected AbstractPolynomialEquations<Variable> {
+ 	lst linear_equations() const override {	
+		list<ex> linear;
+		for (auto eq: this->equations) 
+		  if (eq.is_polynomial(this->variables) && Degree<Poly<Variable>>(eq)<=1 && Degree<Poly<Parameter>>(eq)==0  && !eq.is_zero()) linear.push_back(eq==0);
+		return linear;
+	}
+public:
+	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
+	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
+	using AbstractPolynomialEquations<Variable>::solution;
+	lst always_solution() const {
+		lst solution;
+		list<ex> surviving_variables;
+		for (auto eq : this->equations)
+			GetSymbols<Variable>(surviving_variables,eq);
+		lst to_zero;
+		for (auto x: surviving_variables) to_zero.append(x==0);
+		for (auto x: this->sol)
+			solution.append(x.lhs()==x.rhs().subs(to_zero));
+		for (auto x: to_zero)
+			solution.append(x);
+		return solution;
+	}
+};
+
+
+template<class Variable>
+class PolynomialEquations : protected AbstractPolynomialEquations<Variable>  {
+ 	lst linear_equations() const override {	
+		list<ex> linear;
+		for (auto eq: this->equations) 
+		  if (eq.is_polynomial(this->variables) && Degree<Poly<Variable>>(eq)<=1 && !eq.is_zero()) linear.push_back(eq==0);		
+		return linear;
+	}
+public:
+	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
+	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
+	using AbstractPolynomialEquations<Variable>::solution;
 };
 }
 
@@ -105,7 +143,7 @@ bool impose_polynomial_eqns(ParametrizedClass& parametrized_object, ListOfEquati
   nice_log<<solution<<endl;
   if (!isAdmissibleSolution(solution)) return false;
 	exvector to_zero;
-	std::transform(solution.begin(),solution.end(),back_insert_iterator<exvector>(to_zero),[](ex equation) {return equation.lhs()-equation.rhs();});
+	std::transform(solution.begin(),solution.end(),std::back_insert_iterator<exvector>(to_zero),[](ex equation) {return equation.lhs()-equation.rhs();});
 	parametrized_object.DeclareZero(to_zero.begin(),to_zero.end());
   return true;
 }

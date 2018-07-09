@@ -18,18 +18,20 @@
 #ifndef WEIGHT_BASIS_H
 #define WEIGHT_BASIS_H
 
-#include <iostream>
-#include <list>
+#include "includes.h"
 #include <ginac/ginac.h>
 #include "xginac.h"
-#include <algorithm>
 #include "gauss.h"
 #include <wedge/liegroup.h>
 #include "labeled_tree.h"
+#include "options.h"
+#include "implicitmetric.h"
+#include "antidiagonal.h"
+#include "diagramanalyzer.h"
 
-using namespace std;
 using namespace GiNaC;
 using namespace Wedge;
+
 
 struct WeightAndCoefficient : Weight {
 	WeightAndCoefficient() = default;
@@ -39,167 +41,135 @@ struct WeightAndCoefficient : Weight {
 	WeightAndCoefficient(const Weight& weight) : Weight(weight) {};	
 	WeightAndCoefficient& operator=(const WeightAndCoefficient&)=default;
 	WeightAndCoefficient& operator=(WeightAndCoefficient&&)=default;
-	ex X_ijk;
 	void eliminate_parameter() {parameter_eliminated_=true;}
+	void eliminate_sign_and_parameter() {parameter_eliminated_=true; sign_eliminated_=true;}
 	bool parameter_eliminated() const {return parameter_eliminated_;}
+	bool sign_and_parameter_eliminated() const {return sign_eliminated_;}
 	bool same_weight_as(Weight weight) const {
 		return weight.node_in1==node_in1 && weight.node_in2==node_in2 && weight.node_out==node_out;
 	}
 private:
 	bool parameter_eliminated_=false;
+	bool sign_eliminated_=false;
 };
-
-class SignConfiguration {
-	vector<int> signs;
-public:
-	SignConfiguration(int sign_ambiguities) {
-		signs.insert(signs.begin(),sign_ambiguities,1);
-	}
-	bool operator==(const SignConfiguration& other) const {return signs==other.signs;}
-	bool operator!=(const SignConfiguration& other) const {return signs!=other.signs;}
-	SignConfiguration& operator++()  {
-		int i=0;
-			do {
-				signs[i]=-signs[i];
-		} while (signs[i]==1 && ++i<signs.size()) ;
-		return *this;
-	}
-	bool has_next() const {
-		return any_of(signs.begin(),signs.end(),[](int sign) {return sign==1;});
-	}
-	static list<SignConfiguration> all_configurations(int signs) {
-		list<SignConfiguration> result;
-		SignConfiguration conf{signs}; 
-		result.push_back(conf); 
-		while (conf.has_next())	result.push_back(++conf);
-		return result;
-	}
-	int size() const {return signs.size();}
-	int& operator[] (int i) {return signs[i];}	
-	int operator[] (int i) const {return signs[i];}	
-	template<typename T>
-	auto multiply(vector<T> coefficients) const {
-		assert(coefficients.size()>=signs.size());
-		for (int i=0;i<signs.size();++i)
-			coefficients[i]*=signs[i];
-		return coefficients;
-	}
-};
-
-ostream& operator<<(ostream& os,SignConfiguration sign_configuration);
-
 
 ostream& operator<<(ostream& os,WeightAndCoefficient weight);
 
 class WeightMatrix;
 
 class DiagramProperties {
+public:
+  DiagramProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options);
+ 	int dimension_kernel_M_Delta() const {return no_cols-rank_over_Q;}
+ 	int dimension_cokernel_M_Delta() const {return no_rows-rank_over_Q;}
+ 	string diagram_data() const;
+ 	bool potentially_admits_metrics() const {
+ 		assert(!metrics.empty());
+ 		auto result=any_of(metrics.begin(),metrics.end(),
+ 			[](auto& metric) {return !metric->no_metric_regardless_of_polynomial_conditions();});
+ 		return result;
+ 	}
+ 	string polynomial_conditions(const exvector& csquared) const {
+ 		string result;
+ 		for (auto& metric : metrics) {
+ 			if (metric->no_metric_regardless_of_polynomial_conditions()) continue;
+ 			result+=metric->name();
+ 			auto polynomial_equations=metric->polynomial_equations_for_existence(csquared);
+			if (!polynomial_equations.empty())	result+=" when structure constants satisfy: "+horizontal(polynomial_equations)+"\n";
+			else result+=" always\n";
+			result +=metric->solution_to_polynomial_equations_or_empty_string(csquared);
+		}
+ 		return result; 		
+ 	}
+  bool are_all_derivations_traceless() const {
+		return all_of(nikolayevsky.begin(),nikolayevsky.end(),[] (ex x) {return x.is_zero();});
+	}
+	bool has_nontrivial_automorphisms() const {return !automorphisms.empty();}
+	
+	string classification_of_metrics(const exvector& csquared) const {
+		string result;
+		for (auto& metric : metrics)
+			result+=metric->name()+"&"+metric->classification(csquared);
+		return result;
+	}
+	
+	const ImplicitMetric* diagonal_nilsoliton_metric() const {
+		auto it=find_if(metrics.begin(),metrics.end(),[] (auto& metric) {return metric->name()==NILSOLITON_DIAGONAL();});
+		return it!=metrics.end()? it->get() : nullptr;
+	}
+	const ImplicitMetric* diagonal_ricci_flat_metric() const {
+		auto it=find_if(metrics.begin(),metrics.end(),[] (auto& metric) {return metric->name()==RICCI_FLAT_DIAGONAL();});
+		return it!=metrics.end()? it->get() : nullptr;
+	}
+	bool matches(DiagramDataOptions options) const {return this->options==options;}
+	list<OrderTwoAutomorphism> automorphisms_giving_ricci_flat() const {return ricci_flat_antidiagonal;}
+	exvector nikolayevsky_derivation() const {return nikolayevsky;}
+	bool simple_nikolayevsky_derivation() const {return set<ex,ex_is_less>(nikolayevsky.begin(),nikolayevsky.end()).size()==nikolayevsky.size();}
+private:
+	static string RICCI_FLAT_DIAGONAL() {return "Ricci-flat(diag)"s;}
+	static string RICCI_FLAT_SIGMA() {return "Ricci-flat(sigma)"s;}
+	static string NILSOLITON_DIAGONAL() {return "nilsoliton(diag)"s;}
+	DiagramDataOptions options;
+	void print_matrix_data(ostream& os) const;
+  int no_rows, no_cols, rank_over_Q;
   int rank_over_Z2;
-  bool derivations_traceless;
-  bool X_ijk_in_coordinate_hyperplane;
-  exvector X_ijk;
-  string deformation_data;
-public:
-  DiagramProperties(const WeightMatrix& weight_matrix);
-  bool are_all_derivations_traceless() const {return derivations_traceless;}
-  bool is_X_ijk_in_coordinate_hyperplane() const {return X_ijk_in_coordinate_hyperplane;}
- 	virtual bool is_M_Delta_surjective() const=0;
- 	virtual string diagram_data() const;
-};
-
-class DiagramPropertiesNonSurjectiveMDelta : public DiagramProperties {
-  int no_rows;
-  int rank_over_Q;
-  bool X_ijk_in_coordinate_hyperplane;
-public:
-  string diagram_data() const ;
-  DiagramPropertiesNonSurjectiveMDelta(const WeightMatrix& weight_matrix);
-  bool is_M_Delta_surjective() const override {return false;}
-};
-
-class DiagramPropertiesSurjectiveMDelta : public DiagramProperties {
-  list<exvector> einstein_metrics_;
-  int rank_over_Q;
-
-  list<exvector> compute_einstein_metrics(const Matrix& complete_matrix) const;  
-public:
-  DiagramPropertiesSurjectiveMDelta(const WeightMatrix& weight_matrix);
-  bool is_M_Delta_surjective() const override {return true;}
-  const list<exvector>& einstein_metrics() const {return einstein_metrics_;}
-  bool is_X_ijk_in_reachable_orthant() const {
-    return !(einstein_metrics_.empty());
-   }
-	string diagram_data() const override;
+  list<unique_ptr<ImplicitMetric>> metrics;
+	exvector nikolayevsky;
+	list<vector<int>> automorphisms;
+	string imMDelta2;
+	list<OrderTwoAutomorphism> ricci_flat_antidiagonal;
+	DiagramAnalyzer diagram_analyzer;		//combinatorial data about the diagram
+	ex B;
+	exvector b;
+  exvector kernel_of_MDelta_transpose;
 };
 
 
 
 class WeightBasis {
-	vector<WeightAndCoefficient> weights;
 	list<SignConfiguration> configurations;	
-  unique_ptr<DiagramProperties> diagram_properties;
   int number_of_nodes_;	
+protected:
+	vector<WeightAndCoefficient> weights;
+	explicit WeightBasis(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions diagram_data_options); 
 public:
 	explicit WeightBasis(const LabeledTree& tree); 
 	vector<WeightAndCoefficient> weights_and_coefficients() const {return weights;}
 	list<SignConfiguration> sign_configurations() const {return configurations;}	
-	const DiagramProperties& properties() const {return *diagram_properties;}
 	int number_of_nodes() const {return number_of_nodes_;}
 };
 
-
-struct WeightAndValue : Weight {
-	WeightAndValue(Weight weight, ex coefficient) : Weight(weight), value{coefficient} {}
-	ex value;
-	WeightAndValue operator*=(int sign) {value*=sign; return *this;}
+class WeightBasisAndProperties : public WeightBasis {
+  unique_ptr<DiagramProperties> diagram_properties;
+	explicit WeightBasisAndProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions diagram_data_options); 
+	explicit WeightBasisAndProperties(const WeightMatrix& weight_matrix,const LabeledTree& tree, DiagramDataOptions options);
+public:
+	explicit WeightBasisAndProperties(const LabeledTree& tree, DiagramDataOptions diagram_data_options); 
+	const DiagramProperties& properties() const {return *diagram_properties;}
+	bool matches(DiagramDataOptions options) const {return diagram_properties && diagram_properties->matches(options);}
 };
 
-class CoefficientConfiguration {
-public:
-	int lie_algebra_dimension() const {return nodes;}
-//iteration through all configurations
-	CoefficientConfiguration& operator++() {
-		++current;
-		return *this;
-	}	
-	operator bool () const {
-		return current!=sign_configurations.end();
-	}	
-//iterations through this configuration
-	vector<WeightAndValue> weights() const {
-		return current->multiply(configuration_with_positive_signs);
+class EnhancedWeightBasis  : public WeightBasis {
+	WeightMatrix weight_matrix(const LabeledTree& tree, OrderTwoAutomorphism sigma);
+	list<vector<int>> automorphisms(const LabeledTree& tree, OrderTwoAutomorphism sigma) {
+		return tree.nontrivial_automorphisms(); //FIXME there will be more.
 	}
-protected:
-  void add_weight(WeightAndCoefficient weight, ex coefficient) {
-      configuration_with_positive_signs.emplace_back(weight,coefficient);
-  }
-  CoefficientConfiguration(const list<SignConfiguration> & sign_configurations, int nodes) : sign_configurations{sign_configurations}, nodes{nodes} {
-  	if (sign_configurations.empty()) this->sign_configurations.emplace_back(0);
-  	current=this->sign_configurations.begin();
-  }
-private:
-	vector<WeightAndValue> configuration_with_positive_signs;
-	list<SignConfiguration> sign_configurations;
-	list<SignConfiguration>::const_iterator current;
-	const int nodes;
+public:
+	EnhancedWeightBasis(const LabeledTree& tree, OrderTwoAutomorphism sigma);
 };
 
-class CoefficientConfigurationWithoutRedundantParameter : public CoefficientConfiguration {
-public:
-	CoefficientConfigurationWithoutRedundantParameter(const WeightBasis& weight_basis) : CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes()} {
-		int no_parameters=0;
-		nice_log<<weight_basis.weights_and_coefficients()<<endl;
-		for (auto weight: weight_basis.weights_and_coefficients()) 
-			if (weight.parameter_eliminated()) add_weight(weight,1);
-			else add_weight(weight,StructureConstant{N.a(++no_parameters)});
-  }
-};
 
-class EinsteinCoefficientConfiguration : public CoefficientConfiguration {
-public:
-	EinsteinCoefficientConfiguration(const WeightBasis& weight_basis) : CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes()} {
-		for (auto weight: weight_basis.weights_and_coefficients()) 
-		    add_weight(weight,sqrt(abs(weight.X_ijk)));  
-  }
-};
+
+
+template<typename Parameter>
+vector<exvector> basis_from_generic_element(const exvector& generic_vector) {	
+	list<ex> free; 
+	GetSymbols<Parameter>(free, generic_vector.begin(),generic_vector.end());
+	vector<exvector> basis;
+	transform (free.begin(),free.end(),back_inserter(basis),
+		[&generic_vector] (ex x) {return coefficients_of(generic_vector,x);}
+	);
+	return basis;
+}
+
 #endif

@@ -18,17 +18,11 @@
 #ifndef NICE_H
 #define NICE_H
 
-#include <vector>
-#include <sstream>
-#include <list>
-#include <map>
-#include <iostream>
-#include <algorithm>
 #include "arrow.h"
 #include "permutations.h"
 #include "log.h"
 #include "horizontal.h"
-using namespace std;
+
 
 class Tree;
 
@@ -97,8 +91,11 @@ public:
 	SetOfNodes(int nodes, int final_size) : no_nodes{nodes},  nodes_hash(final_size) {}
 	SetOfNodes()=default;
 	string name() const {
-	  if (name_.empty()) return to_string(number_)+ "#"+to_string(tree_hash);
-	  else  return to_string(number_)+ "#"+to_string(tree_hash)+ " : "+name_;
+	  if (name_.empty()) return std::to_string(number_)+ "#"+std::to_string(tree_hash);
+	  else  return std::to_string(number_)+ "#"+std::to_string(tree_hash)+ " : "+name_;
+	}
+	string number() const {
+		return std::to_string(number_);
 	}
 	void set_name(string new_name) {name_=move(new_name);}
 	void add_number_to_name(int n) {number_=n;}
@@ -119,13 +116,13 @@ private:
 template<typename ArrowType> class TreeBase : public SetOfNodes {
 private:
 	list<ArrowType> arrows_in_tree;
-	void compute_hash_and_cache_result() const;
+	void compute_hash_and_cache_result_ordered() const;	//assumes arrows have the form i-> j with i>j
 protected:
 	static const int NO_NODE=-1;
 	void invalidate() {tree_hash=HASH_NOT_COMPUTED;}
 	bool matches(const TreeBase& tree, const vector<int>& permutation) const;
-  void add_arrow(ArrowType&& arrow) {
-    arrows_in_tree.push_back(move(arrow));
+  void add_arrow(const ArrowType& arrow) {
+    arrows_in_tree.push_back(arrow);
 		invalidate();
   }
   template<typename Arrow>
@@ -138,6 +135,7 @@ protected:
   TreeBase(const SetOfNodes& tree, list<ArrowType>&& arrows) : SetOfNodes(tree),  arrows_in_tree{move(arrows)} {
     assert(tree_hash!=HASH_NOT_COMPUTED);
   }
+	void compute_hash_and_cache_result_unordered() const;
 public:
 	TreeBase(const TreeBase&)=default;
 	TreeBase(TreeBase&&)=default;
@@ -147,11 +145,11 @@ public:
 	bool is_equivalent_to(const TreeBase& tree) const;
 	list<vector<int>> nontrivial_automorphisms() const;
 	vector<int> node_hash() const {
-	  if (tree_hash==HASH_NOT_COMPUTED) compute_hash_and_cache_result();
+	  if (tree_hash==HASH_NOT_COMPUTED) compute_hash_and_cache_result_ordered();
 	  return nodes_hash.to_vector(number_of_nodes());
 	}
 	int hash() const {
-	  if (tree_hash==HASH_NOT_COMPUTED) compute_hash_and_cache_result();
+	  if (tree_hash==HASH_NOT_COMPUTED) compute_hash_and_cache_result_ordered();
     return tree_hash;	  
 	}
 	string to_dot_string(string extra_data={}) const;
@@ -161,7 +159,10 @@ public:
 	  for (auto& arrow: arrows_in_tree)
 	    arrow.invert(number_of_nodes());	 
    }
-	    
+  template<typename Compare> 
+	void sort_arrows(Compare&& compare) {
+		arrows_in_tree.sort(compare);
+	}
 };
 
 template<typename ArrowType>

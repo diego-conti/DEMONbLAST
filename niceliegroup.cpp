@@ -21,20 +21,21 @@
 #include "weightbasis.h"
 
 
-
-
-list<NiceLieGroup> NiceLieGroup::from_weight_basis(const WeightBasis& weight_basis) {
+list<NiceLieGroup> NiceLieGroup::from_coefficient_configuration(CoefficientConfiguration&& configuration) {
 		list<NiceLieGroup> result;
-		CoefficientConfigurationWithoutRedundantParameter configuration{weight_basis};		
 		while (configuration) {
 			insert_new_lie_group(result,configuration);
 			++configuration;
-		}
-		//test_einstein_condition(result);
+		}	
 		return result;
 }
 
-NiceLieGroup::NiceLieGroup(const CoefficientConfigurationWithoutRedundantParameter& configuration) : LieGroupsFromDiagram(configuration.lie_algebra_dimension()) {
+list<NiceLieGroup> NiceLieGroup::from_weight_basis(const WeightBasis& weight_basis) {
+	CoefficientConfigurationWithoutRedundantParameter configuration{weight_basis};
+	return from_coefficient_configuration(std::move(configuration));
+}
+
+NiceLieGroup::NiceLieGroup(const CoefficientConfiguration& configuration) : LieGroupsFromDiagram(configuration.lie_algebra_dimension()) {
 		ExVector de(configuration.lie_algebra_dimension());
 		int i=0;
 		for (WeightAndValue weight : configuration.weights()) {
@@ -103,7 +104,7 @@ bool equivalent(const NiceLieGroup& G, const NiceLieGroup& H) {
 }	
 
 
-void NiceLieGroup::insert_new_lie_group(list<NiceLieGroup>& out_list, const CoefficientConfigurationWithoutRedundantParameter& configuration) {
+void NiceLieGroup::insert_new_lie_group(list<NiceLieGroup>& out_list, const CoefficientConfiguration& configuration) {
 	NiceLieGroup nice_lie_group{configuration};
   nice_log<<to_string(nice_lie_group)<<endl;
 	if (nice_lie_group.solve_linear_ddzero()) {

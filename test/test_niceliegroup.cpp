@@ -6,11 +6,16 @@
 #include "../gauss.cpp"
 #include "../liegroupsfromdiagram.cpp"
 #include "../filter.cpp"
-
+#include "../weightmatrix.cpp"
+#include "../antidiagonal.cpp"
+#include "../implicitmetric.cpp"
+#include "../adinvariantobstruction.cpp"
+#include "../parsetree.cpp"
+#include "../automorphisms.cpp"
 #include "dump.h"
 
 void test_weight_basis() {
-	auto trees = nice_diagrams({3,2,1},Filter{});
+	auto trees = nice_diagrams({3,2,1},Filter{},DiagramDataOptions{});
 	for (auto tree : trees) {
 		cout<<tree;
 		for (auto weight_and_coefficient : WeightBasis{tree}.weights_and_coefficients())
@@ -19,7 +24,7 @@ void test_weight_basis() {
 }
 
 auto lie_groups(vector<int> partition) {
-  auto result = nice_diagrams(partition,Filter{});
+  auto result = nice_diagrams(partition,Filter{},DiagramDataOptions{});
 		for (auto& tree : result) {
 					string groups;
 					for (auto group : NiceLieGroup::from_weight_basis(WeightBasis{tree})) 

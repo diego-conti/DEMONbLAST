@@ -18,11 +18,8 @@
 #ifndef LINEARINEQUALITIES_H
 #define LINEARINEQUALITIES_H
 
-#include <algorithm>
-#include <numeric>
-#include <limits>
 #include <ginac/ginac.h>
-using namespace std;
+
 using namespace GiNaC;
 
 template<typename iter_begin,typename iter_end, typename Closure>
@@ -75,7 +72,8 @@ class LinearInequalities {
 	}
 	
 	void eliminate() {
-		eliminate(variable_that_appears_in_the_least_equations());
+		if (!unknowns.empty())
+			eliminate(variable_that_appears_in_the_least_equations());
 	}
 	void eliminate(ex x) {
 		list<ex> greater_than_x, smaller_than_x, not_depending_on_x;

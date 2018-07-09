@@ -3,8 +3,8 @@
 #include <iostream>
 #include <wedge/liegroup.h>
 
-using namespace std;
 using namespace GiNaC;
+using namespace std;
 using namespace Wedge;
 
 class TestLieGroup : public LieGroupHasParameters<true> , ConcreteManifold {
