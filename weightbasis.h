@@ -99,6 +99,7 @@ class DiagramProperties {
   bool X_ijk_in_coordinate_hyperplane;
   exvector X_ijk;
   string deformation_data;
+  matrix nikolayevsky;
 public:
   DiagramProperties(const WeightMatrix& weight_matrix);
   bool are_all_derivations_traceless() const {return derivations_traceless;}

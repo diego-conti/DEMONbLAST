@@ -39,7 +39,8 @@ enum class Option : unsigned int {
   dflt=0,
   with_diagram_data=1,
   with_automorphisms=4,
-  include_diagrams_no_lie_algebra=8
+  include_diagrams_no_lie_algebra=8,
+  with_derivations=16
 };
 
 auto operator^=(Option& options, Option option) {
@@ -63,6 +64,7 @@ public:
   bool with_automorphisms() const {return options & Option::with_automorphisms;}
   bool with_diagram_data() const {return options & Option::with_diagram_data;}
   bool only_if_lie_algebras() const {return !(options & Option::include_diagrams_no_lie_algebra);}
+  bool with_derivations() const {return options & Option::with_derivations;}
   void log() const {nice_log<<"options = "<<static_cast<unsigned int>(options)<<endl;}
   void set(Option option) {options|=option;}
   void clear(Option option) {set(option); options^=option;}
@@ -75,6 +77,12 @@ protected:
 			if (options.with_diagram_data()) processed_diagram.append_extra(diagram.weight_basis().properties().diagram_data());  
       if (options.with_automorphisms() && !processed_diagram.empty() && !diagram.arrows().empty()) 
         processed_diagram.append_extra(nontrivial_automorphisms_to_string(diagram.nontrivial_automorphisms()));
+  }
+  template<typename LieAlgebras>
+  void append_derivations(ProcessedDiagram& processed_diagram,const LieAlgebras& lie_algebras,Options options) const {
+  		if (options.with_derivations())
+		  	for (auto& lie_algebra : lie_algebras)
+  				 processed_diagram.append_extra(lie_algebra.derivations());
   }
 public:
   virtual ProcessedDiagram process (const LabeledTree& diagram, Options options) const {
@@ -168,6 +176,7 @@ public:
       auto lie_algebras=NiceLieGroup::from_weight_basis(weight_basis);  
       if (lie_algebras.empty() && options.only_if_lie_algebras()) return {};        
       auto result= options.with_automorphisms() ? process_list_and_automorphisms(diagram,lie_algebras) : process_list(diagram,lie_algebras);
+      append_derivations(result,lie_algebras,options);
  			append_extra(result,diagram,options);
 		  return result;
   }
@@ -252,6 +261,7 @@ public:
       auto lie_algebras=NiceEinsteinLieGroup::from_weight_basis(weight_basis);          
       if (lie_algebras.empty() && options.only_if_lie_algebras()) return {};        
       ProcessedDiagram result= process_list(diagram,lie_algebras);
+      append_derivations(result,lie_algebras,options); 			
 			append_extra(result,diagram,options);
 			return result;
 		}

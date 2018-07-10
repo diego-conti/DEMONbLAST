@@ -46,7 +46,7 @@ inline ostream& operator<<(ostream& os, Z2 x) {
 	return os<< (x==Z2{}? 0 : 1);
 }
 
-
+//The matrix M_Delta, called "root matrix" in the literature
 class WeightMatrix {
   matrix weight_matrix;
   vector<int> row_to_parameter_correspondence;
@@ -199,6 +199,15 @@ class WeightMatrix {
 			nice_log<<"delta(sigma,epsilon)+w_epsilon = "<<result<<endl;
 			return result;
   	} 
+  	
+  	static matrix matrix_of_ones(int rows) {
+  		exvector ones(rows,1);
+  		return {rows,1,lst{ones.begin(),ones.end()}};  		
+  	}
+  	static matrix matrix_of_unknowns(int rows) {
+  		auto ones=generate_variables<Unknown>(N.b,rows);
+  		return {rows,1,lst{ones.begin(),ones.end()}};  		
+  	}
 public:
   WeightMatrix(const list<Weight>& weights,int dimension) : 
     weight_matrix{weights.size(),dimension},  
@@ -239,7 +248,7 @@ public:
     return X_ijk_;
   }
   exvector kernel_of_MDelta_transpose() const {
-  	   return solve_over_Q(complete_matrix_transposed_M_Delta(0),generate_variables<StructureConstant>(N.x,weight_matrix.rows()));
+    return solve_over_Q(complete_matrix_transposed_M_Delta(0),generate_variables<StructureConstant>(N.x,weight_matrix.rows()));
   }
   void factor_out_automorphisms(const list<vector<int>>& nontrivial_automorphisms) {
   	if (sign_configurations_.empty()) return;
@@ -251,6 +260,12 @@ public:
 	  	}
   	}
   }
+		matrix nikolayevsky_derivation() const {
+			int m=weight_matrix.rows(), n=weight_matrix.cols();			
+			auto b=weight_matrix.mul(weight_matrix.transpose()).solve(matrix_of_unknowns(m),matrix_of_ones(m));
+			auto v=weight_matrix.transpose()*b+matrix_of_ones(n);
+			return ex_to<matrix>(v.evalm());
+		}
 };
 
 #endif

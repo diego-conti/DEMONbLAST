@@ -56,15 +56,16 @@ DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix) :
   rank_over_Z2{weight_matrix.rank_over_Z2()},
   derivations_traceless{weight_matrix.are_derivations_traceless()},
   X_ijk{weight_matrix.X_ijk()},
-  deformation_data{Deformation{weight_matrix}.to_string()}
+  deformation_data{Deformation{weight_matrix}.to_string()},
+  nikolayevsky{weight_matrix.nikolayevsky_derivation()}
 {
   X_ijk_in_coordinate_hyperplane=any_of(begin(X_ijk),end(X_ijk),[](ex x) {return x.expand().is_zero();});
 }
 
 DiagramPropertiesNonSurjectiveMDelta:: DiagramPropertiesNonSurjectiveMDelta(const WeightMatrix& weight_matrix) 
-  : DiagramProperties(weight_matrix), no_rows(weight_matrix.M_Delta().rows()),  rank_over_Q{weight_matrix.rank_over_Q()}, kernel_of_MDelta_transpose(weight_matrix.kernel_of_MDelta_transpose())
-{
-}
+  : DiagramProperties(weight_matrix), no_rows(weight_matrix.M_Delta().rows()),  rank_over_Q{weight_matrix.rank_over_Q()},
+  kernel_of_MDelta_transpose(weight_matrix.kernel_of_MDelta_transpose())
+{}
   
 string DiagramPropertiesNonSurjectiveMDelta::diagram_data() const {
   stringstream sstream;
@@ -90,6 +91,7 @@ string DiagramProperties::diagram_data() const {
    		if (is_X_ijk_in_coordinate_hyperplane()) sstream<<"X_ijk in coordinate hyperplane; "<<endl;
    	  else sstream<<"X_ijk not in coordinate hyperplane; "<<endl;
     }
+    else sstream<<"Nikolayevsky derivation: "<<nikolayevsky<<endl;
     sstream<<"rank over Z_2 = "<<rank_over_Z2<<endl;
     sstream<<"deformation data: "<<deformation_data<<endl;
     return sstream.str();

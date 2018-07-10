@@ -186,6 +186,7 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
       diagram_processor.invert_nodes();
     if (command_line_variables.count("list-diagram-automorphisms")) diagram_processor.set(Option::with_automorphisms);
     if (command_line_variables.count("diagram-data")) diagram_processor.set(Option::with_diagram_data);
+    if (command_line_variables.count("derivations")) diagram_processor.set(Option::with_derivations);
     if (command_line_variables.count("all-nice-diagrams") || command_line_variables.count("all-diagrams")) diagram_processor.set(Option::include_diagrams_no_lie_algebra);
     Filter filter;
     if (command_line_variables.count("no-coordinate-hyperplane")) filter.no_coordinate_hyperplane();
@@ -238,6 +239,7 @@ int main(int argc, char* argv[]) {
             ("invert",  "invert node numbering") 
             ("parallel-mode",  "use multiple threads") 
             ("diagram-data",  "include diagram data in output") 
+            ("derivations",  "include Lie algebra derivations in output") 
 
             
             ("only-traceless-derivations", "exclude diagrams where (1...1) is not in the span of the rows of M_Delta")

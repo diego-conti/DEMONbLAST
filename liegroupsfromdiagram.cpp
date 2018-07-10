@@ -20,6 +20,7 @@
 #include "gauss.h"
 #include "weightbasis.h"
 #include "wedge/liesubgroup.h"
+#include "wedge/repgl.h"
 #include "horizontal.h"
 #include "linearinequalities.h"
 
@@ -65,6 +66,45 @@ bool LieGroupsFromDiagram::is_dd_nonzero() const {
 		for (auto eq: eqns) if (is_a<numeric>(eq) && !eq.is_zero()) return true;
 		return false;
 }
+
+ex Xbracket(const LieGroup& G, const GLRepresentation<VectorField>& V, ex A, ex X, ex Y) {
+	ex Ax=V.Action<VectorField>(A,X);
+	ex Ay=V.Action<VectorField>(A,Y);
+	ex Axy=V.Action<VectorField>(A,G.LieBracket(X,Y));
+	return G.LieBracket(Ax,Y)+G.LieBracket(X,Ay)-Axy;
+}
+
+exvector Xbrackets(const LieGroup& G, const GLRepresentation<VectorField>& V, ex A) {
+		exvector Xbrackets;
+		for (int i=1;i<=G.Dimension();++i)
+		for (int j=i+1;j<=G.Dimension();++j) 
+			Xbrackets.push_back(Xbracket(G,V,A,G.e(i),G.e(j)));				
+		return Xbrackets;
+}
+
+VectorSpace<DifferentialForm> offdiagonal_elements(const GL& gl) {
+	exvector basis;
+	for (int i=1;i<=gl.n();++i)
+	for (int j=i+1;j<=gl.n();++j) {
+		basis.push_back(gl.A(i,j));
+		basis.push_back(gl.A(j,i));
+	}
+	return {basis.begin(),basis.end()};
+}
+
+string LieGroupsFromDiagram::derivations() const {
+	GL Gl(Dimension());
+		auto gl=offdiagonal_elements(Gl);
+		auto generic_matrix =gl.GenericElement();
+		auto X=Xbrackets(*this,GLRepresentation<VectorField>(&Gl,e()),generic_matrix);
+		lst eqns,sol;
+		GetCoefficients<VectorField>(eqns,X);
+		auto subspace=gl.GetSolutions(sol,eqns.begin(),eqns.end());		
+		stringstream s;
+		s<<"dim offdiag Der(g)=";
+		s<<sol.nops()<<endl; //<<subspace.Dimension()<<endl;
+		return s.str();
+};
 
 AbstractLieSubgroup<true> inverted_structure_constants(const LieGroupsFromDiagram& G) {
   ExVector frame;

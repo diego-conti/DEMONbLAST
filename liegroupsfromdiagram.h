@@ -38,6 +38,7 @@ public:
 		for (exmap::const_iterator i=dTable().begin();i!=dTable().end();i++)					
 			Has_dTable::Declare_d(i->first,i->second.subs(list_of_equations));
 	}
+	string derivations() const;
 };
 
 
