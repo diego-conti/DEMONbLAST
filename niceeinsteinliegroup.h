@@ -30,7 +30,7 @@ using namespace Wedge;
 
 class NiceEinsteinLieGroup : public LieGroupsFromDiagram {
 	NiceEinsteinLieGroup(const EinsteinCoefficientConfiguration& configuration);	
-  static	list<NiceEinsteinLieGroup> from_coefficient_configuration (EinsteinCoefficientConfiguration configuration);
+  static	list<NiceEinsteinLieGroup> from_coefficient_configuration (EinsteinCoefficientConfiguration&& configuration);
  	static void insert_new_lie_group(list<NiceEinsteinLieGroup>& out_list, const EinsteinCoefficientConfiguration& configuration);
 public:
 	static list<NiceEinsteinLieGroup> from_weight_basis(const WeightBasis& weight_basis);

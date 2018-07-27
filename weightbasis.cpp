@@ -21,7 +21,7 @@
 #include "liegroupsfromdiagram.h"
 #include "horizontal.h"
 #include "weightmatrix.h"
-#include "deformation.h"
+#include "linearinequalities.h"
 
 using namespace Wedge;
 
@@ -54,17 +54,18 @@ exvector logsign(const exvector& non_zero_numbers) {
 
 DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix) : 
   rank_over_Z2{weight_matrix.rank_over_Z2()},
-  derivations_traceless{weight_matrix.are_derivations_traceless()},
-  X_ijk{weight_matrix.X_ijk()},
-  deformation_data{Deformation{weight_matrix}.to_string()},
-  nikolayevsky{weight_matrix.nikolayevsky_derivation()}
+  X_ijk_{X_solving_nonRicciflat_Einstein(weight_matrix)},  
+  nilsoliton_Y_ijk{X_solving_nilsoliton(weight_matrix)}
 {
-  X_ijk_in_coordinate_hyperplane=any_of(begin(X_ijk),end(X_ijk),[](ex x) {return x.expand().is_zero();});
+	nikolayevsky=to_matrix(transpose(weight_matrix.M_Delta())).image_of(nilsoliton_Y_ijk);
+	for (auto& x: nikolayevsky) ++x;
+	if (!LinearInequalities(nilsoliton_Y_ijk.begin(),nilsoliton_Y_ijk.end(),Unknown{}).has_solution()) nilsoliton_Y_ijk.clear();
+  X_ijk_in_coordinate_hyperplane=any_of(begin(X_ijk_),end(X_ijk_),[](ex x) {return x.expand().is_zero();});
 }
 
 DiagramPropertiesNonSurjectiveMDelta:: DiagramPropertiesNonSurjectiveMDelta(const WeightMatrix& weight_matrix) 
   : DiagramProperties(weight_matrix), no_rows(weight_matrix.M_Delta().rows()),  rank_over_Q{weight_matrix.rank_over_Q()},
-  kernel_of_MDelta_transpose(weight_matrix.kernel_of_MDelta_transpose())
+  kernel_of_MDelta_transpose(X_solving_Ricciflat(weight_matrix))
 {}
   
 string DiagramPropertiesNonSurjectiveMDelta::diagram_data() const {
@@ -87,13 +88,16 @@ string DiagramProperties::diagram_data() const {
  		stringstream sstream;
 	  if (are_all_derivations_traceless()) {
 	    sstream<<"derivations are traceless"<<endl;
-	    sstream<<"X="<<horizontal(X_ijk)<<endl;
+	    sstream<<"X="<<horizontal(X_ijk_)<<endl;
    		if (is_X_ijk_in_coordinate_hyperplane()) sstream<<"X_ijk in coordinate hyperplane; "<<endl;
    	  else sstream<<"X_ijk not in coordinate hyperplane; "<<endl;
     }
-    else sstream<<"Nikolayevsky derivation: "<<nikolayevsky<<endl;
+    else {
+	    sstream<<"Nikolayevsky derivation: "<<nikolayevsky<<endl;
+	    if (!nilsoliton_Y_ijk.empty()) sstream<<"nilsoliton vector: "<<nilsoliton_Y_ijk<<endl;
+	    else sstream<<"nilsoliton vector not >0"<<endl;
+	  }
     sstream<<"rank over Z_2 = "<<rank_over_Z2<<endl;
-    sstream<<"deformation data: "<<deformation_data<<endl;
     return sstream.str();
 }
 
@@ -112,9 +116,8 @@ WEDGE_DECLARE_NAMED_ALGEBRAIC(Parameter,realsymbol);
 DiagramPropertiesSurjectiveMDelta::DiagramPropertiesSurjectiveMDelta(const WeightMatrix& weight_matrix) 
   : DiagramProperties{weight_matrix},rank_over_Q{weight_matrix.rank_over_Q()}
 {
-  auto X_ijk=weight_matrix.X_ijk();
   if (are_all_derivations_traceless() && !is_X_ijk_in_coordinate_hyperplane()) 
-   einstein_metrics_ = compute_einstein_metrics(complete_matrix(weight_matrix.M_Delta(), logsign(X_ijk)));
+   einstein_metrics_ = compute_einstein_metrics(complete_matrix(weight_matrix.M_Delta(), logsign(X_ijk())));
 }
 
 exvector subs(exvector v,ex subs) {
@@ -154,9 +157,8 @@ list<exvector> DiagramPropertiesSurjectiveMDelta::compute_einstein_metrics(const
 
 WeightBasis::WeightBasis(const LabeledTree& tree) : number_of_nodes_{tree.number_of_nodes()} {
   WeightMatrix weight_matrix{tree.weights(),tree.number_of_nodes()};
-  weight_matrix.factor_out_automorphisms(tree.nontrivial_automorphisms());
-  weights=move(weight_matrix).weights_and_coefficients();
-  configurations=move(weight_matrix).sign_configurations();
+  configurations=SignConfigurations{weight_matrix, tree.nontrivial_automorphisms()}.sign_configurations();
+  weights.insert(weights.end(), weight_matrix.weight_begin(),weight_matrix.weight_end());
   if (!configurations.empty()) {
   		nice_log<<"remaining sign configurations:"<<endl;
 			for (auto sc : configurations)

@@ -6,6 +6,7 @@
 #include "../gauss.cpp"
 #include "../liegroupsfromdiagram.cpp"
 #include "../filter.cpp"
+#include "../weightmatrix.cpp"
 
 #include "dump.h"
 

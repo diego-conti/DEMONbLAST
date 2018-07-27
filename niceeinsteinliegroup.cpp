@@ -21,7 +21,7 @@
 #include "weightbasis.h"
 #include <sstream>
 
-list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_coefficient_configuration (EinsteinCoefficientConfiguration configuration)
+list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_coefficient_configuration (EinsteinCoefficientConfiguration&& configuration)
 {
 		list<NiceEinsteinLieGroup> result;
 		insert_new_lie_group(result,configuration);
@@ -37,8 +37,8 @@ list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_coefficient_configuration 
 
 list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_weight_basis(const WeightBasis& weight_basis) {
 		auto& diagram_properties=weight_basis.properties();
-		EinsteinCoefficientConfiguration configuration{weight_basis};
 		if (!diagram_properties.are_all_derivations_traceless()) return {};
+		EinsteinCoefficientConfiguration configuration{weight_basis};
 	/*	if (!diagram_properties.is_M_Delta_surjective()) {
 	    nice_log<<"skipping (M_Delta not surjective)"<<endl;	
   		return {};
@@ -52,7 +52,7 @@ list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_weight_basis(const WeightB
 	    nice_log<<"skipping (X_{ijk} not contained in reachable orthant)"<<endl;	
   		return {};
     }*/
-    list<NiceEinsteinLieGroup> result=from_coefficient_configuration(configuration);
+    list<NiceEinsteinLieGroup> result=from_coefficient_configuration(move(configuration));
  //   for (exvector metric : diagram_properties_surjective_M_Delta.einstein_metrics())
    //   test_einstein_condition(result,metric);
     return result;

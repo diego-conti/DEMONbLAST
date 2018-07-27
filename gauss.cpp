@@ -41,6 +41,7 @@ Matrix::Matrix(const matrix& m) : Matrix(m.rows(),m.cols()) {
     operator()(i,j)=m(i,j);
 }
 
+
 void print_row(ostream& os, const Matrix& m, int row) {
     os<<"{"<<m(row,0);
     int j=0;

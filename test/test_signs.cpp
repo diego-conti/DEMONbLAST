@@ -10,6 +10,7 @@
 #include "../niceeinsteinliegroup.cpp"
 #include "../permutations.cpp"
 #include "../linearinequalities.h"
+#include "../weightmatrix.cpp"
 
 #include "dump.h"
 

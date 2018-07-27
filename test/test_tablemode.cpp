@@ -9,6 +9,7 @@
 #include "../diagramprocessor.h"
 #include "../niceeinsteinliegroup.cpp"
 #include "../permutations.cpp"
+#include "../weightmatrix.cpp"
 
 #include "dump.h"
 

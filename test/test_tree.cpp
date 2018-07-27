@@ -3,6 +3,7 @@
 #include "../labeled_tree.cpp"
 #include "../weightbasis.cpp"
 #include "../gauss.cpp"
+#include "../weightmatrix.cpp"
 #include "dump.h"
 
 

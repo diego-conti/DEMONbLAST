@@ -39,7 +39,6 @@ struct WeightAndCoefficient : Weight {
 	WeightAndCoefficient(const Weight& weight) : Weight(weight) {};	
 	WeightAndCoefficient& operator=(const WeightAndCoefficient&)=default;
 	WeightAndCoefficient& operator=(WeightAndCoefficient&&)=default;
-	ex X_ijk;
 	void eliminate_parameter() {parameter_eliminated_=true;}
 	bool parameter_eliminated() const {return parameter_eliminated_;}
 	bool same_weight_as(Weight weight) const {
@@ -84,6 +83,8 @@ public:
 			coefficients[i]*=signs[i];
 		return coefficients;
 	}
+	auto begin() const {return signs.begin();}
+	auto end() const {return signs.end();}
 };
 
 ostream& operator<<(ostream& os,SignConfiguration sign_configuration);
@@ -95,15 +96,15 @@ class WeightMatrix;
 
 class DiagramProperties {
   int rank_over_Z2;
-  bool derivations_traceless;
   bool X_ijk_in_coordinate_hyperplane;
-  exvector X_ijk;
-  string deformation_data;
-  matrix nikolayevsky;
+  exvector X_ijk_;
+  exvector nikolayevsky;
+	exvector nilsoliton_Y_ijk;
 public:
   DiagramProperties(const WeightMatrix& weight_matrix);
-  bool are_all_derivations_traceless() const {return derivations_traceless;}
+  bool are_all_derivations_traceless() const {return !X_ijk_.empty();}
   bool is_X_ijk_in_coordinate_hyperplane() const {return X_ijk_in_coordinate_hyperplane;}
+  const exvector& X_ijk() const {return X_ijk_;}
  	virtual bool is_M_Delta_surjective() const=0;
  	virtual string diagram_data() const;
 };
@@ -158,6 +159,7 @@ struct WeightAndValue : Weight {
 
 class CoefficientConfiguration {
 public:
+	CoefficientConfiguration(const CoefficientConfiguration&)=delete;
 	int lie_algebra_dimension() const {return nodes;}
 //iteration through all configurations
 	CoefficientConfiguration& operator++() {
@@ -199,9 +201,12 @@ public:
 
 class EinsteinCoefficientConfiguration : public CoefficientConfiguration {
 public:
-	EinsteinCoefficientConfiguration(const WeightBasis& weight_basis) : CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes()} {
+	EinsteinCoefficientConfiguration(const WeightBasis& weight_basis) : CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes()} {	
+		assert(weight_basis.properties().are_all_derivations_traceless());
+		auto& X_ijk=weight_basis.properties().X_ijk();
+		auto coeff=X_ijk.begin();
 		for (auto weight: weight_basis.weights_and_coefficients()) 
-		    add_weight(weight,sqrt(abs(weight.X_ijk)));  
+		    add_weight(weight,sqrt(abs(*coeff++)));  
   }
 };
 #endif
