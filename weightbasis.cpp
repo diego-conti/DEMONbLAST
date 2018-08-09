@@ -52,14 +52,57 @@ exvector logsign(const exvector& non_zero_numbers) {
 }
 
 
+bool affinespace_intersects_orthant(vector<Z2> epsilon, exvector generic_vector) {
+	auto mul = [] (Z2 x, ex y) {return x.to_Z_star()*y;};
+	transform(epsilon.begin(),epsilon.end(),generic_vector.begin(), generic_vector.begin(),mul);
+	return LinearInequalities{generic_vector.begin(),generic_vector.end(),Unknown{}}.has_solution();
+}
+
+bool sign_change_leaves_ker_invariant(const vector<Z2>& epsilon, const Matrix& matrix) {
+	auto vector_in_kernel=	solve_over_Q(adjoin(matrix, ConstantMatrixBuilder{matrix.rows(),1,0}),generate_variables<Unknown>(N.x,matrix.cols()));
+	auto mul = [] (Z2 x, ex y) {return x.to_Z_star()*y;};
+	transform(epsilon.begin(),epsilon.end(),vector_in_kernel.begin(), vector_in_kernel.begin(),mul);
+	auto image=matrix.image_of(vector_in_kernel);
+	return all_of(image.begin(),image.end(),[](ex x) {return x.is_zero();});
+}
+
+Matrix wa_minus_p(const WeightMatrix& weight_matrix) {
+	auto MDeltatranspose=to_matrix(transpose(weight_matrix.M_Delta()));
+	auto b=X_solving_nilsoliton(weight_matrix);
+	if (b.empty()) return MDeltatranspose;
+	ex trace_b=accumulate(b.begin(),b.end(),ex{});	
+	auto p=MDeltatranspose.image_of(b);
+	assert (!trace_b.is_zero());
+	for (int i=0;i<MDeltatranspose.rows();++i)
+		for (int j=0;j<MDeltatranspose.cols();++j)
+			MDeltatranspose(i,j)-=p[i]/trace_b;
+	return MDeltatranspose;
+}
+
+
+list<SignConfiguration> signatures_compatible_with_X(const WeightMatrix& weight_matrix,const exvector& X)
+{
+	assert(weight_matrix.rows()==0 || !X.empty());
+	list<SignConfiguration> result;
+	auto MDeltatranspose=wa_minus_p(weight_matrix);
+	for (auto epsilon : SignConfiguration::all_configurations(weight_matrix.cols())) {
+		auto MDelta2epsilon=weight_matrix.image_of(sign_configuration_to_vector(weight_matrix.cols(),epsilon));
+//		if (all_of(MDelta2epsilon.begin(),MDelta2epsilon.end(),[](Z2 z) {return z==0;})) continue;	//do not consider "trivial" sign configurations
+			if (affinespace_intersects_orthant((MDelta2epsilon), X) && sign_change_leaves_ker_invariant(MDelta2epsilon, MDeltatranspose))
+				result.push_back(epsilon);
+	}
+	return result;
+}
+
 DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix) : 
   rank_over_Z2{weight_matrix.rank_over_Z2()},
   X_ijk_{X_solving_nonRicciflat_Einstein(weight_matrix)},  
-  nilsoliton_Y_ijk{X_solving_nilsoliton(weight_matrix)}
+  nilsoliton_Y_ijk{X_solving_nilsoliton(weight_matrix)},
+  nilsoliton_signatures_{signatures_compatible_with_X(weight_matrix, nilsoliton_Y_ijk)},
+  weights{weight_matrix.weight_begin(),weight_matrix.weight_end()}
 {
 	nikolayevsky=to_matrix(transpose(weight_matrix.M_Delta())).image_of(nilsoliton_Y_ijk);
 	for (auto& x: nikolayevsky) ++x;
-	if (!LinearInequalities(nilsoliton_Y_ijk.begin(),nilsoliton_Y_ijk.end(),Unknown{}).has_solution()) nilsoliton_Y_ijk.clear();
   X_ijk_in_coordinate_hyperplane=any_of(begin(X_ijk_),end(X_ijk_),[](ex x) {return x.expand().is_zero();});
 }
 
@@ -86,6 +129,7 @@ string signature(const exvector& metric) {
 
 string DiagramProperties::diagram_data() const {
  		stringstream sstream;
+ 		sstream<<horizontal(weights)<<endl;
 	  if (are_all_derivations_traceless()) {
 	    sstream<<"derivations are traceless"<<endl;
 	    sstream<<"X="<<horizontal(X_ijk_)<<endl;
@@ -94,10 +138,20 @@ string DiagramProperties::diagram_data() const {
     }
     else {
 	    sstream<<"Nikolayevsky derivation: "<<nikolayevsky<<endl;
-	    if (!nilsoliton_Y_ijk.empty()) sstream<<"nilsoliton vector: "<<nilsoliton_Y_ijk<<endl;
-	    else sstream<<"nilsoliton vector not >0"<<endl;
 	  }
+	  sstream<<"Nilsoliton vector [k=1]: "<<horizontal(nilsoliton_Y_ijk)<<endl;
+	  for (auto x: nilsoliton_signatures_) 
+	  	sstream<<"nilsoliton signature: "<<x<<endl;	
+    
+    for (auto x: SignConfiguration::all_configurations(nilsoliton_Y_ijk.size())) {
+			exvector with_signs;
+			auto mul = [] (int x, ex y) {return x*y;};
+			transform(x.begin(),x.end(),nilsoliton_Y_ijk.begin(), back_inserter(with_signs),mul);
+			if ( LinearInequalities{with_signs.begin(),with_signs.end(),Unknown{}}.has_solution()) sstream<<"orthant : "<<x<<endl;
+		}
+
     sstream<<"rank over Z_2 = "<<rank_over_Z2<<endl;
+
     return sstream.str();
 }
 

@@ -100,6 +100,8 @@ class DiagramProperties {
   exvector X_ijk_;
   exvector nikolayevsky;
 	exvector nilsoliton_Y_ijk;
+	list<SignConfiguration> nilsoliton_signatures_;
+	vector<WeightAndCoefficient> weights;	//this is only used to keep track of the order of the weights
 public:
   DiagramProperties(const WeightMatrix& weight_matrix);
   bool are_all_derivations_traceless() const {return !X_ijk_.empty();}
@@ -107,6 +109,7 @@ public:
   const exvector& X_ijk() const {return X_ijk_;}
  	virtual bool is_M_Delta_surjective() const=0;
  	virtual string diagram_data() const;
+ 	const	list<SignConfiguration>& signatures() const {return nilsoliton_signatures_;}
 };
 
 class DiagramPropertiesNonSurjectiveMDelta : public DiagramProperties {

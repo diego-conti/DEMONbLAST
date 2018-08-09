@@ -49,7 +49,7 @@ inline ostream& operator<<(ostream& os, Z2 x) {
 	return os<< (x==Z2{}? 0 : 1);
 }
 
-
+vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& epsilon);
 
 //The matrix M_Delta, called "root matrix" in the literature, with rows a_1,...,a_n ordered in such a way that the last k rows are basis of Span{a_1,..,a_n} over Z_2 and the last h rows span are a basis  of Span{a_1,..,a_n} over Q
 class WeightMatrix {
@@ -91,12 +91,17 @@ public:
   auto weight_end() const {return weights.end();} 	
   int rows() const {return weights.size();}
   int cols() const {return cols_;}
+  vector<Z2> image_of(const vector<Z2> v) const {
+  	vector<Z2> result;
+  	result.reserve(weights.size());
+  	for (auto x: weights) result.push_back(v[x.node_in1] + v[x.node_in2]+v[x.node_out]);
+  	return result;
+  }
 };
 
 exvector X_solving_nonRicciflat_Einstein(const WeightMatrix& MDelta);
 exvector X_solving_Ricciflat(const WeightMatrix& MDelta);
 exvector X_solving_nilsoliton(const WeightMatrix& MDelta);
-exvector nikolayevsky_derivation(const Matrix& MDelta);
 
 class SignConfigurations {
  	const WeightMatrix& MDelta;
@@ -150,15 +155,8 @@ class SignConfigurations {
 		return result;
   }
   
-  static vector<Z2> representative(int dimension, const SignConfiguration& epsilon) {
-		vector<Z2> w_epsilon(dimension);
- 		auto logsign = [] (int sign) {return sign>0? 0 : 1;};
- 		transform(epsilon.begin(),epsilon.end(),w_epsilon.begin(),logsign);
- 		return w_epsilon;
- 	}  	
- 	
   SignConfiguration delta(const vector<int>& sigma, const SignConfiguration& epsilon) {
-  		auto w_epsilon=representative(MDelta.rows(),epsilon);
+  		auto w_epsilon=sign_configuration_to_vector(MDelta.rows(),epsilon);
   		nice_log<<"sigma = "<<horizontal(sigma)<<endl;
   		nice_log<<"epsilon = "<<epsilon<<endl;
   		nice_log<<"w_epsilon = "<<horizontal(w_epsilon)<<endl;

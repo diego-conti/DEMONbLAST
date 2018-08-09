@@ -17,8 +17,7 @@ debug: $(SOURCES) $(INCLUDES) clean_log
  
 .PHONY: release
 release: $(SOURCES) $(INCLUDES) clean_log
-	../compile.sh $(SOURCES)  -lpthread -lboost_filesystem -lboost_system -o release
-	g++ $(INCLUDEDIR) $(SOURCES) $(LIBS) -O3 -DNDEBUG  $(CXXFLAGS) -o debug
+	g++ $(INCLUDEDIR) $(SOURCES) $(LIBS) -O3 -DNDEBUG  $(CXXFLAGS) -o release
 
 .PHONY: dot2ps
 dot2ps:

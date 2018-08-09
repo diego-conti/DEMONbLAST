@@ -1,5 +1,12 @@
 #include "weightmatrix.h"
 
+vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& epsilon) {
+	vector<Z2> w_epsilon(dimension);
+		auto logsign = [] (int sign) {return sign>0? 0 : 1;};
+		transform(epsilon.begin(),epsilon.end(),w_epsilon.begin(),logsign);
+		return w_epsilon;
+}  	
+
 
 template<typename Builder>
 Matrix complete_with_constant_vector(Builder&& builder, ex lambda) {
@@ -7,27 +14,18 @@ Matrix complete_with_constant_vector(Builder&& builder, ex lambda) {
 }
 
 exvector X_solving_nonRicciflat_Einstein(const WeightMatrix& weight_matrix) {	
-	return solve_over_Q(complete_with_constant_vector(transpose(weight_matrix.M_Delta()),1),generate_variables<StructureConstant>(N.x,weight_matrix.rows()));
+	return solve_over_Q(complete_with_constant_vector(transpose(weight_matrix.M_Delta()),1),generate_variables<Unknown>(N.x,weight_matrix.rows()));
 };
 exvector X_solving_Ricciflat(const WeightMatrix& weight_matrix) {	
-	return solve_over_Q(complete_with_constant_vector(transpose(weight_matrix.M_Delta()),0),generate_variables<StructureConstant>(N.x,weight_matrix.rows()));
+	return solve_over_Q(complete_with_constant_vector(transpose(weight_matrix.M_Delta()),0),generate_variables<Unknown>(N.x,weight_matrix.rows()));
 };
 
 exvector X_solving_nilsoliton(const WeightMatrix& weight_matrix) {	
 	auto MDelta=weight_matrix.M_Delta();
-	auto complete_matrix = adjoin(transpose(MDelta),ConstantMatrixBuilder{weight_matrix.cols(),1,1},ColumnVectorMatrixBuilder{nikolayevsky_derivation(MDelta)});
-	exvector sol= solve_over_Q(move(complete_matrix),generate_variables<Unknown>(N.x,weight_matrix.rows()+1));
-	sol.pop_back();		
-	return sol;
-};
-
-exvector nikolayevsky_derivation(const Matrix& MDelta) {
 	auto gram = complete_with_constant_vector(matrix_product(MDelta,transpose(MDelta)),1);
 	auto b=	solve_over_Q(gram,generate_variables<Unknown>(N.x,MDelta.rows()));
-	auto v=to_matrix(transpose(MDelta)).image_of(b);
-	for (auto& x: v) ++x;
-	return v;
-}
+	return b;
+};
 
 struct ReorderedMatrix {
 	Matrix m;
