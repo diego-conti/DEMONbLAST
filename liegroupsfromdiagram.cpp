@@ -42,6 +42,14 @@ bool LieGroupsFromDiagram::solve_linear_ddzero() {
 }
 
 
+exvector LieGroupsFromDiagram::csquared(const WeightBasis& weight_basis) const {
+		exvector result;
+		for (auto& weight: weight_basis.weights_and_coefficients()) 
+			result.push_back(pow(c_ijk(weight.node_in1,weight.node_in2,weight.node_out),2));
+		return result;
+}
+
+
 
 template<typename IteratorBegin, typename IteratorEnd>
 string ddzero(IteratorBegin begin, IteratorEnd end) {

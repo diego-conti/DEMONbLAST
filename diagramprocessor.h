@@ -40,7 +40,8 @@ enum class Option : unsigned int {
   with_diagram_data=1,
   with_automorphisms=4,
   include_diagrams_no_lie_algebra=8,
-  with_derivations=16
+  with_derivations=16,
+  with_ricci_flat_metrics=32
 };
 
 auto operator^=(Option& options, Option option) {
@@ -65,6 +66,7 @@ public:
   bool with_diagram_data() const {return options & Option::with_diagram_data;}
   bool only_if_lie_algebras() const {return !(options & Option::include_diagrams_no_lie_algebra);}
   bool with_derivations() const {return options & Option::with_derivations;}
+  bool with_diagonal_ricci_flat_metrics() const {return options & Option::with_ricci_flat_metrics;}
   void log() const {nice_log<<"options = "<<static_cast<unsigned int>(options)<<endl;}
   void set(Option option) {options|=option;}
   void clear(Option option) {set(option); options^=option;}
@@ -95,8 +97,10 @@ public:
 
 class with_lie_algebra_tag {} with_lie_algebra;
 class with_einstein_metrics_tag {} with_einstein_metrics;
+class with_ricciflat_metrics_tag {} with_ricciflat_metrics;
 class only_diagrams_tag {} only_diagrams;
 class lie_algebra_table_tag {} lie_algebra_table;
+
 
 class DiagramProcessor  {
   Filter filter_; //REFACTOR: consider removing the filter from this class (impacts nice.cpp)
@@ -107,6 +111,7 @@ public:
   DiagramProcessor(with_lie_algebra_tag);
   DiagramProcessor(lie_algebra_table_tag);    
   DiagramProcessor(with_einstein_metrics_tag);  
+  DiagramProcessor(with_ricciflat_metrics_tag);  
   ProcessedDiagram process(const LabeledTree& diagram) const {  
       options.log();
       return processor->process(diagram,options);
@@ -150,15 +155,17 @@ public:
 
 
 class DiagramProcessorWithLieAlgebras : public DiagramProcessorImpl {
-  virtual ProcessedDiagram process_list(const LabeledTree& diagram,const list<NiceLieGroup>& groups) const {  
+  virtual ProcessedDiagram process_list(const LabeledTree& diagram,const list<NiceLieGroup>& groups, Options options) const {  
     string lie_algebras;      
-		for (auto group : groups) 
-		  lie_algebras+=to_string(group)+"\n";
+		for (auto& group : groups) {
+			lie_algebras+=to_string(group)+"\n";
+			if (options.with_diagonal_ricci_flat_metrics()) lie_algebras+=polynomial_equations_for_existence_of_ricci_flat_metric(diagram.weight_basis(), group);
+		}
     if (groups.empty()) lie_algebras="no Lie algebra";
 		return {diagram.to_dot_string(),lie_algebras};
   }
-  ProcessedDiagram process_list_and_automorphisms(const LabeledTree& diagram,const list<NiceLieGroup>& groups) const {  
-    auto result=process_list(diagram,groups);
+  ProcessedDiagram process_list_and_automorphisms(const LabeledTree& diagram,const list<NiceLieGroup>& groups, Options options) const {  
+    auto result=process_list(diagram,groups,options);
     if (groups.size()<2) return result; //no need to apply automorphisms, since we only have one Lie algebra
     auto automorphisms= diagram.nontrivial_automorphisms();
     if (automorphisms.empty()) return result;
@@ -170,12 +177,18 @@ class DiagramProcessorWithLieAlgebras : public DiagramProcessorImpl {
     }
     return result;
   }
+protected:
+	static string polynomial_equations_for_existence_of_ricci_flat_metric(const WeightBasis& weight_basis, const NiceLieGroup& group) {
+		auto csquared=group.csquared(weight_basis);
+		auto equations=weight_basis.properties().polynomial_equations_for_existence_of_ricci_flat_metric(csquared);
+		return equations.empty()? string{} : "Ricci-flat when "+horizontal(equations)+", X="+horizontal(weight_basis.properties().ricci_flat_X_ijk());
+	}
 public:
   ProcessedDiagram process(const LabeledTree& diagram, Options options) const override {
       auto& weight_basis=diagram.weight_basis();
       auto lie_algebras=NiceLieGroup::from_weight_basis(weight_basis);  
       if (lie_algebras.empty() && options.only_if_lie_algebras()) return {};        
-      auto result= options.with_automorphisms() ? process_list_and_automorphisms(diagram,lie_algebras) : process_list(diagram,lie_algebras);
+      auto result= options.with_automorphisms() ? process_list_and_automorphisms(diagram,lie_algebras,options) : process_list(diagram,lie_algebras,options);
       append_derivations(result,lie_algebras,options);
  			append_extra(result,diagram,options);
 		  return result;
@@ -235,19 +248,21 @@ public:
 };
 class DiagramProcessorTableOfLieAlgebras : public DiagramProcessorWithLieAlgebras {
 public:
-  ProcessedDiagram process_list(const LabeledTree& diagram,const list<NiceLieGroup>& groups) const override {  
+  ProcessedDiagram process_list(const LabeledTree& diagram,const list<NiceLieGroup>& groups, Options options) const override {  
     string lie_algebras;     
     ProgressiveLetter progressive_letter; 
 		for (auto group : groups)		{
 			string progressive{++progressive_letter};
 			if (groups.size()==1) progressive.clear();
-		  lie_algebras+=horizontal(lower_central_series(diagram),"")+":"+diagram.name()+progressive+"&"+to_string(group)+"&"+horizontal(upper_central_series(diagram),"")+"\\\\\n";
+		  lie_algebras+=horizontal(lower_central_series(diagram),"")+":"+diagram.name()+progressive+"&"+to_string(group)+"&"+horizontal(upper_central_series(diagram),"");
+ 			if (options.with_diagonal_ricci_flat_metrics()) lie_algebras+="&"+polynomial_equations_for_existence_of_ricci_flat_metric(diagram.weight_basis(), group);
+		  lie_algebras+="\\\\\n";
 		 }
     return {lie_algebras,{}};
   }
 };
 
-class DiagramProcessorClassifyingEinsteinLieAlgebras : public DiagramProcessorImpl {
+class DiagramProcessorClassifyingMetricLieAlgebras : public DiagramProcessorImpl {
   ProcessedDiagram process_list(const LabeledTree& diagram,const list<NiceEinsteinLieGroup>& groups) const {
       string lie_algebras;      
 			for (auto group : groups) 
@@ -255,10 +270,12 @@ class DiagramProcessorClassifyingEinsteinLieAlgebras : public DiagramProcessorIm
         if (groups.empty()) lie_algebras="no Lie algebra";	  
       return {diagram.to_dot_string(),lie_algebras};
   }
+  MetricType metric_type;
 public:
+	DiagramProcessorClassifyingMetricLieAlgebras(MetricType metric_type) : metric_type{metric_type} {}
   ProcessedDiagram process(const LabeledTree& diagram, Options options) const override {
       auto& weight_basis=diagram.weight_basis();
-      auto lie_algebras=NiceEinsteinLieGroup::from_weight_basis(weight_basis);          
+      auto lie_algebras=NiceEinsteinLieGroup::from_weight_basis(weight_basis,metric_type);          
       if (lie_algebras.empty() && options.only_if_lie_algebras()) return {};        
       ProcessedDiagram result= process_list(diagram,lie_algebras);
       append_derivations(result,lie_algebras,options); 			
@@ -281,6 +298,7 @@ void DiagramProcessor::with_delta_otimes_delta() {
 
 
 DiagramProcessor::DiagramProcessor(with_lie_algebra_tag) : processor{new DiagramProcessorWithLieAlgebras()} {}
-DiagramProcessor::DiagramProcessor(with_einstein_metrics_tag) : processor{new DiagramProcessorClassifyingEinsteinLieAlgebras()} {} 
+DiagramProcessor::DiagramProcessor(with_einstein_metrics_tag) : processor{new DiagramProcessorClassifyingMetricLieAlgebras(MetricType::NONFLAT_EINSTEIN)} {} 
+DiagramProcessor::DiagramProcessor(with_ricciflat_metrics_tag) : processor{new DiagramProcessorClassifyingMetricLieAlgebras(MetricType::RICCIFLAT)} {} 
 DiagramProcessor::DiagramProcessor(lie_algebra_table_tag) : processor{new DiagramProcessorTableOfLieAlgebras()} {} 
 

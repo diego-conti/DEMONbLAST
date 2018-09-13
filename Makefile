@@ -26,12 +26,12 @@ dot2ps:
 		rm -f all.dot ; \
 		rm -f *.ps ; \
 		for i in $$( ls *.dot); do \
-			dot -Tps $$i > $$i.ps ; \
+			dot -Tps2 $$i >$$i.ps ; \
 			cat $$i >> all.dot ; \
 		done ; \
 		if [ -e all.dot ] ;\
 		then \
-			dot -Tps all.dot > all.ps ; \
+			dot -Tps2 all.dot >all.ps ; \
 		fi ; \
 		cd .. ; \
 	done

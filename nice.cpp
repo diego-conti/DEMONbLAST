@@ -187,7 +187,10 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("list-diagram-automorphisms")) diagram_processor.set(Option::with_automorphisms);
     if (command_line_variables.count("diagram-data")) diagram_processor.set(Option::with_diagram_data);
     if (command_line_variables.count("derivations")) diagram_processor.set(Option::with_derivations);
+    if (command_line_variables.count("ricci-flat-metrics")) diagram_processor.set(Option::with_ricci_flat_metrics);   
+    
     if (command_line_variables.count("all-nice-diagrams") || command_line_variables.count("all-diagrams")) diagram_processor.set(Option::include_diagrams_no_lie_algebra);
+    
     Filter filter;
     if (command_line_variables.count("no-coordinate-hyperplane")) filter.no_coordinate_hyperplane();
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
@@ -202,6 +205,8 @@ DiagramProcessor create_diagram_processor(const po::variables_map& command_line_
   auto mode=command_line_variables["mode"].as<string>();
   if (mode=="einstein")
     return DiagramProcessor{with_einstein_metrics};
+  if (mode=="ricciflat")
+    return DiagramProcessor{with_ricciflat_metrics};
   else if (mode=="diagram")
     return DiagramProcessor{only_diagrams};
   else if (mode=="table")
@@ -229,7 +234,8 @@ int main(int argc, char* argv[]) {
             ("all-diagrams", "list all diagrams satisfying N1 N2 N3 [default: only list nice diagrams]; implies all-nice-diagrams")
 
             ("mode",po::value<string>()->default_value("lie-algebra"), "select operating mode:\n"
-                                           "einstein:\t discard diagrams with M_Delta not surjective; normalize structure constants to obtain einstein metric\n"
+                                           "einstein:\t normalize structure constants to obtain einstein metrics with s=1\n"
+                                           "ricciflat:\t normalize structure constants to obtain ricci-flat metrics\n"
                                           "diagram:\t only list diagrams\n"
                                           "table:\t list Lie algebras in LaTeX table\n"
                                           "lie-algebra [default]:\t list diagrams and Lie algebras")
@@ -240,7 +246,7 @@ int main(int argc, char* argv[]) {
             ("parallel-mode",  "use multiple threads") 
             ("diagram-data",  "include diagram data in output") 
             ("derivations",  "include Lie algebra derivations in output") 
-
+            ("ricci-flat-metrics", "include polynomial conditions for existence of a diagonal Ricci-flat metric")
             
             ("only-traceless-derivations", "exclude diagrams where (1...1) is not in the span of the rows of M_Delta")
             ("no-coordinate-hyperplane", "exclude diagrams where X_ijk is in coordinate hyperplane (implies --only-traceless-derivations)")

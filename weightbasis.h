@@ -99,17 +99,20 @@ class DiagramProperties {
   bool X_ijk_in_coordinate_hyperplane;
   exvector X_ijk_;
   exvector nikolayevsky;
-	exvector nilsoliton_Y_ijk;
-	list<SignConfiguration> nilsoliton_signatures_;
+	exvector nilsoliton_Y_ijk, ricci_flat_Y_ijk;
+	list<SignConfiguration> nilsoliton_signatures_, ricci_flat_signatures_;
 	vector<WeightAndCoefficient> weights;	//this is only used to keep track of the order of the weights
 public:
   DiagramProperties(const WeightMatrix& weight_matrix);
   bool are_all_derivations_traceless() const {return !X_ijk_.empty();}
   bool is_X_ijk_in_coordinate_hyperplane() const {return X_ijk_in_coordinate_hyperplane;}
-  const exvector& X_ijk() const {return X_ijk_;}
+  const exvector& X_ijk() const {return nilsoliton_Y_ijk;}
+  const exvector& ricci_flat_X_ijk() const {return ricci_flat_Y_ijk;}
  	virtual bool is_M_Delta_surjective() const=0;
  	virtual string diagram_data() const;
- 	const	list<SignConfiguration>& signatures() const {return nilsoliton_signatures_;}
+	exvector polynomial_equations_for_existence_of_ricci_flat_metric(const exvector& csquared) const;
+ 	const	list<SignConfiguration>& nilsoliton_signatures() const {return nilsoliton_signatures_;}
+ 	const	list<SignConfiguration>& ricci_flat_signatures() const {return ricci_flat_signatures_;}
 };
 
 class DiagramPropertiesNonSurjectiveMDelta : public DiagramProperties {
@@ -202,14 +205,28 @@ public:
   }
 };
 
-class EinsteinCoefficientConfiguration : public CoefficientConfiguration {
+enum class MetricType {
+	NONFLAT_NILSOLITON,RICCIFLAT,NONFLAT_EINSTEIN
+};
+
+class MetricCoefficientConfiguration : public CoefficientConfiguration {
+	const exvector& X(const WeightBasis& weight_basis, MetricType metric_type) {
+		switch (metric_type) {
+			case MetricType::NONFLAT_NILSOLITON:
+				return weight_basis.properties().X_ijk();
+			case MetricType::RICCIFLAT:
+				return weight_basis.properties().ricci_flat_X_ijk();
+			case MetricType::NONFLAT_EINSTEIN:	//TODO this is redundant. if you want einstein metrics, restrict to traceless derivations.
+				return weight_basis.properties().X_ijk();
+			}
+		}
 public:
-	EinsteinCoefficientConfiguration(const WeightBasis& weight_basis) : CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes()} {	
-		assert(weight_basis.properties().are_all_derivations_traceless());
-		auto& X_ijk=weight_basis.properties().X_ijk();
+	MetricCoefficientConfiguration(const WeightBasis& weight_basis, MetricType metric_type) : CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes()} {	
+		auto& X_ijk=X(weight_basis,metric_type);
 		auto coeff=X_ijk.begin();
 		for (auto weight: weight_basis.weights_and_coefficients()) 
 		    add_weight(weight,sqrt(abs(*coeff++)));  
   }
 };
+
 #endif

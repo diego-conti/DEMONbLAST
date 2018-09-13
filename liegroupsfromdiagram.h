@@ -21,7 +21,7 @@
 #include <wedge/liesubgroup.h>
 #include "ricci.h"
 #include "log.h"
-
+#include "weightbasis.h"
 
 using namespace std;
 using namespace Wedge;
@@ -30,6 +30,9 @@ using namespace Wedge;
 class LieGroupsFromDiagram : public LieGroupHasParameters<true>, public ConcreteManifold, public virtual Has_dTable {
 protected:
 	bool solve_linear_ddzero();
+	ex c_ijk(int i, int j, int k) const {
+		return Hook(e()[j]*e()[i],d(e()[k]));
+	}
 public:
 	using ConcreteManifold::ConcreteManifold;
 	using Has_dTable::Declare_d;
@@ -38,7 +41,9 @@ public:
 		for (exmap::const_iterator i=dTable().begin();i!=dTable().end();i++)					
 			Has_dTable::Declare_d(i->first,i->second.subs(list_of_equations));
 	}
-	string derivations() const;
+	string derivations() const;	
+	
+	exvector csquared(const WeightBasis& weight_basis) const;
 };
 
 

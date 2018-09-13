@@ -72,8 +72,9 @@ class PolynomialEquations {
     return result;
   }
   static lst expand(lst&& eqns) {
+  	ex subs = abs(-wild()) == abs(wild());
     for (int i=0;i<eqns.nops();++i)
-      eqns.let_op(i)=eqns.op(i).expand();
+      eqns.let_op(i)=eqns.op(i).expand().subs(subs).expand();
     return std::move(eqns);
   }
 public:

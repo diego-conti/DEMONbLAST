@@ -75,7 +75,8 @@ class LinearInequalities {
 	}
 	
 	void eliminate() {
-		eliminate(variable_that_appears_in_the_least_equations());
+		if (!unknowns.empty())
+			eliminate(variable_that_appears_in_the_least_equations());
 	}
 	void eliminate(ex x) {
 		list<ex> greater_than_x, smaller_than_x, not_depending_on_x;
