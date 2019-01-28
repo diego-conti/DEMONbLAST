@@ -52,13 +52,34 @@ inline ostream& operator<<(ostream& os, Z2 x) {
 
 vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& epsilon);
 
-//The matrix M_Delta, called "root matrix" in the literature, with rows a_1,...,a_n ordered in such a way that the last k rows are basis of Span{a_1,..,a_n} over Z_2 and the last h rows span are a basis  of Span{a_1,..,a_n} over Q
-//TODO store weights in the same order as passed. 
+
+class WeightIterator {
+	const vector<WeightAndCoefficient>& weights;
+	vector<int>::const_iterator i;
+public:
+	WeightIterator(const vector<WeightAndCoefficient>& weights,	vector<int>::const_iterator i) : weights{weights},i{i} {}
+	const WeightAndCoefficient& operator*() const {return weights[*i];}
+	const WeightAndCoefficient* operator->() const {return &weights[*i];}
+	bool operator!=(const WeightIterator& j) const {return i!=j.i;}
+	bool operator==(const WeightIterator& j) const {return i==j.i;}
+	WeightIterator& operator++() {++i; return *this;}
+	WeightIterator operator++(int) {
+		WeightIterator pre{weights,i};
+		++i;
+		return pre;
+	}
+};
+
+
+//The matrix M_Delta, called "root matrix" in the literature
+//Computes internally a maximal set of linearly independent rows to mark weights where parameters or signs can be eliminated, without affecting order
+//internally, rows a_1,...,a_n ordered in such a way that the last k rows are basis of Span{a_1,..,a_n} over Z_2 and the last h rows span are a basis  of Span{a_1,..,a_n} over Q
 class WeightMatrix {
 	friend class SignConfigurations;
 	int independent_rows_over_Z2=0, independent_rows_over_Q=0;
 	vector<WeightAndCoefficient> weights;
 	int cols_;
+	vector<int> basis_over_Z2, complement_of_basis_over_Z2;
   int sigma_on_VDelta(const vector<int>& sigma, const WeightAndCoefficient& weight) const {
   	Weight sigmaw{sigma[weight.node_in1], sigma[weight.node_in2],sigma[weight.node_out]};
   	if (sigmaw.node_in1>sigmaw.node_in2) swap(sigmaw.node_in1,sigmaw.node_in2);
@@ -68,22 +89,24 @@ class WeightMatrix {
 	}
   Matrix submatrix_JDelta2() const {
   	Matrix submatrix{independent_rows_over_Z2,cols_};
-	 	auto weight=weights.begin()+weights.size()-independent_rows_over_Z2;
+	 	auto weight=Z2basis_begin();
  	  for (int i=0;i<submatrix.rows();++i)
  			populate_row(i, *weight++,submatrix);
+ 		assert (weight==Z2basis_end());
  		return submatrix;
   }
   Matrix submatrix_IDelta_setminus_JDelta2() const {
     Matrix submatrix{weights.size()-independent_rows_over_Z2,cols_};
-	 	auto weight=weights.begin();
+	 	auto weight=complement_of_Z2basis_begin();
  	  for (int i=0;i<submatrix.rows();++i)
  			populate_row(i, *weight++,submatrix);
+ 		assert (weight==complement_of_Z2basis_end());
  		return submatrix;
 	}
 public:
-	WeightMatrix(vector<WeightAndCoefficient> unordered_weights,int dimension);
+	WeightMatrix(vector<WeightAndCoefficient>&& weights,int dimension);
 	template<typename Container> 
-	WeightMatrix(Container&& unordered_weights,int dimension) : WeightMatrix{{unordered_weights.begin(),unordered_weights.end()},dimension} {}
+	WeightMatrix(Container&& weights,int dimension) : WeightMatrix{{forward<Container>(weights).begin(),forward<Container>(weights).end()},dimension} {}
   int rank_over_Z2() const {
 		return independent_rows_over_Z2;
   }
@@ -114,6 +137,10 @@ public:
 		);
 		return result;
   }
+  WeightIterator Z2basis_begin() const {return WeightIterator{weights,basis_over_Z2.begin()};}
+  WeightIterator Z2basis_end() const {return WeightIterator{weights,basis_over_Z2.end()};}
+  WeightIterator complement_of_Z2basis_begin() const {return WeightIterator{weights,complement_of_basis_over_Z2.begin()};}
+  WeightIterator complement_of_Z2basis_end() const {return WeightIterator{weights,complement_of_basis_over_Z2.end()};}
 };
 
 exvector X_solving_nonRicciflat_Einstein(const WeightMatrix& MDelta);
@@ -151,8 +178,7 @@ class SignConfigurations {
   	
 	vector<Z2> sigma_w_projection_to_JDelta2(const vector<int>& sigma, const vector<Z2>& w) {
 		vector<Z2> result(MDelta.rank_over_Z2());
-		auto Z2basis_begin=MDelta.weight_begin()+ MDelta.rows()-MDelta.rank_over_Z2();
-		transform(Z2basis_begin,MDelta.weight_end(),result.begin(),
+		transform(MDelta.Z2basis_begin(),MDelta.Z2basis_end(),result.begin(),
 			[this,&sigma,&w] (Weight weight) {
 				auto sign_and_index=sigma_weight(sigma,weight);
 				return sign_and_index.first+w[sign_and_index.second];
@@ -162,8 +188,7 @@ class SignConfigurations {
   }
   vector<Z2> sigma_w_projection_to_IDelta_minus_JDelta2(const vector<int>& sigma, const vector<Z2>& w) {
   	vector<Z2>  result(MDelta.rows()-MDelta.rank_over_Z2());
-		auto Z2basis_begin=MDelta.weight_begin()+ MDelta.rows()-MDelta.rank_over_Z2();
-		transform(MDelta.weight_begin(),Z2basis_begin,result.begin(),
+		transform(MDelta.complement_of_Z2basis_begin(),MDelta.complement_of_Z2basis_end(),result.begin(),
 			[this,&sigma,&w] (Weight weight) {
 				auto sign_and_index=sigma_weight(sigma,weight);
 				return sign_and_index.first+w[sign_and_index.second];
@@ -174,17 +199,12 @@ class SignConfigurations {
   
   SignConfiguration delta(const vector<int>& sigma, const SignConfiguration& epsilon) {
   		auto w_epsilon=sign_configuration_to_vector(MDelta.rows(),epsilon);
-  		nice_log<<"sigma = "<<horizontal(sigma)<<endl;
-  		nice_log<<"epsilon = "<<epsilon<<endl;
-  		nice_log<<"w_epsilon = "<<horizontal(w_epsilon)<<endl;
   		auto sigma_w_projection_to_JDelta2=this->sigma_w_projection_to_JDelta2(sigma,w_epsilon);
   		auto variables=	 generate_variables<Unknown>(N.a,MDelta.cols());
 	 		auto x=solve_over_Z2(
 	 			complete_matrix(MDelta.submatrix_JDelta2(),exvector{sigma_w_projection_to_JDelta2.begin(),sigma_w_projection_to_JDelta2.end()}),
 				variables
 	 		);
-	 		nice_log<<"x = "<<horizontal(x)<<endl;
-	 		nice_log<<"M_Delta2,x = "<<horizontal(MDelta.submatrix_JDelta2().image_of(x))<<endl;
 	 		auto delta=MDelta.submatrix_IDelta_setminus_JDelta2().image_of(x);	
 	 		auto sigma_w=sigma_w_projection_to_IDelta_minus_JDelta2(sigma,w_epsilon);
 			SignConfiguration result{delta.size()};
@@ -195,7 +215,6 @@ class SignConfigurations {
 				Z2 delta_i{ex_to<numeric>(delta[i]).is_even()? 0 : 1};
 				result[i]=(sigma_w[i]+delta_i).to_Z_star();
 			}
-			nice_log<<"delta(sigma,epsilon)+w_epsilon = "<<result<<endl;
 			return result;
   	} 
 public:

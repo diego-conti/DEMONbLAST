@@ -60,24 +60,23 @@ Matrix matrix_from_weights(const vector<WeightAndCoefficient>& weights,int dimen
 	return result;
 }
 
-WeightMatrix::WeightMatrix(vector<WeightAndCoefficient> unordered_weights,int dimension) : weights(unordered_weights.size()), cols_{dimension} { 
-	int last=unordered_weights.size();
-	for (auto row : ::independent_rows_over_Z2(matrix_from_weights(unordered_weights,dimension))) {
-			unordered_weights[row].eliminate_parameter();
-			weights[--last]=unordered_weights[row];
-	 		++independent_rows_over_Z2;
-	}
-	for (auto parameter : ReorderedMatrix{unordered_weights,dimension}.independent_rows_over_Q()) {
+
+
+WeightMatrix::WeightMatrix(vector<WeightAndCoefficient>&& unordered_weights,int dimension) : weights{move(unordered_weights)}, cols_{dimension} { 
+	basis_over_Z2 = ::independent_rows_over_Z2(matrix_from_weights(weights,dimension));
+	independent_rows_over_Z2=basis_over_Z2.size();
+	for (auto row : basis_over_Z2) 
+			weights[row].eliminate_sign_and_parameter();
+	
+	for (auto parameter : ReorderedMatrix{weights,dimension}.independent_rows_over_Q()) {
 	 	++independent_rows_over_Q;
-	  if (!unordered_weights[parameter].parameter_eliminated()) {
-	 		unordered_weights[parameter].eliminate_parameter();
-			weights[--last]=unordered_weights[parameter];
+	  if (!weights[parameter].parameter_eliminated()) {
+	 		weights[parameter].eliminate_parameter();
 		}		
 	}
-	for (auto& weight: unordered_weights) 
-		if (!weight.parameter_eliminated())
-			weights[--last]=weight;
-	assert(last==0);
+	for (int i=0;i<weights.size();++i)
+		if (!weights[i].sign_and_parameter_eliminated())
+			complement_of_basis_over_Z2.push_back(i);
 }
 
 string sign_configuration_to_string(const SignConfiguration& sign_configuration) {

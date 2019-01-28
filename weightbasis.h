@@ -45,12 +45,15 @@ struct WeightAndCoefficient : Weight {
 	WeightAndCoefficient& operator=(const WeightAndCoefficient&)=default;
 	WeightAndCoefficient& operator=(WeightAndCoefficient&&)=default;
 	void eliminate_parameter() {parameter_eliminated_=true;}
+	void eliminate_sign_and_parameter() {parameter_eliminated_=true; sign_eliminated_=true;}
 	bool parameter_eliminated() const {return parameter_eliminated_;}
+	bool sign_and_parameter_eliminated() const {return sign_eliminated_;}
 	bool same_weight_as(Weight weight) const {
 		return weight.node_in1==node_in1 && weight.node_in2==node_in2 && weight.node_out==node_out;
 	}
 private:
 	bool parameter_eliminated_=false;
+	bool sign_eliminated_=false;
 };
 
 ostream& operator<<(ostream& os,WeightAndCoefficient weight);
@@ -103,7 +106,6 @@ private:
 	static string NILSOLITON_DIAGONAL() {return "nilsoliton(diag)"s;}
   int rank_over_Z2;
   list<unique_ptr<ImplicitMetric>> metrics;
-	vector<WeightAndCoefficient> weights;	//this is only used to keep track of the order of the weights TODO canonicalize the order and do away with this field
 	exvector nikolayevsky;
 	list<vector<int>> automorphisms;
 	string imMDelta2;
@@ -184,15 +186,29 @@ public:
 	operator bool () const {
 		return current!=sign_configurations.end();
 	}	
-//iterations through this configuration
+//iterations through this configuration. The resulting vector may not have the same order as the vector passed in the constructor
 	vector<WeightAndValue> weights() const {
 		return current->multiply(configuration_with_positive_signs);
 	}
 protected:
-  void add_weight(WeightAndCoefficient weight, ex coefficient) {
-      configuration_with_positive_signs.emplace_back(weight,coefficient);
-  }
-  CoefficientConfiguration(const list<SignConfiguration> & sign_configurations, int nodes) : sign_configurations{sign_configurations}, nodes{nodes} {
+	struct Weights {
+		vector<WeightAndValue> weights_with_sign_eliminated;
+		vector<WeightAndValue> weights_with_sign;
+		vector<WeightAndValue> join() &&  {
+			weights_with_sign.insert(weights_with_sign.end(),weights_with_sign_eliminated.begin(),weights_with_sign_eliminated.end());
+			return move(weights_with_sign);
+		}
+		void add_weight(WeightAndCoefficient weight, ex coefficient) {
+			if (weight.sign_and_parameter_eliminated()) 
+	      weights_with_sign_eliminated.emplace_back(weight,coefficient);
+  		else
+	      weights_with_sign.emplace_back(weight,coefficient);
+		}
+	};
+  
+  CoefficientConfiguration(const list<SignConfiguration> & sign_configurations, int nodes,Weights&& weights) : 
+	 	configuration_with_positive_signs{move(weights).join()}, sign_configurations{sign_configurations}, nodes{nodes} 
+	{
   	if (sign_configurations.empty()) this->sign_configurations.emplace_back(0);
   	current=this->sign_configurations.begin();
   }
@@ -204,14 +220,18 @@ private:
 };
 
 class CoefficientConfigurationWithoutRedundantParameter : public CoefficientConfiguration {
-public:
-	CoefficientConfigurationWithoutRedundantParameter(const WeightBasis& weight_basis) : CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes()} {
+	static Weights weights_and_values(const WeightBasis& weight_basis) {
+		Weights weights;
 		int no_parameters=0;
 		nice_log<<weight_basis.weights_and_coefficients()<<endl;
 		for (auto weight: weight_basis.weights_and_coefficients()) 
-			if (weight.parameter_eliminated()) add_weight(weight,1);
-			else add_weight(weight,StructureConstant{N.a(++no_parameters)});
-  }
+			if (weight.parameter_eliminated()) weights.add_weight(weight,1);
+			else weights.add_weight(weight,StructureConstant{N.a(++no_parameters)});
+		return weights;	
+	}
+public:
+	CoefficientConfigurationWithoutRedundantParameter(const WeightBasis& weight_basis) : 
+		CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes(),weights_and_values(weight_basis)} {}
 };
 
 enum class MetricType {
@@ -219,7 +239,7 @@ enum class MetricType {
 };
 
 class MetricCoefficientConfiguration : public CoefficientConfiguration {
-	const exvector& X(const WeightBasisAndProperties& weight_basis, MetricType metric_type) {
+	static const exvector& X(const WeightBasisAndProperties& weight_basis, MetricType metric_type) {
 		switch (metric_type) {
 			case MetricType::NONFLAT_NILSOLITON:
 				return weight_basis.properties().diagonal_nilsoliton_metric()->X();
@@ -229,13 +249,18 @@ class MetricCoefficientConfiguration : public CoefficientConfiguration {
 				throw 0;
 			}
 		}
-public:
-	MetricCoefficientConfiguration(const WeightBasisAndProperties& weight_basis, MetricType metric_type) : CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes()} {	
-		auto& X_ijk=X(weight_basis,metric_type);
-		auto coeff=X_ijk.begin();
+	static Weights weights_and_values(const WeightBasis& weight_basis, const exvector& X) {
+		Weights weights;
+		auto coeff=X.begin();
+		nice_log<<weight_basis.weights_and_coefficients()<<endl;
 		for (auto weight: weight_basis.weights_and_coefficients()) 
-		    add_weight(weight,sqrt(abs(*coeff++)));  
-  }
+			weights.add_weight(weight,sqrt(abs(*coeff++)));  
+		return weights;	
+	}
+
+public:
+	MetricCoefficientConfiguration(const WeightBasisAndProperties& weight_basis, MetricType metric_type) 
+		: CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes(),weights_and_values(weight_basis,X(weight_basis,metric_type))} {}
 };
 
 #endif
