@@ -24,31 +24,29 @@ using namespace std;
 
 class Filter {
   bool allow_nonnice=false;
-  bool no_coordinate_hyperplane_=false;
   bool only_traceless_derivations_=false;
   bool only_MDelta_surjective_=false;
-  bool only_reachable_orthant_=false;
+  bool only_nontrivial_automorphisms_=false;
+  bool only_with_metric_=false;
 public:
-  void no_coordinate_hyperplane()  {no_coordinate_hyperplane_=only_traceless_derivations_=true;}
   void only_traceless_derivations()  {only_traceless_derivations_=true;}
   void only_MDelta_surjective()  {only_MDelta_surjective_=true;}
-  void only_reachable_orthant()  {only_reachable_orthant_=only_traceless_derivations_=true;}
+	void only_nontrivial_automorphisms() {only_nontrivial_automorphisms_=true;}
+	void only_with_metric() {only_with_metric_=true;}
   void N1N2N3() {allow_nonnice=true;}
-  bool nontrivial() const {return no_coordinate_hyperplane_||only_traceless_derivations_||only_MDelta_surjective_||only_reachable_orthant_;}
-  bool meets(const LabeledTree& diagram) const {
-    return allow_nonnice || satisfies_formal_jacobi(diagram);
-  }
-  bool meets(const WeightBasis& weight_basis) const {
-    auto& properties = weight_basis.properties();
+  bool trivial() const {return !(only_traceless_derivations_||only_MDelta_surjective_||only_nontrivial_automorphisms_ | only_with_metric_);}
+  bool meets(const LabeledTree& diagram, DiagramDataOptions options) const {
+  	if (!allow_nonnice && !satisfies_formal_jacobi(diagram)) return false;
+  	if (trivial()) return true;
+    auto& properties = diagram.weight_basis(options).properties();
     if (only_traceless_derivations_ && !properties.are_all_derivations_traceless()) return false;
-    if (no_coordinate_hyperplane_ && properties.is_X_ijk_in_coordinate_hyperplane()) return false;
     if (only_MDelta_surjective_ && !properties.is_M_Delta_surjective()) return false;
-    if (only_reachable_orthant_ && !properties.is_M_Delta_surjective()) throw invalid_argument("only-reachable-orthant not applicable when M_delta is not surjective");
-    if (only_reachable_orthant_ && !static_cast<const DiagramPropertiesSurjectiveMDelta&>(properties).is_X_ijk_in_reachable_orthant()) return false;    
+    if (only_nontrivial_automorphisms_ && !properties.has_nontrivial_automorphisms()) return false;
+    if (only_with_metric_ && !properties.potentially_admits_metrics()) return false;
     return true;
   }
 };
 
-list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter);
+list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter,DiagramDataOptions options);
 
 #endif

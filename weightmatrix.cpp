@@ -79,3 +79,19 @@ WeightMatrix::WeightMatrix(vector<WeightAndCoefficient> unordered_weights,int di
 			weights[--last]=weight;
 	assert(last==0);
 }
+
+string sign_configuration_to_string(const SignConfiguration& sign_configuration) {
+	stringstream s;
+	s<<sign_configuration;
+	return s.str();
+}
+
+ImageMod2 image_mod2(const WeightMatrix& weight_matrix) {
+	ImageMod2 result;
+	for (auto delta : SignConfiguration::all_configurations(weight_matrix.cols())) {
+		auto vector=sign_configuration_to_vector(weight_matrix.cols(),delta);
+		result.insert(sign_configuration_to_string(delta), weight_matrix.image_of(vector));
+	}
+	return result;
+}
+

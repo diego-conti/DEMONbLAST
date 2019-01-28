@@ -69,8 +69,8 @@ vector<int> LabeledTree::number_of_unlabeled_incoming_arrows() const {
 	return unlabeled_incoming_arrows;
 }
   
-const WeightBasis& LabeledTree::weight_basis() const {
-  if (weight_basis_==nullptr) weight_basis_=make_unique<WeightBasis>(*this);
+const WeightBasisAndProperties& LabeledTree::weight_basis(DiagramDataOptions diagram_data_options) const {
+  if (weight_basis_==nullptr || !weight_basis_->matches(diagram_data_options)) weight_basis_=make_unique<WeightBasisAndProperties>(*this,diagram_data_options);
   return *weight_basis_;
 }
 
@@ -96,6 +96,18 @@ int LabeledTree::node_with_less_unlabeled_incoming_arrows() const {
 	return minimal_element!=unlabeled_incoming_arrows.end()? minimal_element-unlabeled_incoming_arrows.begin() : NO_NODE;
 }
 
+void LabeledTree::canonicalize_order_increasing() {
+	static auto compare = [](LabeledArrow arrow1, LabeledArrow arrow2) {
+		return arrow1.node_out<arrow2.node_out || arrow1.node_out==arrow2.node_out &&	min(arrow1.node_in,arrow1.label) < min(arrow2.node_in,arrow2.label);
+	};
+	sort_arrows(compare);
+}
+void LabeledTree::canonicalize_order_decreasing() {
+	static auto compare = [](LabeledArrow arrow1, LabeledArrow arrow2) {
+		return arrow1.node_out>arrow2.node_out || arrow1.node_out==arrow2.node_out &&	max(arrow1.node_in,arrow1.label) > max(arrow2.node_in,arrow2.label);
+	};
+	sort_arrows(compare);
+}
 
 //3-combination of integers with repetitions
 class Triplet {

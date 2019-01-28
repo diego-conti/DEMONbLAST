@@ -161,7 +161,10 @@ public:
 	  for (auto& arrow: arrows_in_tree)
 	    arrow.invert(number_of_nodes());	 
    }
-	    
+  template<typename Compare> 
+	void sort_arrows(Compare&& compare) {
+		arrows_in_tree.sort(compare);
+	}
 };
 
 template<typename ArrowType>

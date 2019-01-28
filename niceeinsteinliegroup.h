@@ -34,7 +34,7 @@ class NiceEinsteinLieGroup : public LieGroupsFromDiagram {
   static	list<NiceEinsteinLieGroup> from_coefficient_configuration (MetricCoefficientConfiguration&& configuration);
  	static void insert_new_lie_group(list<NiceEinsteinLieGroup>& out_list, const MetricCoefficientConfiguration& configuration);
 public:
-	static list<NiceEinsteinLieGroup> from_weight_basis(const WeightBasis& weight_basis, MetricType);
+	static list<NiceEinsteinLieGroup> from_weight_basis(const WeightBasisAndProperties& weight_basis, MetricType);
 };
 
 

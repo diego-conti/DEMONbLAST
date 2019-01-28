@@ -43,4 +43,26 @@ inline string to_string(const exvector& v) {
   return "("+horizontal(v)+")\n";
 }
 
+template<typename T> 
+auto incremented(T container) {
+	for (auto& x: container) ++x;
+	return container;
+}
+
+template<typename T> string cut_at(const T& vector, int n) {
+	if (vector.size()>n) {
+		auto i=vector.begin();
+		advance(i,n);
+		return horizontal(T{vector.begin(),i})+",[...]";
+	}
+	else return horizontal (vector);
+}
+
+inline
+set<int> consecutive_numbers(int begin, int end) {
+  set<int> numbers;
+  while (begin!=end) numbers.emplace(begin++);
+  return numbers;
+}
+
 #endif

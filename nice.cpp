@@ -24,10 +24,10 @@
 #include "labeled_tree.h"
 #include "wedge/liesubgroup.h"
 #include "niceliegroup.h"
-#include "niceeinsteinliegroup.h"
 #include "partitions.h"
 #include "taskrunner.h"
 #include <boost/program_options.hpp>
+#include <boost/exception/diagnostic_information.hpp> 
 #include "diagramprocessor.h"
 
 
@@ -48,16 +48,20 @@ string output_path(const vector<int>& partition, string filename) {
 }
 string output_path(const vector<int>& partition) {
   int dimension = std::accumulate(partition.begin(),partition.end(),0);
-  return "output"+to_string(dimension)+"/graph"+get_label(partition,"_")+".dot";
+  return "output"+to_string(dimension)+"/part"+get_label(partition,"_")+".dot";
 }
 
+string output_path(const vector<int>& partition, const LabeledTree& diagram) {
+  int dimension = std::accumulate(partition.begin(),partition.end(),0);
+  return "output"+to_string(dimension)+"/graph"+diagram.name()+".dot";
+}
 
 
 int enumerate_nice_diagrams_in_partition(const vector<int>& partition,ostream& stream,const DiagramProcessor& processor) {
     nice_log<<"enumerating diagrams in partition "<<horizontal(partition)<<endl;
       map<int,int> hashes_to_hashes;
       int count=0;
-			auto diagrams = nice_diagrams(partition,processor.filter());
+			auto diagrams = nice_diagrams(partition,processor.filter(),processor);
 			if (!diagrams.empty()) {
 				for (auto& diagram: diagrams) {
 				  ++hashes_to_hashes[diagram.hash()];
@@ -66,6 +70,7 @@ int enumerate_nice_diagrams_in_partition(const vector<int>& partition,ostream& s
 			    auto processed=processor.process(diagram);
 	        stream<<processed.data;
 	        if (!processed.empty() && !processed.extra_data.empty()) stream<<"/*"<<processed.extra_data<<"*/"<<endl;
+	        ofstream{output_path(partition,diagram),std::ofstream::out | std::ofstream::trunc}<<processed.data;
  		    }
   		}
 		for (auto p : hashes_to_hashes) 
@@ -87,7 +92,7 @@ int enumerate_nice_diagrams(const list<vector<int>>& partitions,const DiagramPro
 
 void process_single_diagram(const vector<int>& partition, int hash,const DiagramProcessor& processor) {
   int dimension = std::accumulate(partition.begin(),partition.end(),0);
-  auto diagrams = nice_diagrams(partition,processor.filter());
+  auto diagrams = nice_diagrams(partition,processor.filter(),processor);
   bool found=false;
 	for (auto& diagram : diagrams) 
 	  if (diagram.hash()==hash) {
@@ -184,29 +189,44 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
       diagram_processor.with_delta_otimes_delta();
     if (command_line_variables.count("invert"))
       diagram_processor.invert_nodes();
-    if (command_line_variables.count("list-diagram-automorphisms")) diagram_processor.set(Option::with_automorphisms);
-    if (command_line_variables.count("diagram-data")) diagram_processor.set(Option::with_diagram_data);
-    if (command_line_variables.count("derivations")) diagram_processor.set(Option::with_derivations);
-    if (command_line_variables.count("ricci-flat-metrics")) diagram_processor.set(Option::with_ricci_flat_metrics);   
-    
-    if (command_line_variables.count("all-nice-diagrams") || command_line_variables.count("all-diagrams")) diagram_processor.set(Option::include_diagrams_no_lie_algebra);
+    if (command_line_variables.count("list-diagram-automorphisms")) diagram_processor.set(ProcessingOption::with_automorphisms);
+    if (command_line_variables.count("derivations")) diagram_processor.set(ProcessingOption::with_derivations);
+    if (command_line_variables.count("polynomial")) diagram_processor.set(ProcessingOption::with_polynomial_conditions);
+    if (command_line_variables.count("enhanced")) diagram_processor.set(ProcessingOption::with_enhanced_lie_algebras);       
+    if (command_line_variables.count("matrix-data")) diagram_processor.set(DiagramDataOption::with_matrix_data);
+    if (command_line_variables.count("diagonal-ricci-flat-metrics")) diagram_processor.set(DiagramDataOption::with_diagonal_ricci_flat_metrics);
+    if (command_line_variables.count("diagonal-nilsoliton-metrics")) diagram_processor.set(DiagramDataOption::with_diagonal_nilsoliton_metrics);
+    if (command_line_variables.count("sigma-compatible-ricci-flat-metrics")) diagram_processor.set(DiagramDataOption::with_sigma_compatible_ricci_flat_metrics);       
+    if (command_line_variables.count("all-nice-diagrams") || command_line_variables.count("all-diagrams")) diagram_processor.set(ProcessingOption::include_diagrams_no_lie_algebra);
+    if (command_line_variables.count("analyze-diagram")) diagram_processor.set(DiagramDataOption::analyze_diagram);
+    if (command_line_variables.count("antidiagonal-ricci-flat-sigma")) diagram_processor.set(DiagramDataOption::with_antidiagonal_ricci_flat_sigma);
     
     Filter filter;
-    if (command_line_variables.count("no-coordinate-hyperplane")) filter.no_coordinate_hyperplane();
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
     if (command_line_variables.count("only-MDelta-surjective")) filter.only_MDelta_surjective();
-    if (command_line_variables.count("only-reachable-orthant")) filter.only_reachable_orthant();
     if (command_line_variables.count("all-diagrams")) filter.N1N2N3();
-    diagram_processor.setFilter(filter);     
+    if (command_line_variables.count("only-with-nontrivial-automorphisms")) filter.only_nontrivial_automorphisms();
+    if (command_line_variables.count("only-with-metric")) {
+    	filter.only_with_metric();
+    	DiagramDataOptions{diagram_processor}.log();
+    	if (!DiagramDataOptions{diagram_processor}.with_metrics()) throw runtime_error("No type of metric indicated");
+    }
+    diagram_processor.setFilter(filter);
     return move(diagram_processor);
 }
 
 DiagramProcessor create_diagram_processor(const po::variables_map& command_line_variables) {
   auto mode=command_line_variables["mode"].as<string>();
-  if (mode=="einstein")
-    return DiagramProcessor{with_einstein_metrics};
-  if (mode=="ricciflat")
-    return DiagramProcessor{with_ricciflat_metrics};
+  if (mode=="einstein") {
+	  DiagramProcessor diagram_processor{with_einstein_metrics};
+	  diagram_processor.set(DiagramDataOption::with_diagonal_nilsoliton_metrics);	//ensure that X is computed
+    return diagram_processor;
+  }
+  if (mode=="ricciflat") {
+	  DiagramProcessor diagram_processor{with_ricciflat_metrics};
+	  diagram_processor.set(DiagramDataOption::with_diagonal_ricci_flat_metrics); //ensure that X is computed
+    return diagram_processor;
+ 	}
   else if (mode=="diagram")
     return DiagramProcessor{only_diagrams};
   else if (mode=="table")
@@ -214,6 +234,11 @@ DiagramProcessor create_diagram_processor(const po::variables_map& command_line_
   else if (mode!="lie-algebra") 
     throw invalid_argument("unrecognized mode");  
   else return DiagramProcessor{with_lie_algebra};
+}
+
+void print_help(string program_name, const po::options_description& desc) {
+	cout << "Usage: "<< program_name<< " [options]\n";
+	cout << desc;
 }
 
 
@@ -244,28 +269,33 @@ int main(int argc, char* argv[]) {
             ("list-diagram-automorphisms", "list the automorphisms of each diagram")
             ("invert",  "invert node numbering") 
             ("parallel-mode",  "use multiple threads") 
-            ("diagram-data",  "include diagram data in output") 
+            ("matrix-data",  "include data depending on the root matrix (rank, etc.)") 
             ("derivations",  "include Lie algebra derivations in output") 
-            ("ricci-flat-metrics", "include polynomial conditions for existence of a diagonal Ricci-flat metric")
+            ("diagonal-ricci-flat-metrics", "include diagonal Ricci-flat metrics")
+            ("diagonal-nilsoliton-metrics", "include diagonal nilsoliton metrics")
+            ("sigma-compatible-ricci-flat-metrics", "include sigma-compatible Ricci-flat metrics")
+            ("polynomial", "include polynomial conditions for the existence of the indicated metrics")
+            ("enhanced","include list of sigma-enhanced Lie algebras")         
+            ("analyze-diagram","include data depending on diagram combinatorics")
+            ("antidiagonal-ricci-flat-sigma","include order two automorphisms inducing antidiagonal ricci-flat metrics")
             
             ("only-traceless-derivations", "exclude diagrams where (1...1) is not in the span of the rows of M_Delta")
-            ("no-coordinate-hyperplane", "exclude diagrams where X_ijk is in coordinate hyperplane (implies --only-traceless-derivations)")
             ("only-MDelta-surjective", "only diagrams where M_Delta is surjective")            
-            ("only-reachable-orthant", "only diagrams where X_ijk intersects reachable orthant (implies --only-traceless-derivations; use with --only-MDelta-surjective)")
-            
+            ("only-with-nontrivial-automorphisms", "only diagrams with nontrivial automorphisms)")           
+            ("only-with-metric", "only diagrams which potentially admit a metric (conditions H and L)")           
         ;
 
+				try {
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
         po::notify(vm);
-        if (vm.count("help")) {
-            cout << "Usage: "<< argv[0]<< " [options]\n";
-            cout << desc;
-        }        
-        else if (vm.count("speed-test")) {
-        	test_speed();
-        	return 0;
-        }
-        else process(vm,with_options(vm,create_diagram_processor(vm)));
+        if (vm.count("help")) print_help(argv[0],desc);
+        else if (vm.count("speed-test")) test_speed();
+        else 	process(vm,with_options(vm,create_diagram_processor(vm)));
         return 0;
+        }
+        catch (const boost::program_options::unknown_option& e) {
+        		print_help(argv[0],desc);
+        		return 1;
+        }
 }

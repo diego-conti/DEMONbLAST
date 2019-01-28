@@ -35,8 +35,7 @@ list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_coefficient_configuration 
 
 
 
-list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_weight_basis(const WeightBasis& weight_basis,MetricType metric_type) {
-		auto& diagram_properties=weight_basis.properties();
+list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_weight_basis(const WeightBasisAndProperties& weight_basis,MetricType metric_type) {
 		MetricCoefficientConfiguration configuration{weight_basis,metric_type};
     list<NiceEinsteinLieGroup> result=from_coefficient_configuration(move(configuration));
     return result;

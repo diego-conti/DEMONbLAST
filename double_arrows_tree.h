@@ -20,8 +20,8 @@
 
 class DoubleArrowsTree : public TreeBase<LabeledDoubleArrow> {
 public:
-  DoubleArrowsTree(const LabeledTree& tree) : TreeBase(tree.number_of_nodes(),tree.number_of_nodes()) {
-    auto weights=tree.weights();
+	template<typename Weights> 
+  DoubleArrowsTree(int number_of_nodes, Weights&& weights) : TreeBase(number_of_nodes,number_of_nodes)  {
   	for (auto i=weights.begin();i!=weights.end();++i) {
 			auto j=i;
 			while (++j!=weights.end()) {
@@ -29,7 +29,8 @@ public:
 				add_concatenated_arrow(*j,*i);	
 			}
 		}  
-  };
+  }
+  DoubleArrowsTree(const LabeledTree& tree) : DoubleArrowsTree(tree.number_of_nodes(),tree.weights()) {}  
 private:
   void add_arrow_if_no_repetition(int from, int to, pair<int,int> label) {
     if (from!=label.first && from!=label.second) add_arrow({from,to,label});

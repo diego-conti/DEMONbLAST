@@ -41,6 +41,7 @@ public:
 	Z2 operator+ (Z2 other) const {return {x+other.x};}	
 	Z2& operator=(int other) {x=other%2; return *this;}
 	Z2& operator=(const Z2& other) =default;
+	bool operator<(Z2 other) const {return x==0 && other.x==1;}
 	operator ex() const {return x;}
 	int to_Z_star() const {return x? -1 : 1;}
 };
@@ -52,10 +53,33 @@ inline ostream& operator<<(ostream& os, Z2 x) {
 vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& epsilon);
 
 //The matrix M_Delta, called "root matrix" in the literature, with rows a_1,...,a_n ordered in such a way that the last k rows are basis of Span{a_1,..,a_n} over Z_2 and the last h rows span are a basis  of Span{a_1,..,a_n} over Q
+//TODO store weights in the same order as passed. 
 class WeightMatrix {
+	friend class SignConfigurations;
 	int independent_rows_over_Z2=0, independent_rows_over_Q=0;
 	vector<WeightAndCoefficient> weights;
 	int cols_;
+  int sigma_on_VDelta(const vector<int>& sigma, const WeightAndCoefficient& weight) const {
+  	Weight sigmaw{sigma[weight.node_in1], sigma[weight.node_in2],sigma[weight.node_out]};
+  	if (sigmaw.node_in1>sigmaw.node_in2) swap(sigmaw.node_in1,sigmaw.node_in2);
+  	auto it=find_if(weights.begin(),weights.end(),[sigmaw](auto& w) {return w.same_weight_as(sigmaw);});
+  	assert (it!=weights.end());
+  	return it-weights.begin();
+	}
+  Matrix submatrix_JDelta2() const {
+  	Matrix submatrix{independent_rows_over_Z2,cols_};
+	 	auto weight=weights.begin()+weights.size()-independent_rows_over_Z2;
+ 	  for (int i=0;i<submatrix.rows();++i)
+ 			populate_row(i, *weight++,submatrix);
+ 		return submatrix;
+  }
+  Matrix submatrix_IDelta_setminus_JDelta2() const {
+    Matrix submatrix{weights.size()-independent_rows_over_Z2,cols_};
+	 	auto weight=weights.begin();
+ 	  for (int i=0;i<submatrix.rows();++i)
+ 			populate_row(i, *weight++,submatrix);
+ 		return submatrix;
+	}
 public:
 	WeightMatrix(vector<WeightAndCoefficient> unordered_weights,int dimension);
 	template<typename Container> 
@@ -71,22 +95,8 @@ public:
 	 	auto weight=weights.begin();
  	  for (int i=0;i<matrix.rows();++i)
  			populate_row(i, *weight++,matrix);
- 		return matrix;  	
+ 		return matrix;  
  	}
-  Matrix submatrix_JDelta2() const {
-  	Matrix submatrix{independent_rows_over_Z2,cols_};
-	 	auto weight=weights.begin()+weights.size()-independent_rows_over_Z2;
- 	  for (int i=0;i<submatrix.rows();++i)
- 			populate_row(i, *weight++,submatrix);
- 		return submatrix;
-  }
-  Matrix submatrix_IDelta_setminus_JDelta2() const {
-    Matrix submatrix{weights.size()-independent_rows_over_Z2,cols_};
-	 	auto weight=weights.begin();
- 	  for (int i=0;i<submatrix.rows();++i)
- 			populate_row(i, *weight++,submatrix);
- 		return submatrix;
-	}
   auto weight_begin() const {return weights.begin();}
   auto weight_end() const {return weights.end();} 	
   int rows() const {return weights.size();}
@@ -96,6 +106,13 @@ public:
   	result.reserve(weights.size());
   	for (auto x: weights) result.push_back(v[x.node_in1] + v[x.node_in2]+v[x.node_out]);
   	return result;
+  }
+  vector<int> sigma_on_VDelta(const vector<int>& sigma) const {
+		vector<int> result;
+		transform(weights.begin(),weights.end(),back_inserter(result),
+			[this,&sigma]	(auto& weight) {return this->sigma_on_VDelta(sigma,weight);}
+		);
+		return result;
   }
 };
 
@@ -190,5 +207,44 @@ public:
 	list<SignConfiguration> sign_configurations() && {return move(sign_configurations_);}
 };
 
+/*
+class ImageMod2 {
+	map<vector<Z2>,list<vector<Z2>>> preimages;
+	static string to_string(const vector<Z2>& vec, const list<vector<Z2>>& preimages) {
+		string result=horizontal(vec)+" from:\n";
+		for (auto& v : preimages) result+="\t"+horizontal(v)+"\n";
+		return result;
+	}
+public:
+	string to_string() const {
+		string result;
+		for (auto& vector_and_preimages : preimages) result+=to_string(vector_and_preimages.first, vector_and_preimages.second)+"\n";
+		return result;
+	}
+	void insert(const vector<Z2>& delta, const vector<Z2>& imdelta) {
+		preimages[imdelta].push_back(delta);
+	}
+};
+*/
+
+class ImageMod2 {
+	map<vector<Z2>,list<string>> preimages;
+	static string to_string(const vector<Z2>& vec, const list<string>& preimages) {
+		string result=horizontal(vec)+" from:\n";
+		for (auto& v : preimages) result+="\t"+v+"\n";
+		return result;
+	}
+public:
+	string to_string() const {
+		string result;
+		for (auto& vector_and_preimages : preimages) result+=to_string(vector_and_preimages.first, vector_and_preimages.second);
+		return result;
+	}
+	void insert(const string& delta, const vector<Z2>& imdelta) {
+		preimages[imdelta].push_back(delta);
+	}
+};
+
+ImageMod2 image_mod2(const WeightMatrix& weight_matrix);
 
 #endif
