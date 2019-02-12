@@ -18,6 +18,7 @@
 #include "labeled_tree.h"
 #include "partitions.h"
 #include "weightbasis.h"
+#include "parsetree.h"
 
 list<LabeledTree> LabeledTree::labelings() const  {
 		auto node=node_with_less_unlabeled_incoming_arrows();
@@ -109,6 +110,31 @@ void LabeledTree::canonicalize_order_decreasing() {
 	sort_arrows(compare);
 }
 
+LabeledTree LabeledTree::from_stream(istream& s) {
+	using namespace DiagramParser;
+	int nodes=parse_number(s);
+	LabeledTree tree{nodes,nodes};
+	LabeledArrow arrow;
+	while (parse_arrow(s,arrow)) {
+		tree.add_arrow(arrow);	
+		swap(arrow.node_in,arrow.label);
+		tree.add_arrow(arrow);	
+	}
+	return tree;
+}
+
+string LabeledTree::as_string() const {
+	stringstream s;
+	s<<number_of_nodes();
+	char sep=':';
+	for (auto weight: weights()) {
+		s<<sep<<' '<<weight.node_in1+1<<"->["<<weight.node_in2+1<<"]"<<weight.node_out+1;
+		sep=',';
+	}
+	return s.str();
+}
+
+
 //3-combination of integers with repetitions
 class Triplet {
 	friend ostream& operator<<(ostream& os, Triplet triplet);
@@ -189,6 +215,8 @@ ostream& operator<<(ostream& os, const DoubleIncomingArrows& d) {
 		}
 	 return os;
 }
+
+
 
 bool satisfies_formal_jacobi(const LabeledTree& tree) {
 	return DoubleIncomingArrows{tree}.formal_jacobi();	

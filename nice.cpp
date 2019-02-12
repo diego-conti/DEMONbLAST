@@ -105,6 +105,15 @@ void process_single_diagram(const vector<int>& partition, int hash,const Diagram
   	cout<<"diagram not found"<<endl;  
 }
 
+void process_single_digraph(const po::variables_map& command_line_variables,const DiagramProcessor& processor) {
+	auto tree_description=command_line_variables["digraph"].as<string>();
+	stringstream s{tree_description};
+	auto diagram = LabeledTree::from_stream(s);
+ 	auto processed=processor.process(diagram);
+  cout<<processed.data;
+	cout<<processed.extra_data;
+}
+
 void non_parallel_enumerate_nice_diagrams(int dimension,const DiagramProcessor& processor) {
   enumerate_nice_diagrams(partitions(dimension),processor);
 }
@@ -180,7 +189,9 @@ void process(const po::variables_map& command_line_variables,const DiagramProces
           process_all_partitions(command_line_variables,processor);
         else if (command_line_variables.count("partition")) 
           process_single_partition(command_line_variables,processor);
-        else cerr<<"Either --all-partitions or --partition must be specified"<<endl;        
+        else if (command_line_variables.count("digraph")) 
+					process_single_digraph(command_line_variables,processor);
+        else cerr<<"Either --all-partitions, --partition or --digraph must be specified"<<endl;        
 }
 
 
@@ -254,6 +265,8 @@ int main(int argc, char* argv[]) {
                   "only process partition arg")
             ("diagram", po::value<int>(),
                   "only process diagram with hash <arg>")
+            ("digraph", po::value<string>(),
+                  "only process diagram indicated by <arg>")
                   
             ("all-nice-diagrams", "in Lie algebra mode, list all nice diagrams [default: only list nice diagrams that correspond to a Lie algebra]") 
             ("all-diagrams", "list all diagrams satisfying N1 N2 N3 [default: only list nice diagrams]; implies all-nice-diagrams")

@@ -124,8 +124,8 @@ protected:
 	static const int NO_NODE=-1;
 	void invalidate() {tree_hash=HASH_NOT_COMPUTED;}
 	bool matches(const TreeBase& tree, const vector<int>& permutation) const;
-  void add_arrow(ArrowType&& arrow) {
-    arrows_in_tree.push_back(move(arrow));
+  void add_arrow(const ArrowType& arrow) {
+    arrows_in_tree.push_back(arrow);
 		invalidate();
   }
   template<typename Arrow>

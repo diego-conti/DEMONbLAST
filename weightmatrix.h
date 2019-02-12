@@ -23,11 +23,9 @@
 
 template<typename Matrix>
 void populate_row(int row, Weight weight, Matrix& matrix) {
-     ex ex_1=ex{1};
-     ex ex_minus_1=ex{-1};
-		matrix(row,weight.node_out)=ex_1;
- 		matrix(row,weight.node_in1)=ex_minus_1;
-   	matrix(row,weight.node_in2)=ex_minus_1;
+		++matrix(row,weight.node_out);
+ 		--matrix(row,weight.node_in1);
+   	--matrix(row,weight.node_in2);
 }
 	
 WEDGE_DECLARE_NAMED_ALGEBRAIC(Unknown,realsymbol);

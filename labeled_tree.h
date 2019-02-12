@@ -67,6 +67,8 @@ public:
 	void canonicalize_order_increasing();
 	void canonicalize_order_decreasing();
 	virtual ~LabeledTree(); 	
+	static LabeledTree from_stream(istream& s);
+	string as_string() const;
 private:
 	friend struct TestLabeledTree;
 	friend class WeightedTree;
@@ -79,7 +81,7 @@ private:
   vector<int> number_of_unlabeled_incoming_arrows() const;
 	int node_with_less_unlabeled_incoming_arrows() const;
 	LabeledTree() = default;
-	void add_arrow(LabeledArrow&& arrow) = delete;
+	using TreeBase<LabeledArrow>::add_arrow;
 };
 
 bool satisfies_formal_jacobi(const LabeledTree& tree);

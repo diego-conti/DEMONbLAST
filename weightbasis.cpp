@@ -89,11 +89,11 @@ exvector symmetrize(const exvector& X, const vector<int>& sigma) {
 
 
 DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options) : 
+ 	options{options},
   rank_over_Z2{weight_matrix.rank_over_Z2()},
   automorphisms{automorphisms},
  	imMDelta2{image_mod2(weight_matrix).to_string()}, 	
  	ricci_flat_antidiagonal{ricci_flat_sigma(weight_matrix)},
- 	options{options},
  	diagram_analyzer{options.analyze_diagram()? DiagramAnalyzer{weight_matrix.cols(),vector<WeightAndCoefficient>{weight_matrix.weight_begin(),weight_matrix.weight_end()}} : DiagramAnalyzer{}}
 {
 	auto nilsoliton_X=X_solving_nilsoliton(weight_matrix);

@@ -56,6 +56,7 @@ class DiagramProcessorImpl {
   friend class IndirectDiagramProcessor;
 protected:
   void append_extra(ProcessedDiagram& processed_diagram, const LabeledTree& diagram) const {
+			processed_diagram.append_extra(diagram.as_string());
 			if (with_diagram_data()) processed_diagram.append_extra(diagram.weight_basis(diagram_data_options()).properties().diagram_data());
       if (with_automorphisms() && !processed_diagram.empty() && !diagram.arrows().empty()) 
         processed_diagram.append_extra(nontrivial_automorphisms_to_string(diagram.nontrivial_automorphisms()));
