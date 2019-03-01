@@ -137,11 +137,30 @@ void DiagramPropertiesSurjectiveMDelta::print_matrix_data(ostream& os) const {
 	os<<"rank over Q = "<<rank_over_Q<< "(M_Delta surjective);"<<endl; 		
 }
 
+//REFACTOR same code appears in implicitmetric.cpp
+
+inline exvector coefficients_of(exvector v, ex parameter) {
+	transform(v.begin(),v.end(),v.begin(),[&parameter] (ex x) {return x.coeff(parameter);});
+	return v;
+}
+
+template<typename Parameter>
+vector<exvector> basis_from_generic_element(const exvector& generic_vector) {	
+	list<ex> free; 
+	GetSymbols<Parameter>(free, generic_vector.begin(),generic_vector.end());
+	vector<exvector> basis;
+	transform (free.begin(),free.end(),back_inserter(basis),
+		[&generic_vector] (ex x) {return coefficients_of(generic_vector,x);}
+	);
+	return basis;
+}
+
 void DiagramPropertiesNonSurjectiveMDelta::print_matrix_data(ostream& os) const {
 	DiagramProperties::print_matrix_data(os);
   os<<"rank over Q = "<<rank_over_Q;
   os<< "< "<< no_rows<< "(M_Delta not surjective);"<<endl;
-  os<<" kernel of (M_Delta)^T "<<kernel_of_MDelta_transpose<<"; ";
+  os<<" kernel of (M_Delta)^T "<<kernel_of_MDelta_transpose<<"; generators:"<<endl;
+  for (auto v : basis_from_generic_element<Unknown>(kernel_of_MDelta_transpose)) os<<v<<endl;
   list<ex> symbols;
   GetSymbols<Unknown>(symbols,kernel_of_MDelta_transpose.begin(),kernel_of_MDelta_transpose.end());
   os<<"dim="<<symbols.size()<<endl;
@@ -213,7 +232,8 @@ WeightBasis::WeightBasis(const WeightMatrix& weight_matrix,const list<vector<int
   configurations=SignConfigurations{weight_matrix,automorphisms}.sign_configurations();
   weights.insert(weights.end(), weight_matrix.weight_begin(),weight_matrix.weight_end());
   if (!configurations.empty()) {
-  		nice_log<<"remaining sign configurations:"<<endl;
+  		for (auto w: weights) nice_log<<w<<", ";
+  		nice_log<<endl<<"remaining sign configurations:"<<endl;
 			for (auto sc : configurations)
 				nice_log<<sc<<endl;
 	}

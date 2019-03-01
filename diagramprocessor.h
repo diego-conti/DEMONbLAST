@@ -58,7 +58,7 @@ protected:
   void append_extra(ProcessedDiagram& processed_diagram, const LabeledTree& diagram) const {
 			processed_diagram.append_extra(diagram.as_string());
 			if (with_diagram_data()) processed_diagram.append_extra(diagram.weight_basis(diagram_data_options()).properties().diagram_data());
-      if (with_automorphisms() && !processed_diagram.empty() && !diagram.arrows().empty()) 
+      if (with_automorphisms() && !diagram.arrows().empty()) 
         processed_diagram.append_extra(nontrivial_automorphisms_to_string(diagram.nontrivial_automorphisms()));
   }
   template<typename LieAlgebras>
@@ -145,10 +145,8 @@ public:
   using IndirectDiagramProcessor::IndirectDiagramProcessor;
   ProcessedDiagram process(const LabeledTree& diagram) const override {
     ProcessedDiagram processed_by_base = IndirectDiagramProcessor::process(diagram);
-    if (!processed_by_base.empty()) {
       DoubleArrowsTree double_tree{diagram};
       processed_by_base.append_extra(double_tree.to_dot_string());
-    }
     return processed_by_base;
   }
 };
@@ -178,7 +176,7 @@ class DiagramProcessorWithLieAlgebras : public DiagramProcessorImpl {
   }
   ProcessedDiagram process_list_and_automorphisms(const LabeledTree& diagram,const list<NiceLieGroup>& groups) const {
     auto result=process_list(diagram,groups);
-    if (groups.size()<2) return result; //no need to apply automorphisms, since we only have one Lie algebra
+//    if (groups.size()<2) return result; //no need to apply automorphisms, since we only have one Lie algebra
     auto automorphisms=diagram.nontrivial_automorphisms();
     if (automorphisms.empty()) return result;
     result.append_extra("More than one Lie algebra and more than one automorphism:");

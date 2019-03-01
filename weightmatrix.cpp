@@ -1,12 +1,5 @@
 #include "weightmatrix.h"
 
-vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& epsilon) {
-	vector<Z2> w_epsilon(dimension);
-		auto logsign = [] (int sign) {return sign>0? 0 : 1;};
-		transform(epsilon.begin(),epsilon.end(),w_epsilon.begin(),logsign);
-		return w_epsilon;
-}  	
-
 
 template<typename Builder>
 Matrix complete_with_constant_vector(Builder&& builder, ex lambda) {
@@ -22,7 +15,7 @@ exvector X_solving_Ricciflat(const WeightMatrix& weight_matrix) {
 
 exvector X_solving_nilsoliton(const WeightMatrix& weight_matrix) {	
 	auto MDelta=weight_matrix.M_Delta();
-	auto gram = complete_with_constant_vector(matrix_product(MDelta,transpose(MDelta)),1);
+	auto gram = complete_with_constant_vector(matrix_product(MDelta,transpose(MDelta)),-1);
 	auto b=	solve_over_Q(gram,generate_variables<Unknown>(N.x,MDelta.rows()));
 	return b;
 };
@@ -83,6 +76,13 @@ string sign_configuration_to_string(const SignConfiguration& sign_configuration)
 	stringstream s;
 	s<<sign_configuration;
 	return s.str();
+}
+
+vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& epsilon) {
+	vector<Z2> w_epsilon(dimension);
+	auto logsign = [] (int sign) {return sign>0? 0 : 1;};
+	transform(epsilon.begin(),epsilon.end(),w_epsilon.begin(),logsign);
+	return w_epsilon;
 }
 
 ImageMod2 image_mod2(const WeightMatrix& weight_matrix) {

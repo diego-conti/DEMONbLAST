@@ -50,7 +50,6 @@ inline ostream& operator<<(ostream& os, Z2 x) {
 
 vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& epsilon);
 
-
 class WeightIterator {
 	const vector<WeightAndCoefficient>& weights;
 	vector<int>::const_iterator i;
@@ -139,6 +138,15 @@ public:
   WeightIterator Z2basis_end() const {return WeightIterator{weights,basis_over_Z2.end()};}
   WeightIterator complement_of_Z2basis_begin() const {return WeightIterator{weights,complement_of_basis_over_Z2.begin()};}
   WeightIterator complement_of_Z2basis_end() const {return WeightIterator{weights,complement_of_basis_over_Z2.end()};}
+  vector<Z2> w_epsilon(const SignConfiguration& epsilon) const {
+		vector<Z2> w_epsilon(rows());
+		auto index=complement_of_basis_over_Z2.begin();
+		for (auto sign : epsilon) {
+			w_epsilon[*index++]=sign>0? 0 : 1;
+		}
+		assert(index==complement_of_basis_over_Z2.end());
+		return w_epsilon;
+	}
 };
 
 exvector X_solving_nonRicciflat_Einstein(const WeightMatrix& MDelta);
@@ -154,8 +162,10 @@ class SignConfigurations {
   	for (auto epsilon = sign_configurations_.begin();epsilon!=sign_configurations_.end();++epsilon) {
   		for (auto& sigma : nontrivial_automorphisms) {
   			auto delta_sigma_epsilon=delta(sigma, *epsilon);
-  			if (delta_sigma_epsilon!=*epsilon) 
+  			if (delta_sigma_epsilon!=*epsilon) {
+  				nice_log<<"used "<<sigma<<"("<<*epsilon<<") to eliminate "<<delta_sigma_epsilon<<endl;
 	  			sign_configurations_.remove(delta_sigma_epsilon);
+	  		}
 	  	}
   	}
   }
@@ -181,6 +191,7 @@ class SignConfigurations {
 				auto sign_and_index=sigma_weight(sigma,weight);
 				return sign_and_index.first+w[sign_and_index.second];
 			});
+		nice_log<<"w="<<horizontal(w)<<endl;
 		nice_log<<"sigma_w_projection_to_JDelta2= "<<horizontal(result)<<endl;
 		return result;
   }
@@ -196,7 +207,7 @@ class SignConfigurations {
   }
   
   SignConfiguration delta(const vector<int>& sigma, const SignConfiguration& epsilon) {
-  		auto w_epsilon=sign_configuration_to_vector(MDelta.rows(),epsilon);
+  		auto w_epsilon=MDelta.w_epsilon(epsilon);
   		auto sigma_w_projection_to_JDelta2=this->sigma_w_projection_to_JDelta2(sigma,w_epsilon);
   		auto variables=	 generate_variables<Unknown>(N.a,MDelta.cols());
 	 		auto x=solve_over_Z2(
