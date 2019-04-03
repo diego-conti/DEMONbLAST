@@ -111,6 +111,8 @@ private:
 	string imMDelta2;
 	list<OrderTwoAutomorphism> ricci_flat_antidiagonal;
 	DiagramAnalyzer diagram_analyzer;		//combinatorial data about the diagram
+	ex B;
+	exvector b;
 };
 
 class DiagramPropertiesNonSurjectiveMDelta : public DiagramProperties {
@@ -152,6 +154,7 @@ public:
 class WeightBasisAndProperties : public WeightBasis {
   unique_ptr<DiagramProperties> diagram_properties;
 	explicit WeightBasisAndProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions diagram_data_options); 
+	explicit WeightBasisAndProperties(const WeightMatrix& weight_matrix,const LabeledTree& tree, DiagramDataOptions options);
 public:
 	explicit WeightBasisAndProperties(const LabeledTree& tree, DiagramDataOptions diagram_data_options); 
 	const DiagramProperties& properties() const {return *diagram_properties;}

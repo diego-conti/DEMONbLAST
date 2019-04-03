@@ -200,7 +200,11 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
       diagram_processor.with_delta_otimes_delta();
     if (command_line_variables.count("invert"))
       diagram_processor.invert_nodes();
-    if (command_line_variables.count("list-diagram-automorphisms")) diagram_processor.set(ProcessingOption::with_automorphisms);
+    if (command_line_variables.count("list-diagram-automorphisms")) {
+      diagram_processor.set(ProcessingOption::with_automorphisms);
+      diagram_processor.set(DiagramDataOption::with_automorphisms);
+    }
+
     if (command_line_variables.count("derivations")) diagram_processor.set(ProcessingOption::with_derivations);
     if (command_line_variables.count("polynomial")) diagram_processor.set(ProcessingOption::with_polynomial_conditions);
     if (command_line_variables.count("enhanced")) diagram_processor.set(ProcessingOption::with_enhanced_lie_algebras);       
@@ -216,7 +220,10 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
     if (command_line_variables.count("only-MDelta-surjective")) filter.only_MDelta_surjective();
     if (command_line_variables.count("all-diagrams")) filter.N1N2N3();
-    if (command_line_variables.count("only-with-nontrivial-automorphisms")) filter.only_nontrivial_automorphisms();
+    if (command_line_variables.count("only-with-nontrivial-automorphisms")) {
+      filter.only_nontrivial_automorphisms();
+      diagram_processor.set(DiagramDataOption::with_automorphisms);
+    }
     if (command_line_variables.count("only-with-metric")) {
     	filter.only_with_metric();
     	DiagramDataOptions{diagram_processor}.log();

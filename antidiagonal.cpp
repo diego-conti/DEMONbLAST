@@ -23,19 +23,22 @@
 #include "weightmatrix.h"
 #include "antidiagonal.h"
 
-
 bool conflict(Weight weight,const WeightMatrix& weight_matrix) {
-	return any_of(weight_matrix.weight_begin(),weight_matrix.weight_end(),
+	auto result= any_of(weight_matrix.weight_begin(),weight_matrix.weight_end(),
 		[weight] (Weight weight2) {
 			return (weight.node_in1==weight2.node_in1 || weight.node_in1==weight2.node_in2 || weight.node_in2==weight2.node_in1 ||weight.node_in2==weight2.node_in2 ) && weight.node_out==weight2.node_out
 				|| (weight.node_in1==weight2.node_in1 && weight.node_in2==weight2.node_in2) 
 				|| (weight.node_in2==weight2.node_in1 && weight.node_in1==weight2.node_in2);
 		});
+	if (result) nice_log<<"conflict at "<<weight<<endl;
+	return result;
 }
 
 bool sigma_defines_ricci_flat(const WeightMatrix& weight_matrix,const OrderTwoAutomorphism& sigma) {
+	nice_log<<"sigma "<<sigma.to_string()<<endl;
 	for (auto weight=weight_matrix.weight_begin();weight!=weight_matrix.weight_end();++weight)
 		if (conflict(sigma.apply(*weight),weight_matrix)) return false;
+	nice_log<<"no conflict"<<endl;
 	return true;
 }
 

@@ -34,7 +34,8 @@ enum class DiagramDataOption : unsigned int {
   with_im_delta2=8,
   analyze_diagram=16,
   with_matrix_data=32,
-  with_antidiagonal_ricci_flat_sigma=64
+  with_antidiagonal_ricci_flat_sigma=64,
+  with_automorphisms=128
 };
 
 struct DiagramDataOptions : Options<DiagramDataOption> {
@@ -47,6 +48,8 @@ struct DiagramDataOptions : Options<DiagramDataOption> {
 	bool with_matrix_data() const {return has(DiagramDataOption::with_matrix_data);}
 	bool with_antidiagonal_ricci_flat_sigma() const {return has(DiagramDataOption::with_antidiagonal_ricci_flat_sigma);}
 	bool with_metrics() const {return with_diagonal_ricci_flat_metrics() || with_diagonal_nilsoliton_metrics() || with_sigma_compatible_ricci_flat_metrics();}
+  bool with_automorphisms() const {return has(DiagramDataOption::with_automorphisms);}
+	int ricci_flat_antidiagonal_limit=10000;
 };
 
 

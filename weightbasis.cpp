@@ -87,16 +87,17 @@ exvector symmetrize(const exvector& X, const vector<int>& sigma) {
 
 
 
-
 DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options) : 
  	options{options},
   rank_over_Z2{weight_matrix.rank_over_Z2()},
   automorphisms{automorphisms},
  	imMDelta2{image_mod2(weight_matrix).to_string()}, 	
- 	ricci_flat_antidiagonal{ricci_flat_sigma(weight_matrix)},
+ 	ricci_flat_antidiagonal{options.with_antidiagonal_ricci_flat_sigma()? ricci_flat_sigma(weight_matrix) : list<OrderTwoAutomorphism>{}},
  	diagram_analyzer{options.analyze_diagram()? DiagramAnalyzer{weight_matrix.cols(),vector<WeightAndCoefficient>{weight_matrix.weight_begin(),weight_matrix.weight_end()}} : DiagramAnalyzer{}}
 {
 	auto nilsoliton_X=X_solving_nilsoliton(weight_matrix);
+	b=nilsoliton_X;	
+	B=accumulate(b.begin(),b.end(),ex{0});
 	auto diagonal_ricci_flat_X=X_solving_Ricciflat(weight_matrix);
 	if (options.with_diagonal_nilsoliton_metrics())
 		metrics.push_back(make_unique<DiagonalMetric>(NILSOLITON_DIAGONAL(), weight_matrix,nilsoliton_X));
@@ -130,6 +131,8 @@ void DiagramProperties::print_matrix_data(ostream& os) const {
 	    os<<"Nikolayevsky derivation: "<<nikolayevsky<<endl;
 	  }
     os<<"rank over Z_2 = "<<rank_over_Z2<<endl;
+    os<< "B="<<B<<endl;
+    os<<"b="<<horizontal(b)<<endl;
 }
 
 void DiagramPropertiesSurjectiveMDelta::print_matrix_data(ostream& os) const {
@@ -188,7 +191,7 @@ string DiagramProperties::diagram_data() const {
 		}*/
 		if (options.with_antidiagonal_ricci_flat_sigma()) {
 	    if (ricci_flat_antidiagonal.empty()) sstream<<"no ricci-flat antidiagonal sigma"<<endl;
-			else sstream<<"ricci-flat antidiagonal sigma: "<<cut_at(ricci_flat_antidiagonal,4)<<endl;
+			else sstream<<"ricci-flat antidiagonal sigma: "<<cut_at(ricci_flat_antidiagonal,options.ricci_flat_antidiagonal_limit)<<endl;
 		}
     return sstream.str();
 }
@@ -227,7 +230,6 @@ list<exvector> affine_space_over_Z2(const exvector& generic_element) {
   }
 }*/
 
-
 WeightBasis::WeightBasis(const WeightMatrix& weight_matrix,const list<vector<int>>& automorphisms ) : number_of_nodes_{weight_matrix.cols()} {
   configurations=SignConfigurations{weight_matrix,automorphisms}.sign_configurations();
   weights.insert(weights.end(), weight_matrix.weight_begin(),weight_matrix.weight_end());
@@ -250,8 +252,14 @@ WeightBasisAndProperties::WeightBasisAndProperties(const WeightMatrix& weight_ma
     diagram_properties = make_unique< DiagramPropertiesNonSurjectiveMDelta>(weight_matrix,automorphisms,options);
 }
 
+WeightBasisAndProperties::WeightBasisAndProperties(const WeightMatrix& weight_matrix,const LabeledTree& tree, DiagramDataOptions options)
+  : WeightBasisAndProperties{weight_matrix,
+      (weight_matrix.rank_over_Q()<weight_matrix.rows() || options.with_automorphisms()) ? tree.nontrivial_automorphisms() : list<vector<int>>{},
+          options
+} {}
+
 WeightBasisAndProperties::WeightBasisAndProperties(const LabeledTree& tree, DiagramDataOptions options) 
-	: WeightBasisAndProperties{WeightMatrix{tree.weights(),tree.number_of_nodes()},tree.nontrivial_automorphisms(),options} {} 
+	: WeightBasisAndProperties{WeightMatrix{tree.weights(),tree.number_of_nodes()},tree,options} {}
 
 EnhancedWeightBasis::EnhancedWeightBasis(const LabeledTree& tree, OrderTwoAutomorphism sigma) : WeightBasis{weight_matrix(tree,sigma), automorphisms(tree,sigma)} {}
 

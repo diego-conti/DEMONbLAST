@@ -15,7 +15,7 @@ exvector X_solving_Ricciflat(const WeightMatrix& weight_matrix) {
 
 exvector X_solving_nilsoliton(const WeightMatrix& weight_matrix) {	
 	auto MDelta=weight_matrix.M_Delta();
-	auto gram = complete_with_constant_vector(matrix_product(MDelta,transpose(MDelta)),-1);
+	auto gram = complete_with_constant_vector(matrix_product(MDelta,transpose(MDelta)),1);
 	auto b=	solve_over_Q(gram,generate_variables<Unknown>(N.x,MDelta.rows()));
 	return b;
 };

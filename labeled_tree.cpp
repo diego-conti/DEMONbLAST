@@ -99,13 +99,13 @@ int LabeledTree::node_with_less_unlabeled_incoming_arrows() const {
 
 void LabeledTree::canonicalize_order_increasing() {
 	static auto compare = [](LabeledArrow arrow1, LabeledArrow arrow2) {
-		return arrow1.node_out<arrow2.node_out || arrow1.node_out==arrow2.node_out &&	min(arrow1.node_in,arrow1.label) < min(arrow2.node_in,arrow2.label);
+		return arrow1.node_out<arrow2.node_out || (arrow1.node_out==arrow2.node_out &&	min(arrow1.node_in,arrow1.label) < min(arrow2.node_in,arrow2.label));
 	};
 	sort_arrows(compare);
 }
 void LabeledTree::canonicalize_order_decreasing() {
 	static auto compare = [](LabeledArrow arrow1, LabeledArrow arrow2) {
-		return arrow1.node_out>arrow2.node_out || arrow1.node_out==arrow2.node_out &&	max(arrow1.node_in,arrow1.label) > max(arrow2.node_in,arrow2.label);
+		return arrow1.node_out>arrow2.node_out || (arrow1.node_out==arrow2.node_out &&	max(arrow1.node_in,arrow1.label) > max(arrow2.node_in,arrow2.label));
 	};
 	sort_arrows(compare);
 }

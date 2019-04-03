@@ -1,4 +1,6 @@
-SOURCES=nice.cpp partitions.cpp tree.cpp labeled_tree.cpp weightbasis.cpp niceliegroup.cpp liegroupsfromdiagram.cpp gauss.cpp log.cpp niceeinsteinliegroup.cpp ricci.cpp filter.cpp permutations.cpp weightmatrix.cpp implicitmetric.cpp antidiagonal.cpp
+SOURCES_NO_MAIN= partitions.cpp tree.cpp labeled_tree.cpp weightbasis.cpp niceliegroup.cpp liegroupsfromdiagram.cpp gauss.cpp log.cpp niceeinsteinliegroup.cpp ricci.cpp filter.cpp permutations.cpp weightmatrix.cpp implicitmetric.cpp antidiagonal.cpp
+
+SOURCES=nice.cpp $(SOURCES_NO_MAIN)
 
 INCLUDES=arrow.h labeled_tree.h partitions.h liegroupsfromdiagram.h  permutations.h diagramprocessor.h linearinequalities.h ricci.h double_arrows_tree.h linearsolve.h taskrunner.h filter.h log.h tree.h gauss.h niceeinsteinliegroup.h weightbasis.h horizontal.h niceliegroup.h weightmatrix.h  xginac.h tree.hpp matrixbuilder.h options.h implicitmetric.h antidiagonal.h
 
@@ -9,7 +11,6 @@ CXXFLAGS=-g -ffor-scope -Wctor-dtor-privacy -Wreorder -Wold-style-cast -Wsign-pr
 LIBS=-lginac -lwedge -lcln -lgmp -lpthread -lboost_filesystem -lboost_system -lboost_program_options
 
 INCLUDEDIR=-I/usr/local/include/wedge-0.3
-
 
 .PHONY: debug
 debug: $(SOURCES) $(INCLUDES) clean_log
@@ -37,6 +38,10 @@ dot2ps:
 		fi ; \
 		cd .. ; \
 	done
+
+.PHONY: plugin
+plugin: $(SOURCES_NO_MAIN) $(INCLUDES) $(source) clean_log
+	g++ $(INCLUDEDIR) $(SOURCES_NO_MAIN) $(source) $(LIBS) -O2 $(CXXFLAGS) -o plugin
 
 .PHONY: dist
 dist: $(SOURCES) $(INCLUDES) $(DIST)

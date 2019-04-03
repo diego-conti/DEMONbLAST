@@ -90,6 +90,7 @@ public:
 			if (!compatible_from(couples.begin())) advance_till_compatible(couples.begin());
 		}		
 	}
+	OrderTwoAutomorphism(int n,initializer_list<Couple> list) : couples{list},n{n} {}
 	OrderTwoAutomorphism& operator++() {
 		auto iter=couples.begin();	
 		assert(iter!=couples.end());
@@ -116,6 +117,15 @@ public:
 		if (couples.empty()) result="()";
 		return result;	
 	}
+	matrix to_matrix() {
+		matrix sigma(n,n);
+		for (int i=0;i<n;++i) sigma(i,i)=1;
+		for (auto couple: couples) {
+			sigma(couple.first,couple.second)= sigma(couple.second,couple.first)=1;
+			sigma(couple.first,couple.first)= sigma(couple.second,couple.second)=0;
+		}
+		return sigma;
+	}
 };
 
 inline ostream& operator<<(ostream& os, const OrderTwoAutomorphism& sigma) {
@@ -123,6 +133,7 @@ inline ostream& operator<<(ostream& os, const OrderTwoAutomorphism& sigma) {
 }
 
 list<OrderTwoAutomorphism> ricci_flat_sigma(const WeightMatrix& weight_matrix);
+bool sigma_defines_ricci_flat(const WeightMatrix& weight_matrix,const OrderTwoAutomorphism& sigma);
 
 bool sigma_enhanced_has_cycle_of_length_two(const WeightMatrix& weight_matrix,const OrderTwoAutomorphism& sigma);
 
