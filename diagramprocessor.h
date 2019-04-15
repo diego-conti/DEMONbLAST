@@ -44,6 +44,7 @@ enum class ProcessingOption : unsigned int {
   with_derivations=8,
   with_polynomial_conditions=16,
   with_enhanced_lie_algebras=32,
+  reorder=64
 };
 
 
@@ -78,12 +79,14 @@ public:
 			return result;
   }
   virtual void canonicalize_order(LabeledTree& diagram) const {
-  	diagram.canonicalize_order_increasing();
+  	if (processing_options().has(ProcessingOption::reorder))
+	  	diagram.canonicalize_order_increasing();
   }
 	void set(ProcessingOption option) {processing_options().set(option);}
   void set(DiagramDataOption option) {diagram_data_options().set(option);}
   void clear(ProcessingOption option) {processing_options().clear(option);}
   void clear(DiagramDataOption option) {diagram_data_options().clear(option);}
+  void adapt_to_filter(Filter filter) {diagram_data_options().adapt_to_filter(filter);}
   bool with_automorphisms() const {return processing_options().has(ProcessingOption::with_automorphisms);}
   bool with_diagram_data() const {return diagram_data_options().with_data();}
   bool only_if_lie_algebras() const {return !processing_options().has(ProcessingOption::include_diagrams_no_lie_algebra);}
@@ -109,13 +112,14 @@ public:
   DiagramProcessor(with_nilsoliton_metrics_tag);  
   DiagramProcessor(with_ricciflat_metrics_tag);  
   ProcessedDiagram process(LabeledTree& diagram) const {  
-  		processor->canonicalize_order(diagram);
+ 			processor->canonicalize_order(diagram);
       return processor->process(diagram);
   }
   void invert_nodes();
   void with_delta_otimes_delta();
   void setFilter(Filter newFilter) {
     filter_=newFilter;
+    processor->adapt_to_filter(filter_);
   } 
   const Filter& filter() const {return filter_;}
   void set(ProcessingOption option) {processor->set(option);}

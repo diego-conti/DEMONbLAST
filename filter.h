@@ -20,6 +20,7 @@
 #include "weightbasis.h"
 #include "labeled_tree.h"
 #include <vector>
+#include <bitset>
 using namespace std;
 
 class Filter {
@@ -45,6 +46,22 @@ public:
     if (only_with_metric_ && !properties.potentially_admits_metrics()) return false;
     return true;
   }
+	void to_stream(ostream& s) const {
+		s<<allow_nonnice<<only_traceless_derivations_<<only_MDelta_surjective_<<only_nontrivial_automorphisms_<<only_with_metric_<<endl;
+	}
+  static Filter from_stream(istream& s) {
+  	Filter filter;
+  	s>>filter.allow_nonnice>>filter.only_traceless_derivations_>>filter.only_MDelta_surjective_>>filter.only_nontrivial_automorphisms_>>filter.only_with_metric_;
+  	return filter;
+  }
+  int to_int() const {
+		bitset<5> set; 
+		set[0]=allow_nonnice; set[1]=only_traceless_derivations_; set[2]=only_MDelta_surjective_; set[3]=only_nontrivial_automorphisms_;set[4]=only_with_metric_;
+		return set.to_ulong();
+  }
+  bool operator==(Filter filter) const {return to_int()==filter.to_int();}
+  bool operator!=(Filter filter) const {return to_int()!=filter.to_int();}
+	bool require_only_nontrivial_automorphisms() const {return only_nontrivial_automorphisms_;}
 };
 
 list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter,DiagramDataOptions options);

@@ -126,6 +126,15 @@ public:
 		}
 		return sigma;
 	}
+	matrix sigma_diagonal_metric(const exvector& coefficients) {
+		matrix sigma(n,n);
+		for (int i=0;i<n;++i) sigma(i,i)=1;
+		for (auto couple: couples) {
+			sigma(couple.first,couple.second)= sigma(couple.second,couple.first)=coefficients[couple.first];
+			sigma(couple.first,couple.first)= sigma(couple.second,couple.second)=0;
+		}
+		return sigma;
+	}
 };
 
 inline ostream& operator<<(ostream& os, const OrderTwoAutomorphism& sigma) {

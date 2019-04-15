@@ -29,7 +29,7 @@
 #include <boost/program_options.hpp>
 #include <boost/exception/diagnostic_information.hpp> 
 #include "diagramprocessor.h"
-
+#include "nicediagramsinpartition.h"
 
 namespace po = boost::program_options;
 using namespace GiNaC;
@@ -60,12 +60,10 @@ string output_path(const vector<int>& partition, const LabeledTree& diagram) {
 int enumerate_nice_diagrams_in_partition(const vector<int>& partition,ostream& stream,const DiagramProcessor& processor) {
     nice_log<<"enumerating diagrams in partition "<<horizontal(partition)<<endl;
       map<int,int> hashes_to_hashes;
-      int count=0;
-			auto diagrams = nice_diagrams(partition,processor.filter(),processor);
+			auto diagrams =nice_diagrams_in_partition(partition,processor);
 			if (!diagrams.empty()) {
 				for (auto& diagram: diagrams) {
 				  ++hashes_to_hashes[diagram.hash()];
-				  diagram.add_number_to_name(++count);
 				  nice_log<<diagram.name()<<endl;
 			    auto processed=processor.process(diagram);
 	        stream<<processed.data;
@@ -76,7 +74,7 @@ int enumerate_nice_diagrams_in_partition(const vector<int>& partition,ostream& s
 		for (auto p : hashes_to_hashes) 
 		  if (p.second>1) 
 		    nice_log<<" multiple ("<<p.second<<") diagrams with hash "<<p.first<<endl;		  
-		return count;
+		return nice_diagrams_in_partition.count();
 }
 
 int enumerate_nice_diagrams(const list<vector<int>>& partitions,const DiagramProcessor& processor) {
@@ -220,15 +218,10 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
     if (command_line_variables.count("only-MDelta-surjective")) filter.only_MDelta_surjective();
     if (command_line_variables.count("all-diagrams")) filter.N1N2N3();
-    if (command_line_variables.count("only-with-nontrivial-automorphisms")) {
+    if (command_line_variables.count("only-with-nontrivial-automorphisms")) 
       filter.only_nontrivial_automorphisms();
-      diagram_processor.set(DiagramDataOption::with_automorphisms);
-    }
-    if (command_line_variables.count("only-with-metric")) {
+    if (command_line_variables.count("only-with-metric")) 
     	filter.only_with_metric();
-    	DiagramDataOptions{diagram_processor}.log();
-    	if (!DiagramDataOptions{diagram_processor}.with_metrics()) throw runtime_error("No type of metric indicated");
-    }
     diagram_processor.setFilter(filter);
     return move(diagram_processor);
 }

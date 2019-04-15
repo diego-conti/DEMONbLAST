@@ -38,6 +38,8 @@ enum class DiagramDataOption : unsigned int {
   with_automorphisms=128
 };
 
+class Filter;
+
 struct DiagramDataOptions : Options<DiagramDataOption> {
   bool with_diagonal_ricci_flat_metrics() const {return has(DiagramDataOption::with_diagonal_ricci_flat_metrics);}
 	bool with_diagonal_nilsoliton_metrics() const {return has(DiagramDataOption::with_diagonal_nilsoliton_metrics);}
@@ -50,7 +52,9 @@ struct DiagramDataOptions : Options<DiagramDataOption> {
 	bool with_metrics() const {return with_diagonal_ricci_flat_metrics() || with_diagonal_nilsoliton_metrics() || with_sigma_compatible_ricci_flat_metrics();}
   bool with_automorphisms() const {return has(DiagramDataOption::with_automorphisms);}
 	int ricci_flat_antidiagonal_limit=10000;
+	void adapt_to_filter(const Filter& filter);
 };
+
 
 
 class LabeledTree : public TreeBase<LabeledArrow> {
