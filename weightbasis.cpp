@@ -140,23 +140,6 @@ void DiagramPropertiesSurjectiveMDelta::print_matrix_data(ostream& os) const {
 	os<<"rank over Q = "<<rank_over_Q<< "(M_Delta surjective);"<<endl; 		
 }
 
-//REFACTOR same code appears in implicitmetric.cpp
-
-inline exvector coefficients_of(exvector v, ex parameter) {
-	transform(v.begin(),v.end(),v.begin(),[&parameter] (ex x) {return x.coeff(parameter);});
-	return v;
-}
-
-template<typename Parameter>
-vector<exvector> basis_from_generic_element(const exvector& generic_vector) {	
-	list<ex> free; 
-	GetSymbols<Parameter>(free, generic_vector.begin(),generic_vector.end());
-	vector<exvector> basis;
-	transform (free.begin(),free.end(),back_inserter(basis),
-		[&generic_vector] (ex x) {return coefficients_of(generic_vector,x);}
-	);
-	return basis;
-}
 
 void DiagramPropertiesNonSurjectiveMDelta::print_matrix_data(ostream& os) const {
 	DiagramProperties::print_matrix_data(os);

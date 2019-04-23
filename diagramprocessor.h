@@ -44,7 +44,7 @@ enum class ProcessingOption : unsigned int {
   with_derivations=8,
   with_polynomial_conditions=16,
   with_enhanced_lie_algebras=32,
-  reorder=64
+  do_not_reorder=64
 };
 
 
@@ -79,7 +79,7 @@ public:
 			return result;
   }
   virtual void canonicalize_order(LabeledTree& diagram) const {
-  	if (processing_options().has(ProcessingOption::reorder))
+  	if (!processing_options().has(ProcessingOption::do_not_reorder))
 	  	diagram.canonicalize_order_increasing();
   }
 	void set(ProcessingOption option) {processing_options().set(option);}

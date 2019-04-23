@@ -266,4 +266,17 @@ public:
 		: CoefficientConfiguration{weight_basis.sign_configurations(),weight_basis.number_of_nodes(),weights_and_values(weight_basis,X(weight_basis,metric_type))} {}
 };
 
+
+
+template<typename Parameter>
+vector<exvector> basis_from_generic_element(const exvector& generic_vector) {	
+	list<ex> free; 
+	GetSymbols<Parameter>(free, generic_vector.begin(),generic_vector.end());
+	vector<exvector> basis;
+	transform (free.begin(),free.end(),back_inserter(basis),
+		[&generic_vector] (ex x) {return coefficients_of(generic_vector,x);}
+	);
+	return basis;
+}
+
 #endif

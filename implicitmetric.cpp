@@ -32,21 +32,6 @@ ImplicitMetric::ImplicitMetric(const string& name, const exvector& X_ijk) :
 
 
 
-exvector coefficients_of(exvector v, ex parameter) {
-	transform(v.begin(),v.end(),v.begin(),[&parameter] (ex x) {return x.coeff(parameter);});
-	return v;
-}
-
-template<typename Parameter>
-vector<exvector> basis_from_generic_element(const exvector& generic_vector) {	
-	list<ex> free; 
-	GetSymbols<Parameter>(free, generic_vector.begin(),generic_vector.end());
-	vector<exvector> basis;
-	transform (free.begin(),free.end(),back_inserter(basis),
-		[&generic_vector] (ex x) {return coefficients_of(generic_vector,x);}
-	);
-	return basis;
-}
 
 exvector integer_multiple(exvector v) {
 	return v;

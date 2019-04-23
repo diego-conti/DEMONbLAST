@@ -11,15 +11,20 @@
 #include "../permutations.cpp"
 #include "../linearinequalities.h"
 #include "../weightmatrix.cpp"
+#include "../antidiagonal.cpp"
+#include "../implicitmetric.cpp"
 
 #include "dump.h"
 
 void test_tree(LabeledTree tree) {
 	tree.invert_nodes();
-	CoefficientConfigurationWithoutRedundantParameter configuration{tree.weight_basis()};		
+	CoefficientConfigurationWithoutRedundantParameter configuration{tree.weight_basis(DiagramDataOptions{})};		
 	stringstream os;
 	while (configuration) {
-		for (auto weight : configuration.weights())
+		auto weights = configuration.weights();
+		auto compare=[](auto& w1, auto& w2) {return w1.node_in1<w2.node_in1 || (w1.node_in1==w2.node_in1 && w1.node_in2<w2.node_in2);};
+		sort(weights.begin(),weights.end(),compare);
+		for (auto weight : weights)
 				os<<weight.value<<weight<<endl;
 		++configuration;
 		os<<endl;
@@ -28,7 +33,7 @@ void test_tree(LabeledTree tree) {
 }
 
 void test_tree(vector<int> partition, int hash) {
-  auto diagrams = nice_diagrams(partition,Filter{});
+  auto diagrams = nice_diagrams(partition,Filter{},DiagramDataOptions{});
 	for (auto& diagram : diagrams) 
 	  if (diagram.hash()==hash) {
 	  	test_tree(diagram); return;

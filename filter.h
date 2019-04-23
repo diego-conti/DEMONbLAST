@@ -23,7 +23,9 @@
 #include <bitset>
 using namespace std;
 
+//TODO derive from Options
 class Filter {
+	friend void DiagramDataOptions::adapt_to_filter(const Filter& filter);
   bool allow_nonnice=false;
   bool only_traceless_derivations_=false;
   bool only_MDelta_surjective_=false;
@@ -65,5 +67,5 @@ public:
 };
 
 list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter,DiagramDataOptions options);
-
+void remove_trees(list<LabeledTree>& trees, const Filter& filter,DiagramDataOptions options);
 #endif

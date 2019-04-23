@@ -110,15 +110,18 @@ void LabeledTree::canonicalize_order_decreasing() {
 	sort_arrows(compare);
 }
 
-LabeledTree LabeledTree::from_stream(istream& s) {
+unique_ptr<LabeledTree> LabeledTree::from_stream(istream& s) {
 	using namespace DiagramParser;
-	int nodes=parse_number(s);
-	LabeledTree tree{nodes,nodes};
+	auto token=parse_token(s);
+	if (token.type==TokenType::END) return nullptr;
+	if (token.type!=TokenType::NUMBER) throw std::invalid_argument("Diagram definition should start with number");
+	int nodes=token.data;
+	auto tree=make_unique<LabeledTree>(nodes,nodes);
 	LabeledArrow arrow;
 	while (parse_arrow(s,arrow)) {
-		tree.add_arrow(arrow);	
+		tree->add_arrow(arrow);	
 		swap(arrow.node_in,arrow.label);
-		tree.add_arrow(arrow);	
+		tree->add_arrow(arrow);	
 	}
 	return tree;
 }

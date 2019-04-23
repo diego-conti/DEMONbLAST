@@ -49,6 +49,6 @@ list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter,Diag
 void DiagramDataOptions::adapt_to_filter(const Filter& filter) {
   	if(filter.require_only_nontrivial_automorphisms())
       set(DiagramDataOption::with_automorphisms);
-    if (filter.only_with_metric() && !with_metrics()) throw runtime_error("Filter specifies metrics, but diagram data options do not specify the type of metric");
+    if (filter.only_with_metric_ && !with_metrics()) throw runtime_error("Filter specifies metrics, but diagram data options do not specify the type of metric");
 }
 

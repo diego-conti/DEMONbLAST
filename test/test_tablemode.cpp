@@ -10,6 +10,8 @@
 #include "../niceeinsteinliegroup.cpp"
 #include "../permutations.cpp"
 #include "../weightmatrix.cpp"
+#include "../antidiagonal.cpp"
+#include "../implicitmetric.cpp"
 
 #include "dump.h"
 
@@ -17,7 +19,7 @@ void test_table_mode(vector<int> partition,ostream& os) {
   auto processor = DiagramProcessor{lie_algebra_table};
   processor.invert_nodes();
   stringstream output;
-  auto diagrams = nice_diagrams(partition,Filter{});
+  auto diagrams = nice_diagrams(partition,Filter{},DiagramDataOptions{});
   int count=0;
 	for (auto& diagram: diagrams) {
       diagram.add_number_to_name(++count);

@@ -74,7 +74,7 @@ public:
 	void canonicalize_order_increasing();
 	void canonicalize_order_decreasing();
 	virtual ~LabeledTree(); 	
-	static LabeledTree from_stream(istream& s);
+	static unique_ptr<LabeledTree> from_stream(istream& s);
 	string as_string() const;
 private:
 	friend struct TestLabeledTree;

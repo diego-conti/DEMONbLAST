@@ -26,7 +26,7 @@
 bool conflict(Weight weight,const WeightMatrix& weight_matrix) {
 	auto result= any_of(weight_matrix.weight_begin(),weight_matrix.weight_end(),
 		[weight] (Weight weight2) {
-			return (weight.node_in1==weight2.node_in1 || weight.node_in1==weight2.node_in2 || weight.node_in2==weight2.node_in1 ||weight.node_in2==weight2.node_in2 ) && weight.node_out==weight2.node_out
+			return ((weight.node_in1==weight2.node_in1 || weight.node_in1==weight2.node_in2 || weight.node_in2==weight2.node_in1 ||weight.node_in2==weight2.node_in2 ) && weight.node_out==weight2.node_out)
 				|| (weight.node_in1==weight2.node_in1 && weight.node_in2==weight2.node_in2) 
 				|| (weight.node_in2==weight2.node_in1 && weight.node_in1==weight2.node_in2);
 		});

@@ -4,6 +4,9 @@
 #include "../weightbasis.cpp"
 #include "../gauss.cpp"
 #include "../weightmatrix.cpp"
+#include "../antidiagonal.cpp"
+#include "../implicitmetric.cpp"
+
 #include "dump.h"
 
 

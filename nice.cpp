@@ -59,22 +59,14 @@ string output_path(const vector<int>& partition, const LabeledTree& diagram) {
 
 int enumerate_nice_diagrams_in_partition(const vector<int>& partition,ostream& stream,const DiagramProcessor& processor) {
     nice_log<<"enumerating diagrams in partition "<<horizontal(partition)<<endl;
-      map<int,int> hashes_to_hashes;
-			auto diagrams =nice_diagrams_in_partition(partition,processor);
-			if (!diagrams.empty()) {
-				for (auto& diagram: diagrams) {
-				  ++hashes_to_hashes[diagram.hash()];
-				  nice_log<<diagram.name()<<endl;
-			    auto processed=processor.process(diagram);
+			auto diagrams =nice_diagrams_in_partition(partition,processor.filter(),processor);
+				for (auto diagram= diagrams.begin_process(processor);diagram!=diagrams.end_process(processor);++diagram) {
+			    auto processed=diagram.process();
 	        stream<<processed.data;
 	        if (!processed.empty() && !processed.extra_data.empty()) stream<<"/*"<<processed.extra_data<<"*/"<<endl;
-	        ofstream{output_path(partition,diagram),std::ofstream::out | std::ofstream::trunc}<<processed.data;
+	        ofstream{output_path(partition,*diagram),std::ofstream::out | std::ofstream::trunc}<<processed.data;
  		    }
-  		}
-		for (auto p : hashes_to_hashes) 
-		  if (p.second>1) 
-		    nice_log<<" multiple ("<<p.second<<") diagrams with hash "<<p.first<<endl;		  
-		return nice_diagrams_in_partition.count();
+		return diagrams.count();
 }
 
 int enumerate_nice_diagrams(const list<vector<int>>& partitions,const DiagramProcessor& processor) {
@@ -107,7 +99,8 @@ void process_single_digraph(const po::variables_map& command_line_variables,cons
 	auto tree_description=command_line_variables["digraph"].as<string>();
 	stringstream s{tree_description};
 	auto diagram = LabeledTree::from_stream(s);
- 	auto processed=processor.process(diagram);
+	if (!diagram) {cerr<<"no diagram specified"<<endl; return;}
+ 	auto processed=processor.process(*diagram);
   cout<<processed.data;
 	cout<<processed.extra_data;
 }
@@ -213,6 +206,7 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("all-nice-diagrams") || command_line_variables.count("all-diagrams")) diagram_processor.set(ProcessingOption::include_diagrams_no_lie_algebra);
     if (command_line_variables.count("analyze-diagram")) diagram_processor.set(DiagramDataOption::analyze_diagram);
     if (command_line_variables.count("antidiagonal-ricci-flat-sigma")) diagram_processor.set(DiagramDataOption::with_antidiagonal_ricci_flat_sigma);
+    if (command_line_variables.count("legacy-weight-order")) diagram_processor.set(ProcessingOption::do_not_reorder);
     
     Filter filter;
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
@@ -291,6 +285,7 @@ int main(int argc, char* argv[]) {
             ("enhanced","include list of sigma-enhanced Lie algebras")         
             ("analyze-diagram","include data depending on diagram combinatorics")
             ("antidiagonal-ricci-flat-sigma","include order two automorphisms inducing antidiagonal ricci-flat metrics")
+            ("legacy-weight-order","maintain the weight order coming from the classification algorithm. This option is independent from --invert.")
             
             ("only-traceless-derivations", "exclude diagrams where (1...1) is not in the span of the rows of M_Delta")
             ("only-MDelta-surjective", "only diagrams where M_Delta is surjective")            
