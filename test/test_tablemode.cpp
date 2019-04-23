@@ -17,6 +17,7 @@
 
 void test_table_mode(vector<int> partition,ostream& os) {
   auto processor = DiagramProcessor{lie_algebra_table};
+  processor.set(ProcessingOption::do_not_reorder);
   processor.invert_nodes();
   stringstream output;
   auto diagrams = nice_diagrams(partition,Filter{},DiagramDataOptions{});

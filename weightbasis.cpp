@@ -237,7 +237,7 @@ WeightBasisAndProperties::WeightBasisAndProperties(const WeightMatrix& weight_ma
 
 WeightBasisAndProperties::WeightBasisAndProperties(const WeightMatrix& weight_matrix,const LabeledTree& tree, DiagramDataOptions options)
   : WeightBasisAndProperties{weight_matrix,
-      (weight_matrix.rank_over_Q()<weight_matrix.rows() || options.with_automorphisms()) ? tree.nontrivial_automorphisms() : list<vector<int>>{},
+      (weight_matrix.rank_over_Z2()<weight_matrix.rows() || options.with_automorphisms()) ? tree.nontrivial_automorphisms() : list<vector<int>>{},
           options
 } {}
 
