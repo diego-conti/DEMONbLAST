@@ -3,7 +3,7 @@
 #include <boost/filesystem.hpp>
 
 class NiceDiagramsInPartition {
-	const vector<int>& partition;
+	const vector<int> partition;
 	list<LabeledTree> trees;	
 	NiceDiagramsInPartition(const vector<int>& partition, 	list<LabeledTree>&& trees) : partition{partition},trees{trees} {}
 	NiceDiagramsInPartition(const vector<int>& partition, const vector<LabeledTree>& trees) : partition{partition},trees{trees.begin(),trees.end()} {}

@@ -45,7 +45,7 @@ public:
 };
 
 Token parse_token(istream& s) {
-	if (s.peek()=='\n') return {TokenType::END};
+	if (s.peek()=='\n') {s.get(); return {TokenType::END};}
 	char ch = 0;
 	int value;
 	s>>ch;
