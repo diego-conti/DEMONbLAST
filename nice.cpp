@@ -211,6 +211,7 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     Filter filter;
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
     if (command_line_variables.count("only-MDelta-surjective")) filter.only_MDelta_surjective();
+    if (command_line_variables.count("only-MDelta-injective")) filter.only_MDelta_injective();
     if (command_line_variables.count("all-diagrams")) filter.N1N2N3();
     if (command_line_variables.count("only-with-nontrivial-automorphisms")) 
       filter.only_nontrivial_automorphisms();
@@ -289,6 +290,7 @@ int main(int argc, char* argv[]) {
             
             ("only-traceless-derivations", "exclude diagrams where (1...1) is not in the span of the rows of M_Delta")
             ("only-MDelta-surjective", "only diagrams where M_Delta is surjective")            
+            ("only-MDelta-injective", "only diagrams where M_Delta is injective")            
             ("only-with-nontrivial-automorphisms", "only diagrams with nontrivial automorphisms)")           
             ("only-with-metric", "only diagrams which potentially admit a metric (conditions H and L)")           
         ;

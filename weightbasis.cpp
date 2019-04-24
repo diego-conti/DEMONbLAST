@@ -89,6 +89,8 @@ exvector symmetrize(const exvector& X, const vector<int>& sigma) {
 
 DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options) : 
  	options{options},
+ 	no_rows{weight_matrix.M_Delta().rows()},
+ 	no_cols{weight_matrix.M_Delta().cols()},
   rank_over_Z2{weight_matrix.rank_over_Z2()},
   automorphisms{automorphisms},
  	imMDelta2{image_mod2(weight_matrix).to_string()}, 	
@@ -113,7 +115,7 @@ DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const l
 
 
 DiagramPropertiesNonSurjectiveMDelta:: DiagramPropertiesNonSurjectiveMDelta(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options)
-  : DiagramProperties(weight_matrix,automorphisms,options), no_rows{weight_matrix.M_Delta().rows()},  rank_over_Q{weight_matrix.rank_over_Q()},
+  : DiagramProperties(weight_matrix,automorphisms,options),  rank_over_Q{weight_matrix.rank_over_Q()},
   kernel_of_MDelta_transpose{X_solving_Ricciflat(weight_matrix)}
 {}
   
@@ -137,14 +139,18 @@ void DiagramProperties::print_matrix_data(ostream& os) const {
 
 void DiagramPropertiesSurjectiveMDelta::print_matrix_data(ostream& os) const {
 	DiagramProperties::print_matrix_data(os);
-	os<<"rank over Q = "<<rank_over_Q<< "(M_Delta surjective);"<<endl; 		
+	os<<"rank over Q = "<<rank_over_Q<< "(M_Delta surjective, "; 		
+  os <<( (rank_over_Q==no_cols)? "injective" : "not injective");
+  os<<");"<<endl;
 }
 
 
 void DiagramPropertiesNonSurjectiveMDelta::print_matrix_data(ostream& os) const {
 	DiagramProperties::print_matrix_data(os);
   os<<"rank over Q = "<<rank_over_Q;
-  os<< "< "<< no_rows<< "(M_Delta not surjective);"<<endl;
+  os<< "< "<< no_rows<< "(M_Delta not surjective, ";
+  os << ((rank_over_Q==no_cols)? "injective" : "not injective");
+  os<<");"<<endl;
   os<<" kernel of (M_Delta)^T "<<kernel_of_MDelta_transpose<<"; generators:"<<endl;
   for (auto v : basis_from_generic_element<Unknown>(kernel_of_MDelta_transpose)) os<<v<<endl;
   list<ex> symbols;

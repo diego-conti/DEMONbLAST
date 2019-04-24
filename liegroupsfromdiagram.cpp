@@ -107,10 +107,13 @@ string LieGroupsFromDiagram::derivations() const {
 		auto X=Xbrackets(*this,GLRepresentation<VectorField>(&Gl,e()),generic_matrix);
 		lst eqns,sol;
 		GetCoefficients<VectorField>(eqns,X);
-		auto subspace=gl.GetSolutions(sol,eqns.begin(),eqns.end());		
+		gl.GetSolutions(sol,eqns.begin(),eqns.end());		
+		VectorSpace<DifferentialForm> subspace{sol.begin(),sol.end()};
 		stringstream s;
 		s<<"dim offdiag Der(g)=";
-		s<<sol.nops()<<endl; //<<subspace.Dimension()<<endl;
+		s<<sol.nops()<<"; ";
+		if (Gl.glToMatrix(subspace.GenericElement()).pow(Dimension()).is_zero_matrix()) s<<" offdiag derivations are nilpotent"<<endl;
+		else s<<latex<<" offdiag derivation are not nilpotent: "<<subspace.GenericElement()<<endl;
 		return s.str();
 };
 
