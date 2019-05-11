@@ -19,9 +19,7 @@
 #define TASKRUNNER_H
 
 #include <future>
-#include <fstream>
-#include <string>
-using namespace std;
+using std::future;
 
 class TaskWithFileOutput {
 public:
@@ -43,6 +41,7 @@ public:
   TaskWithFileOutputImpl(Closure&& closure, string filename, Args&& args) : TaskWithFileOutput{filename}, closure_{forward<Closure>(closure)}, args_{forward<Args>(args)} {}
  
   future<void> run_and_write_to_file() override {
+  		using namespace std;
       return async(launch::async,
         [this] () {
             stringstream output;

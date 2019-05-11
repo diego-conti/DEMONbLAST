@@ -18,15 +18,7 @@
 #ifndef PERMUTATIONS_H
 #define PERMUTATIONS_H
 
-#include <vector>
-#include <list>
-#include <algorithm>
-#include <stdexcept>
-#include <cassert>
-#include <numeric>
-#include <string>
-
-using namespace std;
+#include "includes.h"
 
 class PermutationsPreservingHash {
   enum {ASSIGNED=-1};

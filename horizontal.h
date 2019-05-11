@@ -17,16 +17,15 @@
 */
 #ifndef HORIZONTAL_H
 #define HORIZONTAL_H
-#include <sstream>
+#include "includes.h"
 #include <ginac/ex.h>
 #include <ginac/operators.h>
 
-using namespace std;
 using namespace GiNaC;
 
 inline string to_string_hex(unsigned int n) {
 	stringstream ss;
-  ss<<hex<<n;
+  ss<<std::hex<<n;
   return ss.str();
 }
 

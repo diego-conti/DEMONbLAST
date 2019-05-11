@@ -18,8 +18,7 @@
 #ifndef IMPLICIT_METRIC_H
 #define IMPLICIT_METRIC_H
 
-#include <iostream>
-#include <list>
+#include "includes.h"
 #include <ginac/ginac.h>
 #include "xginac.h"
 #include <algorithm>
@@ -28,7 +27,7 @@
 #include "horizontal.h"
 
 
-using namespace std;
+
 using namespace GiNaC;
 using namespace Wedge;
 

@@ -23,7 +23,6 @@
 #include "log.h"
 #include "weightbasis.h"
 
-using namespace std;
 using namespace Wedge;
 
 

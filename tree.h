@@ -18,17 +18,11 @@
 #ifndef NICE_H
 #define NICE_H
 
-#include <vector>
-#include <sstream>
-#include <list>
-#include <map>
-#include <iostream>
-#include <algorithm>
 #include "arrow.h"
 #include "permutations.h"
 #include "log.h"
 #include "horizontal.h"
-using namespace std;
+
 
 class Tree;
 
@@ -97,8 +91,8 @@ public:
 	SetOfNodes(int nodes, int final_size) : no_nodes{nodes},  nodes_hash(final_size) {}
 	SetOfNodes()=default;
 	string name() const {
-	  if (name_.empty()) return to_string(number_)+ "#"+to_string(tree_hash);
-	  else  return to_string(number_)+ "#"+to_string(tree_hash)+ " : "+name_;
+	  if (name_.empty()) return std::to_string(number_)+ "#"+std::to_string(tree_hash);
+	  else  return std::to_string(number_)+ "#"+std::to_string(tree_hash)+ " : "+name_;
 	}
 	void set_name(string new_name) {name_=move(new_name);}
 	void add_number_to_name(int n) {number_=n;}

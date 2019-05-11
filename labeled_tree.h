@@ -17,11 +17,10 @@
 */
 #ifndef LABELED_TREE_H
 #define LABELED_TREE_H
+#include "includes.h"
 #include "tree.h"
 #include "options.h"
-#include <memory>
 
-using namespace std;
 class WeightBasisAndProperties;
 
 

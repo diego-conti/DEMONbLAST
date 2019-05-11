@@ -18,9 +18,7 @@
     
 #ifndef ARROW_H
 #define ARROW_H
-
-#include <iostream>
-using namespace std;
+#include "includes.h"
 
 //represents an unlabeled arrow (in) -> (out)
 struct Arrow {

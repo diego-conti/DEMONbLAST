@@ -19,9 +19,8 @@
 #define FILTER_H
 #include "weightbasis.h"
 #include "labeled_tree.h"
-#include <vector>
-#include <bitset>
-using namespace std;
+#include "includes.h"
+
 
 //TODO derive from Options
 class Filter {

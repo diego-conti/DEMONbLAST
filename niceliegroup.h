@@ -24,7 +24,6 @@
 #include "xginac.h"
 #include "weightbasis.h"
 
-using namespace std;
 using namespace Wedge;
 
 class CoefficientConfiguration;

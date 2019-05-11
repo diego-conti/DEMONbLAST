@@ -25,7 +25,6 @@
 #include "liegroupsfromdiagram.h"
 #include "horizontal.h"
 
-using namespace std;
 using namespace Wedge;
 
 

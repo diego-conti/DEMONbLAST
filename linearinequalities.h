@@ -18,11 +18,8 @@
 #ifndef LINEARINEQUALITIES_H
 #define LINEARINEQUALITIES_H
 
-#include <algorithm>
-#include <numeric>
-#include <limits>
 #include <ginac/ginac.h>
-using namespace std;
+
 using namespace GiNaC;
 
 template<typename iter_begin,typename iter_end, typename Closure>

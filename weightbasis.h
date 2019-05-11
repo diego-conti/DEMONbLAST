@@ -18,11 +18,9 @@
 #ifndef WEIGHT_BASIS_H
 #define WEIGHT_BASIS_H
 
-#include <iostream>
-#include <list>
+#include "includes.h"
 #include <ginac/ginac.h>
 #include "xginac.h"
-#include <algorithm>
 #include "gauss.h"
 #include <wedge/liegroup.h>
 #include "labeled_tree.h"
@@ -31,7 +29,6 @@
 #include "antidiagonal.h"
 #include "diagramanalyzer.h"
 
-using namespace std;
 using namespace GiNaC;
 using namespace Wedge;
 
