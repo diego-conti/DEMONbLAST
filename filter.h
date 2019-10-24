@@ -50,7 +50,9 @@ public:
     if (only_with_metric_ && !properties.potentially_admits_metrics()) return false;
     return true;
   }
+  
 	bool require_only_nontrivial_automorphisms() const {return only_nontrivial_automorphisms_;}
+	bool has_N1N2N3() const {return allow_nonnice;}
 };
 
 list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter,DiagramDataOptions options);

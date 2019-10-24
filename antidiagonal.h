@@ -111,13 +111,17 @@ public:
 		}
 		return weight;
 	}
+	int apply(int node) const {
+		for (auto& couple : couples) node=apply(node,couple);
+		return node;	
+	}
 	string to_string() const {
 		string result;
 		for (auto c: couples) result+="("+std::to_string(c.first+1)+" "+std::to_string(c.second+1)+")";
 		if (couples.empty()) result="()";
 		return result;	
 	}
-	matrix to_matrix() {
+	matrix to_matrix() const {
 		matrix sigma(n,n);
 		for (int i=0;i<n;++i) sigma(i,i)=1;
 		for (auto couple: couples) {
@@ -126,15 +130,16 @@ public:
 		}
 		return sigma;
 	}
-	matrix sigma_diagonal_metric(const exvector& coefficients) {
+	matrix sigma_diagonal_metric(const exvector& coefficients) const {
 		matrix sigma(n,n);
-		for (int i=0;i<n;++i) sigma(i,i)=1;
+		for (int i=0;i<n;++i) sigma(i,i)=coefficients[i];
 		for (auto couple: couples) {
 			sigma(couple.first,couple.second)= sigma(couple.second,couple.first)=coefficients[couple.first];
 			sigma(couple.first,couple.first)= sigma(couple.second,couple.second)=0;
 		}
 		return sigma;
-	}
+	}	
+	
 };
 
 inline ostream& operator<<(ostream& os, const OrderTwoAutomorphism& sigma) {

@@ -15,6 +15,9 @@
     You should have received a copy of the GNU General Public License
     along with DEMONbLAST.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef RICCI_H
+#define RICCI_H
+
 #include <wedge/bilinearform.h>
 #include <wedge/pseudolevicivita.h>
 #include <wedge/pseudoriemannianstructure.h>
@@ -59,3 +62,5 @@ ex ricci_tensor(const Manifold& G, exvector diagonal_metric);
 ex ricci_operator(const Manifold& G, matrix metric_on_coframe);
 
 ex ricci_operator(const Manifold& G, exvector diagonal_metric);
+
+#endif

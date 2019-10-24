@@ -1,3 +1,6 @@
+#ifndef NICEDIAGRAMS_IN_PARTITION_H
+#define NICEDIAGRAMS_IN_PARTITION_H
+
 #include "filter.h"
 #include "partitions.h"
 #include <boost/filesystem.hpp>
@@ -34,9 +37,9 @@ public:
 		}		
 		return NiceDiagramsInPartition{partition,move(trees)};
 	}
-	static NiceDiagramsInPartition compute(const vector<int>& partition) {
+	static NiceDiagramsInPartition compute(const vector<int>& partition, Filter filter={}) {
 		int count=0;
-		auto diagrams = nice_diagrams(partition,Filter{},{});
+		auto diagrams = nice_diagrams(partition,filter,{});
 		if (!diagrams.empty()) 
 			for (auto& diagram: diagrams)
 			  diagram.add_number_to_name(++count);
@@ -86,8 +89,11 @@ NiceDiagramsInPartition nice_diagrams_in_partition(const vector<int>& partition)
 }
 			
 NiceDiagramsInPartition nice_diagrams_in_partition(const vector<int>& partition,Filter filter, DiagramDataOptions options) {
+	if (filter.has_N1N2N3()) //nonnice diagrams are not cached 
+		return NiceDiagramsInPartition::compute(partition,filter);
 	auto all_diagrams = nice_diagrams_in_partition(partition);
 	all_diagrams.remove_trees(filter,options);
 	return all_diagrams;
 }	
 
+#endif

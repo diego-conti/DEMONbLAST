@@ -15,6 +15,9 @@
     You should have received a copy of the GNU General Public License
     along with DEMONbLAST.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef DIAGRAM_PROCESSOR_H
+#define DIAGRAM_PROCESSOR_H
+
 #include <iostream>
 #include "tree.h"
 #include "labeled_tree.h"
@@ -325,3 +328,4 @@ DiagramProcessor::DiagramProcessor(with_nilsoliton_metrics_tag) : processor{new 
 DiagramProcessor::DiagramProcessor(with_ricciflat_metrics_tag) : processor{new DiagramProcessorClassifyingMetricLieAlgebras(MetricType::RICCIFLAT)} {} 
 DiagramProcessor::DiagramProcessor(lie_algebra_table_tag) : processor{new DiagramProcessorTableOfLieAlgebras()} {} 
 
+#endif

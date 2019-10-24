@@ -15,6 +15,9 @@
     You should have received a copy of the GNU General Public License
     along with DEMONbLAST.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#ifndef DOUBLE_ARROWS_TREE_H
+#define DOUBLE_ARROWS_TREE_H
 #include "tree.h"
 #include "labeled_tree.h"
 
@@ -42,4 +45,4 @@ private:
 };
 
 
-
+#endif
