@@ -19,6 +19,7 @@
 #define LIE_GROUPS_FROM_DIAGRAM_H
 #include <wedge/liegroup.h>
 #include <wedge/liesubgroup.h>
+#include <wedge/gl.h>
 #include "ricci.h"
 #include "log.h"
 #include "weightbasis.h"
@@ -40,6 +41,7 @@ public:
 		for (exmap::const_iterator i=dTable().begin();i!=dTable().end();i++)					
 			Has_dTable::Declare_d(i->first,i->second.subs(list_of_equations));
 	}
+	VectorSpace<DifferentialForm> derivations(const GL& gl) const;		//return the derivations as a subset of the Lie algebra gl
 	string derivations() const;	
 	
 	exvector csquared(const WeightBasis& weight_basis) const;

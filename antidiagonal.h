@@ -90,7 +90,7 @@ public:
 			if (!compatible_from(couples.begin())) advance_till_compatible(couples.begin());
 		}		
 	}
-	OrderTwoAutomorphism(int n,initializer_list<Couple> list) : couples{list},n{n} {}
+	OrderTwoAutomorphism(int n,std::initializer_list<Couple> list) : couples{list},n{n} {}
 	OrderTwoAutomorphism& operator++() {
 		auto iter=couples.begin();	
 		assert(iter!=couples.end());

@@ -18,6 +18,8 @@
 #include "filter.h"
 #include "horizontal.h"
 
+using namespace std;
+
 void remove_trees(list<LabeledTree>& trees, const Filter& filter,DiagramDataOptions options) {
   auto i=trees.begin();
   while (i!=trees.end()) 

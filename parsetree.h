@@ -41,7 +41,7 @@ struct Token {
 
 class ParseError : public std::runtime_error {
 public:
-	ParseError(const string& error) : runtime_error(error) {};
+	ParseError(const string& error) : std::runtime_error(error) {};
 };
 
 Token parse_token(istream& s) {

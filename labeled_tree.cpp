@@ -20,6 +20,8 @@
 #include "weightbasis.h"
 #include "parsetree.h"
 
+using namespace std;
+
 list<LabeledTree> LabeledTree::labelings() const  {
 		auto node=node_with_less_unlabeled_incoming_arrows();
 		if (node==NO_NODE) return {*this};

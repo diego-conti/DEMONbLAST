@@ -38,7 +38,7 @@ class TaskWithFileOutputImpl : public TaskWithFileOutput {
   Closure closure_;
   Args args_;
 public:
-  TaskWithFileOutputImpl(Closure&& closure, string filename, Args&& args) : TaskWithFileOutput{filename}, closure_{forward<Closure>(closure)}, args_{forward<Args>(args)} {}
+  TaskWithFileOutputImpl(Closure&& closure, string filename, Args&& args) : TaskWithFileOutput{filename}, closure_{std::forward<Closure>(closure)}, args_{std::forward<Args>(args)} {}
  
   future<void> run_and_write_to_file() override {
   		using namespace std;
@@ -55,7 +55,7 @@ public:
 
 template<typename Closure, typename Args>
 unique_ptr<TaskWithFileOutput> make_task_with_file_output(Closure&& closure,string filename, Args&& args) {
-  return unique_ptr<TaskWithFileOutput>{new TaskWithFileOutputImpl<Closure,Args>{forward<Closure>(closure),filename,forward<Args>(args)}};
+  return unique_ptr<TaskWithFileOutput>{new TaskWithFileOutputImpl<Closure,Args>{std::forward<Closure>(closure),filename,std::forward<Args>(args)}};
 }
 
 class TaskRunner {
@@ -65,7 +65,7 @@ public:
   TaskRunner(Closure&& closure,  FunctionMappingArgsToFileName&& function_mapping_args_to_filename, const ListOfArgs& args) {
       for (auto some_args: args) {
         auto filename = function_mapping_args_to_filename(some_args);
-        tasks.push_back(make_task_with_file_output(forward<Closure>(closure),filename, move(some_args)));
+        tasks.push_back(make_task_with_file_output(std::forward<Closure>(closure),filename, std::move(some_args)));
       }
   }
   void run_and_write_to_file() {

@@ -21,6 +21,7 @@
 #include <wedge/bilinearform.h>
 #include <wedge/pseudolevicivita.h>
 #include <wedge/pseudoriemannianstructure.h>
+#include "includes.h"
 
 using namespace Wedge;
 

@@ -24,8 +24,8 @@
 #include "horizontal.h"
 #include "linearinequalities.h"
 
-
 using namespace Wedge;
+using namespace std;
 
 bool LieGroupsFromDiagram::solve_linear_ddzero() {
 		static auto is_solution_in_positive_orthant = [] (ex sol) {
@@ -100,20 +100,27 @@ VectorSpace<DifferentialForm> offdiagonal_elements(const GL& gl) {
 	return {basis.begin(),basis.end()};
 }
 
-string LieGroupsFromDiagram::derivations() const {
-	GL Gl(Dimension());
-		auto gl=offdiagonal_elements(Gl);
+
+VectorSpace<DifferentialForm> LieGroupsFromDiagram::derivations(const GL& Gl) const {
+		auto gl=Gl.pForms(1);
 		auto generic_matrix =gl.GenericElement();
 		auto X=Xbrackets(*this,GLRepresentation<VectorField>(&Gl,e()),generic_matrix);
 		lst eqns,sol;
 		GetCoefficients<VectorField>(eqns,X);
 		gl.GetSolutions(sol,eqns.begin(),eqns.end());		
-		VectorSpace<DifferentialForm> subspace{sol.begin(),sol.end()};
+		return {sol.begin(),sol.end()};
+}
+
+string LieGroupsFromDiagram::derivations() const {
+	GL Gl(Dimension());
+	auto subspace=derivations(Gl);
 		stringstream s;
-		s<<"dim offdiag Der(g)=";
-		s<<sol.nops()<<"; ";
-		if (Gl.glToMatrix(subspace.GenericElement()).pow(Dimension()).is_zero_matrix()) s<<" offdiag derivations are nilpotent"<<endl;
-		else s<<latex<<" offdiag derivation are not nilpotent: "<<subspace.GenericElement()<<endl;
+		s<<"dim Der(g)=";
+		s<<subspace.Dimension()<<"; ";
+		matrix generic_offdiag_derivation=Gl.glToMatrix(subspace.GenericElement());
+		for (int i=0;i<Dimension();++i) generic_offdiag_derivation(i,i)=0;
+		if (generic_offdiag_derivation.pow(Dimension()).is_zero_matrix()) s<<" offdiag derivations are nilpotent"<<endl;
+		else s<<latex<<" offdiag derivation are not nilpotent: "<<generic_offdiag_derivation<<endl;
 		return s.str();
 };
 

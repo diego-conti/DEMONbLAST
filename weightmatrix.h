@@ -103,7 +103,7 @@ class WeightMatrix {
 public:
 	WeightMatrix(vector<WeightAndCoefficient>&& weights,int dimension);
 	template<typename Container> 
-	WeightMatrix(Container&& weights,int dimension) : WeightMatrix{{forward<Container>(weights).begin(),forward<Container>(weights).end()},dimension} {}
+	WeightMatrix(Container&& weights,int dimension) : WeightMatrix{{std::forward<Container>(weights).begin(),std::forward<Container>(weights).end()},dimension} {}
   int rank_over_Z2() const {
 		return independent_rows_over_Z2;
   }

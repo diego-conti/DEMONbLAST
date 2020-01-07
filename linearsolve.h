@@ -106,7 +106,7 @@ bool impose_polynomial_eqns(ParametrizedClass& parametrized_object, ListOfEquati
   nice_log<<solution<<endl;
   if (!isAdmissibleSolution(solution)) return false;
 	exvector to_zero;
-	std::transform(solution.begin(),solution.end(),back_insert_iterator<exvector>(to_zero),[](ex equation) {return equation.lhs()-equation.rhs();});
+	std::transform(solution.begin(),solution.end(),std::back_insert_iterator<exvector>(to_zero),[](ex equation) {return equation.lhs()-equation.rhs();});
 	parametrized_object.DeclareZero(to_zero.begin(),to_zero.end());
   return true;
 }

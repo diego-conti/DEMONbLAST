@@ -2,7 +2,7 @@
 #define MATRIX_BUILDER_H
 #include "gauss.h"
 #include <wedge/named.h>
-
+#include "includes.h"
 using namespace Wedge;
 
 struct ConstantMatrixBuilder {
@@ -79,7 +79,7 @@ pair<int,int> adjoined_matrix_size(MatrixBuilder builder) {
 template<typename MatrixBuilder, typename... MatrixBuilders>
 pair<int,int> adjoined_matrix_size(MatrixBuilder builder, MatrixBuilders... builders) {
 	auto size=adjoined_matrix_size(builders...);
-	if (builder.rows()!=size.first) throw invalid_argument("cannot adjoin matrices with different number of rows");
+	if (builder.rows()!=size.first) throw std::invalid_argument("cannot adjoin matrices with different number of rows");
 	size.second+= builder.cols();
 	return size;
 }

@@ -33,6 +33,7 @@
 
 namespace po = boost::program_options;
 using namespace GiNaC;
+using namespace std;
 
 void create_directory(int n) {
   boost::filesystem::path dir("output"+to_string(n));

@@ -28,7 +28,7 @@ public:
 		s>>partitionlength;
 		vector<int> partition(partitionlength);
 		for (int i=0;i<partitionlength;++i) s>>partition[i];
-		if (expected_partition!=partition) throw runtime_error("corrupt diagram data; inconsistent partition");
+		if (expected_partition!=partition) throw std::runtime_error("corrupt diagram data; inconsistent partition");
 		list<LabeledTree> trees;	
 		while (s) {
 		 auto tree=LabeledTree::from_stream(s);
@@ -76,7 +76,7 @@ public:
 NiceDiagramsInPartition nice_diagrams_in_partition(const vector<int>& partition) {
   boost::filesystem::path dir("diagrams");
   if (!boost::filesystem::is_directory(dir) && !boost::filesystem::create_directories(dir))
-  	throw runtime_error("cannot create directory 'diagrams'");
+  	throw std::runtime_error("cannot create directory 'diagrams'");
   	
   boost::filesystem::path part("diagrams/part"+get_label(partition,"_")+".diag");
 	if (boost::filesystem::is_regular_file(part)) 

@@ -25,7 +25,7 @@
 #include "antidiagonal.h"
 
 using namespace Wedge;
-
+using namespace std;
 
 ostream& operator<<(ostream& os,WeightAndCoefficient weight) {
 	os<<"["<<weight.node_in1+1<<","<<weight.node_in2+1<<"]=";
