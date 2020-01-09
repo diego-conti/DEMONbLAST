@@ -85,6 +85,13 @@ vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& 
 	return w_epsilon;
 }
 
+SignConfiguration vector_to_sign_configuration(const vector<Z2>& epsilon) {
+	vector<int> as_integers(epsilon.size());
+	transform(epsilon.begin(),epsilon.end(), as_integers.begin(), [] (Z2 x) {return x.to_Z_star();} );
+	return as_integers;
+}
+
+
 ImageMod2 image_mod2(const WeightMatrix& weight_matrix) {
 	ImageMod2 result;
 	for (auto delta : SignConfiguration::all_configurations(weight_matrix.cols())) {

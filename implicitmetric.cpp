@@ -72,15 +72,15 @@ bool affinespace_intersects_orthant(vector<Z2> epsilon, exvector generic_vector)
 
 
 //condition 2
-list<SignConfiguration> signatures_compatible_with_X(const WeightMatrix& weight_matrix,const exvector& X)
+list<pair<SignConfiguration,SignConfiguration>> signatures_compatible_with_X(const WeightMatrix& weight_matrix,const exvector& X)
 {
 	assert(weight_matrix.rows()==0 || !X.empty());
-	list<SignConfiguration> result;
+	list<pair<SignConfiguration,SignConfiguration>> result;
 	for (auto epsilon : SignConfiguration::all_configurations(weight_matrix.cols())) {
 		auto MDelta2epsilon=weight_matrix.image_of(sign_configuration_to_vector(weight_matrix.cols(),epsilon));
 //		if (all_of(MDelta2epsilon.begin(),MDelta2epsilon.end(),[](Z2 z) {return z==0;})) continue;	//do not consider "trivial" sign configurations
 			if (affinespace_intersects_orthant<Unknown>((MDelta2epsilon), X))
-				result.push_back(epsilon);
+				result.push_back(make_pair(epsilon,vector_to_sign_configuration(MDelta2epsilon)));
 	}
 	return result;
 }
@@ -108,7 +108,11 @@ DiagonalMetric::DiagonalMetric(const string& name,const WeightMatrix& weight_mat
 
 
 ostream& operator<<(ostream& os,SignConfiguration sign_configuration) {
-	for (int i=0;i<sign_configuration.size();++i)
-		if (sign_configuration[i]>0) os<<"+ "; else os<<"- ";
+	string sep;
+	for (int i=0;i<sign_configuration.size();++i) {
+		os<<sep;
+		sep=" ";
+		if (sign_configuration[i]>0) os<<"+"; else os<<"-";
+	}
 	return os;
 }

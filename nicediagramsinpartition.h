@@ -30,11 +30,14 @@ public:
 		for (int i=0;i<partitionlength;++i) s>>partition[i];
 		if (expected_partition!=partition) throw std::runtime_error("corrupt diagram data; inconsistent partition");
 		list<LabeledTree> trees;	
+		int count=0;
 		while (s) {
-		 auto tree=LabeledTree::from_stream(s);
-		 if (!tree) break;
-			trees.push_back(*tree);
-		}		
+			auto tree=LabeledTree::from_stream(s);
+		  if (!tree) break;
+		  tree->hash();
+	    tree->add_number_to_name(++count);
+		  trees.push_back(*tree);
+		 }		
 		return NiceDiagramsInPartition{partition,move(trees)};
 	}
 	static NiceDiagramsInPartition compute(const vector<int>& partition, Filter filter={}) {

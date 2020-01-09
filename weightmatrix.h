@@ -49,6 +49,7 @@ inline ostream& operator<<(ostream& os, Z2 x) {
 }
 
 vector<Z2> sign_configuration_to_vector(int dimension, const SignConfiguration& epsilon);
+SignConfiguration vector_to_sign_configuration(const vector<Z2>& epsilon);
 
 class WeightIterator {
 	const vector<WeightAndCoefficient>& weights;

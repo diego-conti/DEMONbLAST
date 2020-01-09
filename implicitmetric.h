@@ -39,6 +39,8 @@ public:
 	SignConfiguration(int sign_ambiguities) {
 		signs.insert(signs.begin(),sign_ambiguities,1);
 	}
+	template<typename T>
+	SignConfiguration(const vector<T>& signs) : signs{signs} {}
 	bool operator==(const SignConfiguration& other) const {return signs==other.signs;}
 	bool operator!=(const SignConfiguration& other) const {return signs!=other.signs;}
 	SignConfiguration& operator++()  {
@@ -99,12 +101,12 @@ public:
 };
 
 class DiagonalMetric : public ImplicitMetric {
-	list<SignConfiguration> signatures;
+	list<pair<SignConfiguration,SignConfiguration>> signatures;	//first element of each pair is the signature, the other is M_Delta of it.
 protected:
 	void dump_extra(ostream& os) const override {
 			if (signatures.empty()) os<<"no metric (any signature)"<<endl;
 		  for (auto x: signatures) 
-		  	os<<"(potential) signature: "<<x<<endl;		
+		  	os<<"(potential) signature: ("<<x.first<<") -> ("<<x.second<<")"<<endl;
 	}
 public:
 	DiagonalMetric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk);
