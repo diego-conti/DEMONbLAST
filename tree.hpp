@@ -32,9 +32,9 @@ namespace tree_impl {
     }
     void print(ostream& os) const {
       for (int i=0;i<no_outgoing_concatenated_arrows.size();++i)
-        cout<<no_outgoing_concatenated_arrows[i]<< " outgoing concatenated arrows of length "<<i<<endl;
+        os<<no_outgoing_concatenated_arrows[i]<< " outgoing concatenated arrows of length "<<i<<endl;
       for (int i=0;i<no_incoming_concatenated_arrows.size();++i)
-        cout<<no_incoming_concatenated_arrows[i]<< " incoming concatenated arrows of length "<<i<<endl;
+        os<<no_incoming_concatenated_arrows[i]<< " incoming concatenated arrows of length "<<i<<endl;
     }
   private:
     vector<int> no_outgoing_concatenated_arrows;

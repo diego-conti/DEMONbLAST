@@ -218,6 +218,7 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
       filter.only_nontrivial_automorphisms();
     if (command_line_variables.count("only-with-metric")) 
     	filter.only_with_metric();
+    if (command_line_variables.count("only-with-ad-invariant-metric")) filter.only_passing_obstruction_for_ad_invariant_metric();
     diagram_processor.setFilter(filter);
     return move(diagram_processor);
 }
@@ -294,6 +295,7 @@ int main(int argc, char* argv[]) {
             ("only-MDelta-injective", "only diagrams where M_Delta is injective")            
             ("only-with-nontrivial-automorphisms", "only diagrams with nontrivial automorphisms)")           
             ("only-with-metric", "only diagrams which potentially admit a metric (conditions H and L)")           
+            ("only-with-ad-invariant-metric", "only diagrams which satisfy the necessary condition on generalized lower/upper central series for the existence of an ad-invariant metric")
         ;
 
 				try {

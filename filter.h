@@ -20,7 +20,7 @@
 #include "weightbasis.h"
 #include "labeled_tree.h"
 #include "includes.h"
-
+#include "adinvariantobstruction.h"
 
 //TODO derive from Options
 class Filter {
@@ -31,14 +31,16 @@ class Filter {
   bool only_MDelta_injective_=false;
   bool only_nontrivial_automorphisms_=false;
   bool only_with_metric_=false;
+	bool only_passing_obstruction_for_ad_invariant_metric_=false;
 public:
   void only_traceless_derivations()  {only_traceless_derivations_=true;}
   void only_MDelta_surjective()  {only_MDelta_surjective_=true;}
   void only_MDelta_injective()  {only_MDelta_injective_=true;}
 	void only_nontrivial_automorphisms() {only_nontrivial_automorphisms_=true;}
 	void only_with_metric() {only_with_metric_=true;}
+	void only_passing_obstruction_for_ad_invariant_metric() {only_passing_obstruction_for_ad_invariant_metric_=true;}
   void N1N2N3() {allow_nonnice=true;}
-  bool trivial() const {return !(only_traceless_derivations_||only_MDelta_surjective_||only_MDelta_injective_||only_nontrivial_automorphisms_ | only_with_metric_);}
+  bool trivial() const {return !(only_traceless_derivations_||only_MDelta_surjective_||only_MDelta_injective_||only_nontrivial_automorphisms_ | only_with_metric_ | only_passing_obstruction_for_ad_invariant_metric_);}
   bool meets(const LabeledTree& diagram, DiagramDataOptions options) const {
   	if (!allow_nonnice && !satisfies_formal_jacobi(diagram)) return false;
   	if (trivial()) return true;
@@ -48,11 +50,13 @@ public:
     if (only_MDelta_injective_ && !properties.is_M_Delta_injective()) return false;
     if (only_nontrivial_automorphisms_ && !properties.has_nontrivial_automorphisms()) return false;
     if (only_with_metric_ && !properties.potentially_admits_metrics()) return false;
+    if (only_passing_obstruction_for_ad_invariant_metric_ && !passes_obstruction_for_ad_invariant_metric(diagram)) return false;
     return true;
   }
   
 	bool require_only_nontrivial_automorphisms() const {return only_nontrivial_automorphisms_;}
 	bool has_N1N2N3() const {return allow_nonnice;}
+
 };
 
 list<LabeledTree> nice_diagrams(vector<int> partition, const Filter& filter,DiagramDataOptions options);
