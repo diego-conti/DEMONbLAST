@@ -125,6 +125,7 @@ unique_ptr<LabeledTree> LabeledTree::from_stream(istream& s) {
 		swap(arrow.node_in,arrow.label);
 		tree->add_arrow(arrow);	
 	}
+	tree->compute_hash_and_cache_result_unordered();
 	return tree;
 }
 

@@ -41,11 +41,11 @@ dot2ps:
 
 .PHONY: plugin
 plugin: $(SOURCES_NO_MAIN) $(INCLUDES) $(source) clean_log
-	g++ $(INCLUDEDIR) $(SOURCES_NO_MAIN) $(source) $(LIBS) -O3 $(CXXFLAGS) -o plugin
+	g++ $(INCLUDEDIR) $(SOURCES_NO_MAIN) $(source) $(LIBS) -O3 $(CXXFLAGS) -o `basename $(source) .cpp`
 
 .PHONY: debugplugin
 debugplugin: $(SOURCES_NO_MAIN) $(INCLUDES) $(source) clean_log
-	g++ $(INCLUDEDIR) $(SOURCES_NO_MAIN) $(source) $(LIBS) -O0 $(CXXFLAGS) -o plugin
+	g++ $(INCLUDEDIR) $(SOURCES_NO_MAIN) $(source) $(LIBS) -O0 $(CXXFLAGS) -o `basename $(source) .cpp`
 
 .PHONY: dist
 dist: $(SOURCES) $(INCLUDES) $(DIST)

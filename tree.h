@@ -113,7 +113,7 @@ private:
 template<typename ArrowType> class TreeBase : public SetOfNodes {
 private:
 	list<ArrowType> arrows_in_tree;
-	void compute_hash_and_cache_result() const;
+	void compute_hash_and_cache_result_ordered() const;	//assumes arrows have the form i-> j with i>j
 protected:
 	static const int NO_NODE=-1;
 	void invalidate() {tree_hash=HASH_NOT_COMPUTED;}
@@ -132,6 +132,7 @@ protected:
   TreeBase(const SetOfNodes& tree, list<ArrowType>&& arrows) : SetOfNodes(tree),  arrows_in_tree{move(arrows)} {
     assert(tree_hash!=HASH_NOT_COMPUTED);
   }
+	void compute_hash_and_cache_result_unordered() const;
 public:
 	TreeBase(const TreeBase&)=default;
 	TreeBase(TreeBase&&)=default;
@@ -141,11 +142,11 @@ public:
 	bool is_equivalent_to(const TreeBase& tree) const;
 	list<vector<int>> nontrivial_automorphisms() const;
 	vector<int> node_hash() const {
-	  if (tree_hash==HASH_NOT_COMPUTED) compute_hash_and_cache_result();
+	  if (tree_hash==HASH_NOT_COMPUTED) compute_hash_and_cache_result_ordered();
 	  return nodes_hash.to_vector(number_of_nodes());
 	}
 	int hash() const {
-	  if (tree_hash==HASH_NOT_COMPUTED) compute_hash_and_cache_result();
+	  if (tree_hash==HASH_NOT_COMPUTED) compute_hash_and_cache_result_ordered();
     return tree_hash;	  
 	}
 	string to_dot_string(string extra_data={}) const;
