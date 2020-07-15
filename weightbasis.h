@@ -95,6 +95,7 @@ public:
 	}
 	bool matches(DiagramDataOptions options) const {return this->options==options;}
 	list<OrderTwoAutomorphism> automorphisms_giving_ricci_flat() const {return ricci_flat_antidiagonal;}
+	exvector nikolayevsky_derivation() const {return nikolayevsky;}
 protected:
 	DiagramDataOptions options;
 	virtual void print_matrix_data(ostream& os) const;
