@@ -6,7 +6,7 @@ INCLUDES=arrow.h labeled_tree.h partitions.h liegroupsfromdiagram.h  permutation
 
 DIST=Makefile COPYING README
 
-CXXFLAGS=-g -ffor-scope -Wctor-dtor-privacy -Wreorder -Wold-style-cast -Wsign-promo -Wchar-subscripts -Winit-self -Wmissing-braces -Wparentheses -Wreturn-type -Wswitch -Wtrigraphs -Wextra -Wno-sign-compare -Wno-narrowing -Wno-attributes -Wno-error=deprecated-copy -std=c++17 
+CXXFLAGS=-g -Wctor-dtor-privacy -Wreorder -Wold-style-cast -Wsign-promo -Wchar-subscripts -Winit-self -Wmissing-braces -Wparentheses -Wreturn-type -Wswitch -Wtrigraphs -Wextra -Wno-sign-compare -Wno-narrowing -Wno-attributes -std=c++17 
 
 LIBS=-lginac -lwedge -lcln -lgmp -lpthread -lboost_filesystem -lboost_system -lboost_program_options
 
