@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <cassert>
 
+#include <boost/logic/tribool.hpp>
 
 using std::ostream;
 using std::istream;
@@ -47,4 +48,9 @@ using std::make_unique;
 using std::numeric_limits;
 using std::swap;
 using std::move;
+
+
+using boost::logic::tribool;
+using boost::logic::indeterminate;
+
 #endif

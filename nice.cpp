@@ -186,6 +186,13 @@ void process(const po::variables_map& command_line_variables,const DiagramProces
         else cerr<<"Either --all-partitions, --partition or --digraph must be specified"<<endl;        
 }
 
+tribool boolean_value(const po::variables_map& command_line_variables,const string& variable_name) {
+	if (!command_line_variables.count(variable_name)) return indeterminate;
+	auto value=command_line_variables[variable_name].as<string>();
+	if (value=="true" || value=="yes") return true;
+	else if (value=="false" ||value=="no") return false;
+	throw invalid_argument("unrecognized state: "+value);	
+}
 
 DiagramProcessor with_options(const po::variables_map& command_line_variables,DiagramProcessor diagram_processor) {
     if (command_line_variables.count("delta-otimes-delta"))
@@ -219,8 +226,9 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("only-with-metric")) 
     	filter.only_with_metric();
     if (command_line_variables.count("only-with-ad-invariant-metric")) filter.only_passing_obstruction_for_ad_invariant_metric();
+		filter.simple_nikolayevsky(boolean_value(command_line_variables,"simple-nikolayevsky"));
     diagram_processor.setFilter(filter);
-    return move(diagram_processor);
+    return diagram_processor;
 }
 
 DiagramProcessor create_diagram_processor(const po::variables_map& command_line_variables) {
@@ -296,6 +304,7 @@ int main(int argc, char* argv[]) {
             ("only-with-nontrivial-automorphisms", "only diagrams with nontrivial automorphisms)")           
             ("only-with-metric", "only diagrams which potentially admit a metric (conditions H and L)")           
             ("only-with-ad-invariant-metric", "only diagrams which satisfy the necessary condition on generalized lower/upper central series for the existence of an ad-invariant metric")
+            ("simple-nikolayevsky", po::value<string>(), "filter diagrams where the Nikolayevsky derivation has distinct eigenvalues")
         ;
 
 				try {
