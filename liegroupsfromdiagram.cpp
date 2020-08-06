@@ -100,15 +100,23 @@ VectorSpace<DifferentialForm> offdiagonal_elements(const GL& gl) {
 	return {basis.begin(),basis.end()};
 }
 
+Derivations::Derivations(ex generic_element, const lst& eqns) {
+		Wedge::linear_impl::LinearEquationsWithParameters<VectorSpace<DifferentialForm>::Coordinate,StructureConstant> equations{eqns};
+		while (equations.eliminate_linear_equations()) ;
+		auto sol=equations.solution();
+		generic_derivation_=generic_element.subs(sol);
+		for (auto& eq : eqns) remaining_equations_.insert(eq.subs(sol));
+			remaining_equations_.erase(0);					
+	}
 
-VectorSpace<DifferentialForm> LieGroupsFromDiagram::derivations(const GL& Gl) const {
+
+Derivations LieGroupsFromDiagram::derivations(const GL& Gl) const {
 		auto gl=Gl.pForms(1);
 		auto generic_matrix =gl.GenericElement();
 		auto X=Xbrackets(*this,GLRepresentation<VectorField>(&Gl,e()),generic_matrix);
-		lst eqns,sol;
+		lst eqns;
 		GetCoefficients<VectorField>(eqns,X);
-		gl.GetSolutions(sol,eqns.begin(),eqns.end());		
-		return {sol.begin(),sol.end()};
+		return Derivations{generic_matrix,eqns};
 }
 
 string LieGroupsFromDiagram::derivations() const {
@@ -116,8 +124,9 @@ string LieGroupsFromDiagram::derivations() const {
 	auto subspace=derivations(Gl);
 		stringstream s;
 		s<<"dim Der(g)=";
-		s<<subspace.Dimension()<<"; ";
-		matrix generic_offdiag_derivation=Gl.glToMatrix(subspace.GenericElement());
+		s<<subspace.dimension()<<"; ";
+		if (!subspace.always_a_derivation()) s<<"derivation only if "<<horizontal(subspace.remaining_equations())<<endl;
+		matrix generic_offdiag_derivation=Gl.glToMatrix(subspace.generic_derivation());
 		for (int i=0;i<Dimension();++i) generic_offdiag_derivation(i,i)=0;
 		if (generic_offdiag_derivation.pow(Dimension()).is_zero_matrix()) s<<" offdiag derivations are nilpotent"<<endl;
 		else s<<latex<<" offdiag derivation are not nilpotent: "<<generic_offdiag_derivation<<endl;

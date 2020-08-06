@@ -44,20 +44,9 @@ template<class Variable> lst get_variables(const lst& eqns) {
 }
 
 
-
+//represents polynomial equations possibly involving parameters
 template<class Variable>
-class PolynomialEquations {
-  lst equations;
-  lst variables;
-  lst sol;
-  
-  lst linear_equations() const {
-		list<ex> linear;
-		for (auto eq: equations) 
-		  if (eq.is_polynomial(variables) && Degree<Poly<Variable>>(eq)<=1 && !eq.is_zero()) linear.push_back(eq==0);		
-		return linear;
-	}
-  
+class AbstractPolynomialEquations {
   void update_solution(lst solution) {
     nice_log<<"solution: "<<solution<<endl;
     if (solution==lst{}) sol.remove_all();
@@ -77,9 +66,14 @@ class PolynomialEquations {
       eqns.let_op(i)=eqns.op(i).expand().subs(subs).expand();
     return std::move(eqns);
   }
+protected:
+  lst equations;
+  lst variables;
+  lst sol;
+  virtual lst linear_equations() const =0;
 public:
   template< typename ListOfEquations>
-  PolynomialEquations(ListOfEquations&& eqns) : 
+  AbstractPolynomialEquations(ListOfEquations&& eqns) : 
     equations{expand(std::forward<ListOfEquations>(eqns))},
     variables{linear_impl::get_variables<Variable>(equations)}, 
     sol{DefaultLinAlgAlgorithms::lsolve(lst{},variables)} 
@@ -92,6 +86,36 @@ public:
     return true;
   }
   lst solution() const {return sol;}
+};
+
+
+template<class Variable,class Parameter>
+class LinearEquationsWithParameters : protected AbstractPolynomialEquations<Variable> {
+ 	lst linear_equations() const override {	
+		list<ex> linear;
+		for (auto eq: this->equations) 
+		  if (eq.is_polynomial(this->variables) && Degree<Poly<Variable>>(eq)<=1 && Degree<Poly<Parameter>>(eq)==0  && !eq.is_zero()) linear.push_back(eq==0);
+		return linear;
+	}
+public:
+	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
+	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
+	using AbstractPolynomialEquations<Variable>::solution;
+};
+
+
+template<class Variable>
+class PolynomialEquations : protected AbstractPolynomialEquations<Variable>  {
+ 	lst linear_equations() const override {	
+		list<ex> linear;
+		for (auto eq: this->equations) 
+		  if (eq.is_polynomial(this->variables) && Degree<Poly<Variable>>(eq)<=1 && !eq.is_zero()) linear.push_back(eq==0);		
+		return linear;
+	}
+public:
+	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
+	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
+	using AbstractPolynomialEquations<Variable>::solution;
 };
 }
 

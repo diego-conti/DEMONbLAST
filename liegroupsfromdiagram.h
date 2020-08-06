@@ -27,6 +27,27 @@
 using namespace Wedge;
 
 
+class Derivations {
+	ex generic_derivation_;
+	set<ex,ex_is_less> remaining_equations_;
+public:
+	Derivations(ex generic_element, const lst& eqns);
+	ex generic_derivation() const {
+		return generic_derivation_;
+	}
+	exvector remaining_equations() const {
+		return {remaining_equations_.begin(), remaining_equations_.end()};
+	}
+	bool always_a_derivation() const {
+		return remaining_equations_.empty();
+	}
+	int dimension() const {
+		exvector symbols;
+		GetSymbols<VectorSpace<DifferentialForm>::Coordinate> (symbols,generic_derivation_);
+		return symbols.size();
+	}
+};
+
 class LieGroupsFromDiagram : public LieGroupHasParameters<true>, public ConcreteManifold, public virtual Has_dTable {
 protected:
 	bool solve_linear_ddzero();
@@ -41,7 +62,7 @@ public:
 		for (exmap::const_iterator i=dTable().begin();i!=dTable().end();i++)					
 			Has_dTable::Declare_d(i->first,i->second.subs(list_of_equations));
 	}
-	VectorSpace<DifferentialForm> derivations(const GL& gl) const;		//return the derivations as a subset of the Lie algebra gl
+	Derivations derivations(const GL& gl) const;		//return the derivations as a subset of the Lie algebra gl
 	string derivations() const;	
 	
 	exvector csquared(const WeightBasis& weight_basis) const;
