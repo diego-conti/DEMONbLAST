@@ -218,8 +218,8 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     
     Filter filter;
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
-    if (command_line_variables.count("only-MDelta-surjective")) filter.only_MDelta_surjective();
-    if (command_line_variables.count("only-MDelta-injective")) filter.only_MDelta_injective();
+    if (command_line_variables.count("kernel-root-matrix-dimension")) filter.only_kernel_MDelta_dimension(command_line_variables["kernel-root-matrix-dimension"].as<int>());
+    if (command_line_variables.count("cokernel-root-matrix-dimension")) filter.only_cokernel_MDelta_dimension(command_line_variables["cokernel-root-matrix-dimension"].as<int>());
     if (command_line_variables.count("all-diagrams")) filter.N1N2N3();
     if (command_line_variables.count("only-with-nontrivial-automorphisms")) 
       filter.only_nontrivial_automorphisms();
@@ -299,12 +299,12 @@ int main(int argc, char* argv[]) {
             ("legacy-weight-order","maintain the weight order coming from the classification algorithm. This option is independent from --invert.")
             
             ("only-traceless-derivations", "exclude diagrams where (1...1) is not in the span of the rows of M_Delta")
-            ("only-MDelta-surjective", "only diagrams where M_Delta is surjective")            
-            ("only-MDelta-injective", "only diagrams where M_Delta is injective")            
+            ("kernel-root-matrix-dimension", po::value<int>(), "filter diagrams where the root matrix has kernel of dimension")
+            ("cokernel-root-matrix-dimension", po::value<int>(), "filter diagrams where the root matrix has cokernel of dimension")
             ("only-with-nontrivial-automorphisms", "only diagrams with nontrivial automorphisms)")           
             ("only-with-metric", "only diagrams which potentially admit a metric (conditions H and L)")           
             ("only-with-ad-invariant-metric", "only diagrams which satisfy the necessary condition on generalized lower/upper central series for the existence of an ad-invariant metric")
-            ("simple-nikolayevsky", po::value<string>(), "filter diagrams where the Nikolayevsky derivation has distinct eigenvalues")
+            ("simple-nikolayevsky", po::value<string>(), "filter diagrams where the Nikolayevsky derivation is simple (i.e. has distinct eigenvalues) or not")
         ;
 
 				try {

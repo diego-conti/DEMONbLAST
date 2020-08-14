@@ -27,29 +27,30 @@ class Filter {
 	friend void DiagramDataOptions::adapt_to_filter(const Filter& filter);
   bool allow_nonnice=false;
   bool only_traceless_derivations_=false;
-  bool only_MDelta_surjective_=false;
-  bool only_MDelta_injective_=false;
+  int kernel_dimension_=-1;
+  int cokernel_dimension_=-1;  
   bool only_nontrivial_automorphisms_=false;
   bool only_with_metric_=false;
 	bool only_passing_obstruction_for_ad_invariant_metric_=false;
 	tribool simple_nikolayevsky_=indeterminate;
 public:
   void only_traceless_derivations()  {only_traceless_derivations_=true;}
-  void only_MDelta_surjective()  {only_MDelta_surjective_=true;}
-  void only_MDelta_injective()  {only_MDelta_injective_=true;}
 	void only_nontrivial_automorphisms() {only_nontrivial_automorphisms_=true;}
 	void only_with_metric() {only_with_metric_=true;}
 	void only_passing_obstruction_for_ad_invariant_metric() {only_passing_obstruction_for_ad_invariant_metric_=true;}
   void N1N2N3() {allow_nonnice=true;}
   void simple_nikolayevsky(tribool choice) {simple_nikolayevsky_=choice;}
-  bool trivial() const {return !(only_traceless_derivations_||only_MDelta_surjective_||only_MDelta_injective_||only_nontrivial_automorphisms_ | only_with_metric_ | only_passing_obstruction_for_ad_invariant_metric_) && indeterminate(simple_nikolayevsky_);}
+ 	void only_kernel_MDelta_dimension(int kernel_dimension) {kernel_dimension_=kernel_dimension;}
+ 	void only_cokernel_MDelta_dimension(int cokernel_dimension) {cokernel_dimension_=cokernel_dimension;}
+  bool trivial() const {
+  	return !(only_traceless_derivations_||kernel_dimension_>=0||cokernel_dimension_>=0||only_nontrivial_automorphisms_ | only_with_metric_ | only_passing_obstruction_for_ad_invariant_metric_) && indeterminate(simple_nikolayevsky_);}
   bool meets(const LabeledTree& diagram, DiagramDataOptions options) const {
   	if (!allow_nonnice && !satisfies_formal_jacobi(diagram)) return false;
   	if (trivial()) return true;
     auto& properties = diagram.weight_basis(options).properties();
     if (only_traceless_derivations_ && !properties.are_all_derivations_traceless()) return false;
-    if (only_MDelta_surjective_ && !properties.is_M_Delta_surjective()) return false;
-    if (only_MDelta_injective_ && !properties.is_M_Delta_injective()) return false;
+    if (kernel_dimension_>=0 && properties.dimension_kernel_M_Delta()!=kernel_dimension_) return false;
+    if (cokernel_dimension_>=0 && properties.dimension_cokernel_M_Delta()!=cokernel_dimension_) return false;
     if (only_nontrivial_automorphisms_ && !properties.has_nontrivial_automorphisms()) return false;
     if (only_with_metric_ && !properties.potentially_admits_metrics()) return false;
     if (only_passing_obstruction_for_ad_invariant_metric_ && !passes_obstruction_for_ad_invariant_metric(diagram)) return false;

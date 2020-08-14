@@ -91,11 +91,13 @@ DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const l
  	options{options},
  	no_rows{weight_matrix.M_Delta().rows()},
  	no_cols{weight_matrix.M_Delta().cols()},
+  rank_over_Q{weight_matrix.rank_over_Q()},
   rank_over_Z2{weight_matrix.rank_over_Z2()},
   automorphisms{automorphisms},
  	imMDelta2{image_mod2(weight_matrix).to_string()}, 	
  	ricci_flat_antidiagonal{options.with_antidiagonal_ricci_flat_sigma()? ricci_flat_sigma(weight_matrix) : list<OrderTwoAutomorphism>{}},
- 	diagram_analyzer{options.analyze_diagram()? DiagramAnalyzer{weight_matrix.cols(),vector<WeightAndCoefficient>{weight_matrix.weight_begin(),weight_matrix.weight_end()}} : DiagramAnalyzer{}}
+ 	diagram_analyzer{options.analyze_diagram()? DiagramAnalyzer{weight_matrix.cols(),vector<WeightAndCoefficient>{weight_matrix.weight_begin(),weight_matrix.weight_end()}} : DiagramAnalyzer{}},
+  kernel_of_MDelta_transpose{X_solving_Ricciflat(weight_matrix)}
 {
 	auto nilsoliton_X=X_solving_nilsoliton(weight_matrix);
 	b=nilsoliton_X;	
@@ -113,17 +115,15 @@ DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const l
 				metrics.push_back(make_unique<SigmaCompatibleMetric> (RICCI_FLAT_SIGMA(),weight_matrix, symmetrize(diagonal_ricci_flat_X,weight_matrix.sigma_on_VDelta(sigma)), sigma));
 }
 
-
-DiagramPropertiesNonSurjectiveMDelta:: DiagramPropertiesNonSurjectiveMDelta(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options)
-  : DiagramProperties(weight_matrix,automorphisms,options),  rank_over_Q{weight_matrix.rank_over_Q()},
-  kernel_of_MDelta_transpose{X_solving_Ricciflat(weight_matrix)}
-{}
   
 string signature(const exvector& metric) {
   int positive=count_if(metric.begin(),metric.end(),[](ex x) {return x>0;});
   int negative=metric.size()-positive;
   return "("+to_string(positive)+","+to_string(negative)+")";
 }
+
+
+
 
 void DiagramProperties::print_matrix_data(ostream& os) const {
 	  if (are_all_derivations_traceless()) {
@@ -133,32 +133,19 @@ void DiagramProperties::print_matrix_data(ostream& os) const {
 	    os<<"Nikolayevsky derivation: "<<nikolayevsky<<endl;
 	  }
     os<<"rank over Z_2 = "<<rank_over_Z2<<endl;
-    os<< "B="<<B<<endl;
+	  os<<"rank over Q = "<<rank_over_Q<<endl;
+	  os<<"dim ker M_Delta = "<< dimension_kernel_M_Delta()<<endl;
+	  os<<"dim coker M_Delta = "<<dimension_cokernel_M_Delta()<<endl;
+	  if (dimension_cokernel_M_Delta()) {
+		  os<<" kernel of (M_Delta)^T "<<kernel_of_MDelta_transpose<<"; generators:"<<endl;
+		 	for (auto v : basis_from_generic_element<Unknown>(kernel_of_MDelta_transpose)) os<<v<<endl;
+		  list<ex> symbols;
+		  for (auto entry : kernel_of_MDelta_transpose)
+		  for (auto symbol : symbols) 
+		  	if (abs(entry.coeff(symbol))>1) os<<"unexpected coefficient"<<endl;  
+		 }
+    os<<"B="<<B<<endl;
     os<<"b="<<horizontal(b)<<endl;
-}
-
-void DiagramPropertiesSurjectiveMDelta::print_matrix_data(ostream& os) const {
-	DiagramProperties::print_matrix_data(os);
-	os<<"rank over Q = "<<rank_over_Q<< "(M_Delta surjective, "; 		
-  os <<( (rank_over_Q==no_cols)? "injective" : "not injective");
-  os<<");"<<endl;
-}
-
-
-void DiagramPropertiesNonSurjectiveMDelta::print_matrix_data(ostream& os) const {
-	DiagramProperties::print_matrix_data(os);
-  os<<"rank over Q = "<<rank_over_Q;
-  os<< "< "<< no_rows<< "(M_Delta not surjective, ";
-  os << ((rank_over_Q==no_cols)? "injective" : "not injective");
-  os<<");"<<endl;
-  os<<" kernel of (M_Delta)^T "<<kernel_of_MDelta_transpose<<"; generators:"<<endl;
-  for (auto v : basis_from_generic_element<Unknown>(kernel_of_MDelta_transpose)) os<<v<<endl;
-  list<ex> symbols;
-  GetSymbols<Unknown>(symbols,kernel_of_MDelta_transpose.begin(),kernel_of_MDelta_transpose.end());
-  os<<"dim="<<symbols.size()<<endl;
-  for (auto entry : kernel_of_MDelta_transpose)
-  for (auto symbol : symbols) 
-  	if (abs(entry.coeff(symbol))>1) os<<"unexpected coefficient"<<endl;  
 }
 
 
@@ -185,16 +172,9 @@ string DiagramProperties::diagram_data() const {
     return sstream.str();
 }
 
-string DiagramPropertiesSurjectiveMDelta::diagram_data() const  {
-	return DiagramProperties::diagram_data(); 		
-}
 
 WEDGE_DECLARE_NAMED_ALGEBRAIC(Parameter,realsymbol);
 
-DiagramPropertiesSurjectiveMDelta::DiagramPropertiesSurjectiveMDelta(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options) 
-  : DiagramProperties{weight_matrix,automorphisms,options},rank_over_Q{weight_matrix.rank_over_Q()}
-{
-}
 
 exvector subs(exvector v,ex subs) {
   for (auto& x: v) x=x.subs(subs);
@@ -235,10 +215,7 @@ WeightBasis::WeightBasis(const LabeledTree& tree) : WeightBasis{WeightMatrix{tre
 WeightBasisAndProperties::WeightBasisAndProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options) 
 	: WeightBasis{weight_matrix,automorphisms}
 {
-  if (weight_matrix.rank_over_Q()==weights.size())
-    diagram_properties = make_unique< DiagramPropertiesSurjectiveMDelta>(weight_matrix,automorphisms,options);
-  else 
-    diagram_properties = make_unique< DiagramPropertiesNonSurjectiveMDelta>(weight_matrix,automorphisms,options);
+    diagram_properties = make_unique< DiagramProperties>(weight_matrix,automorphisms,options);
 }
 
 WeightBasisAndProperties::WeightBasisAndProperties(const WeightMatrix& weight_matrix,const LabeledTree& tree, DiagramDataOptions options)

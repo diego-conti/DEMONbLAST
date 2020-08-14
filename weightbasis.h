@@ -60,9 +60,9 @@ class WeightMatrix;
 class DiagramProperties {
 public:
   DiagramProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options);
- 	virtual bool is_M_Delta_surjective() const=0;
- 	virtual bool is_M_Delta_injective() const=0;
- 	virtual string diagram_data() const;
+ 	int dimension_kernel_M_Delta() const {return no_cols-rank_over_Q;}
+ 	int dimension_cokernel_M_Delta() const {return no_rows-rank_over_Q;}
+ 	string diagram_data() const;
  	bool potentially_admits_metrics() const {
  		assert(!metrics.empty());
  		auto result=any_of(metrics.begin(),metrics.end(),
@@ -98,14 +98,13 @@ public:
 	list<OrderTwoAutomorphism> automorphisms_giving_ricci_flat() const {return ricci_flat_antidiagonal;}
 	exvector nikolayevsky_derivation() const {return nikolayevsky;}
 	bool simple_nikolayevsky_derivation() const {return set<ex,ex_is_less>(nikolayevsky.begin(),nikolayevsky.end()).size()==nikolayevsky.size();}
-protected:
-	DiagramDataOptions options;
-	virtual void print_matrix_data(ostream& os) const;
-  int no_rows, no_cols;
 private:
 	static string RICCI_FLAT_DIAGONAL() {return "Ricci-flat(diag)"s;}
 	static string RICCI_FLAT_SIGMA() {return "Ricci-flat(sigma)"s;}
 	static string NILSOLITON_DIAGONAL() {return "nilsoliton(diag)"s;}
+	DiagramDataOptions options;
+	void print_matrix_data(ostream& os) const;
+  int no_rows, no_cols, rank_over_Q;
   int rank_over_Z2;
   list<unique_ptr<ImplicitMetric>> metrics;
 	exvector nikolayevsky;
@@ -115,30 +114,9 @@ private:
 	DiagramAnalyzer diagram_analyzer;		//combinatorial data about the diagram
 	ex B;
 	exvector b;
-};
-
-class DiagramPropertiesNonSurjectiveMDelta : public DiagramProperties {
-  int rank_over_Q;
-  bool X_ijk_in_coordinate_hyperplane;
   exvector kernel_of_MDelta_transpose;
-protected:
- 	void print_matrix_data(ostream& os) const override;	
-public:
-  DiagramPropertiesNonSurjectiveMDelta(const WeightMatrix& weight_matrix,const list<vector<int>>& automorphisms, DiagramDataOptions options);
-  bool is_M_Delta_surjective() const override {return false;}
-  bool is_M_Delta_injective() const override {return rank_over_Q==no_cols;}
 };
 
-class DiagramPropertiesSurjectiveMDelta : public DiagramProperties {
-  int rank_over_Q;
-protected:
- 	void print_matrix_data(ostream& os) const override;	
-public:
-  DiagramPropertiesSurjectiveMDelta(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options);
-  bool is_M_Delta_surjective() const override {return true;}
-  bool is_M_Delta_injective() const override {return no_rows==no_cols;}
-	string diagram_data() const override;
-};
 
 
 class WeightBasis {

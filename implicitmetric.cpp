@@ -92,40 +92,6 @@ exvector multiply_signs (const vector<Z2>& epsilon, exvector X) {
 	return X;
 }
 
-//condition 2'' (unused!)
-list<pair<SignConfiguration,SignConfiguration>> signatures_compatible_with_X_and_kerMDelta_transpose(const WeightMatrix& weight_matrix,const exvector& X)
-{
-	assert(weight_matrix.rows()==0 || !X.empty());
-	auto MDelta=weight_matrix.M_Delta();
-	auto gram = to_matrix( matrix_product(MDelta,transpose(MDelta)));
-	exvector ones(MDelta.rows(),ex{1});
-	list<pair<SignConfiguration,SignConfiguration>> result;
-	for (auto epsilon : SignConfiguration::all_configurations(weight_matrix.cols())) {
-		auto MDelta2epsilon=weight_matrix.image_of(sign_configuration_to_vector(weight_matrix.cols(),epsilon));
-		auto epsilonX=multiply_signs(MDelta2epsilon,X);
-//		if (all_of(MDelta2epsilon.begin(),MDelta2epsilon.end(),[](Z2 z) {return z==0;})) continue;	//do not consider "trivial" sign configurations
-		if (affinespace_intersects_orthant<Unknown>((MDelta2epsilon), X) && gram.image_of(epsilonX)==ones)
-			result.push_back(make_pair(epsilon,vector_to_sign_configuration(MDelta2epsilon)));
-	}
-	return result;
-}
-
-
-/*
-//condition 2'' (some old version)
-list<SignConfiguration> signatures_compatible_with_X_and_kerMDelta_transpose(const WeightMatrix& weight_matrix,const exvector& X)
-{
-	assert(weight_matrix.rows()==0 || !X.empty());
-	list<SignConfiguration> result;
-	auto MDeltatranspose=to_matrix(transpose(weight_matrix.M_Delta()));
-	for (auto epsilon : SignConfiguration::all_configurations(weight_matrix.cols())) {
-		auto MDelta2epsilon=weight_matrix.image_of(sign_configuration_to_vector(weight_matrix.cols(),epsilon));
-//		if (all_of(MDelta2epsilon.begin(),MDelta2epsilon.end(),[](Z2 z) {return z==0;})) continue;	//do not consider "trivial" sign configurations
-			if (affinespace_intersects_orthant<Unknown>((MDelta2epsilon), X) && sign_change_leaves_ker_invariant(MDelta2epsilon, MDeltatranspose))			
-				result.push_back(epsilon);
-	}
-	return result;
-}*/
 
 //TODO write  a function that attempts to solve a generic polynomial equation (and fails if degree exceeds 2)
 list<ex> solve_second_degree_equation(ex eq) {
