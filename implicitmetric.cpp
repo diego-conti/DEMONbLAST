@@ -93,34 +93,65 @@ exvector multiply_signs (const vector<Z2>& epsilon, exvector X) {
 }
 
 
-//TODO write  a function that attempts to solve a generic polynomial equation (and fails if degree exceeds 2)
-list<ex> solve_second_degree_equation(ex eq) {
-	list<ex> variables;
-	GetSymbols<Unknown> (variables,eq);
-	if (variables.empty()) {
-		ex x=Unknown{N.x};
-		if (eq.is_zero()) return {x==x}; else return {};
+template<typename Unknown> 
+class PolynomialSolver {
+	exvector solutions;	
+	bool can_solve_;
+	void solve_no_variables(ex equation) {
+		can_solve_=true;
+		if (equation.is_zero())
+			solutions.push_back(lst{});
 	}
-	else if (variables.size()>1) {
-			std::cerr<<eq<<endl;
-			throw std::invalid_argument("equation with more than one variable");
+	void solve_in_variable(ex equation, ex x) {
+		auto a=equation.coeff(x,2);
+		auto b=equation.coeff(x,1);
+		auto c=equation.coeff(x,0);
+		auto delta=b*b-4*a*c;
+		switch (equation.degree(x)) {
+			case 1: 
+				can_solve_=true;
+				solutions.push_back(x==-c/b);
+				break;
+			case 2: 
+				can_solve_=true;
+				if (delta.is_zero()) solutions.push_back(x==-b/(2*a));
+				else if (delta>0) {
+					solutions.push_back(x==(-b+sqrt(delta))/(2*a));
+					solutions.push_back(x==(-b-sqrt(delta))/(2*a));
+				}
+				break;
+			default:
+					can_solve_=false;
+			}
+	}	
+public:
+	PolynomialSolver(ex equation) {
+		list<ex> variables;
+		GetSymbols<Unknown> (variables,equation);
+		if (variables.empty()) solve_no_variables(equation);
+		else if (variables.size()>1) can_solve_=false;
+		else solve_in_variable(equation,variables.front());
 	}
-	auto x=variables.front();
-	auto a=eq.coeff(x,2);
-	auto b=eq.coeff(x,1);
-	auto c=eq.coeff(x,0);
-	auto delta=b*b-4*a*c;
-	switch (eq.degree(x)) {
-		case 1: return {x==-c/b};
-		case 2: 
-			if (delta.is_zero()) return {x==-b/(2*a)} ;
-			else if (delta<0) return {};
-			else return  {x==(-b+sqrt(delta))/(2*a),x==(-b-sqrt(delta))/(2*a)};
-		default:
-				std::cerr<<eq<<endl;
-			 throw std::invalid_argument("not a polynomial of degree 1 or 2");
-		}
-}
+	bool can_solve() const {return can_solve_;}
+	bool has_solution() const {return solutions.size();}
+	list<ex> substitute_solutions(ex expression) const {
+		list<ex> result;
+		transform(solutions.begin(),solutions.end(),back_inserter(result),[expression] (ex solution) {return expression.subs(solution);});
+		return result;
+	}
+	list<exvector> substitute_solutions(const exvector& expression) const {
+		auto subs_into_vector=[&expression] (ex solution) {
+			exvector result;
+			transform(expression.begin(),expression.end(),back_inserter(result),[solution] (ex x) {return x.subs(solution);});
+			return result;
+		};	
+		list<exvector> result;
+		transform(solutions.begin(),solutions.end(),back_inserter(result),subs_into_vector);
+		return result;
+	}
+};
+
+
 
 SignConfiguration sign_configuration_from_vector(const exvector& X) {
 	vector<int> signs;
@@ -133,33 +164,18 @@ string DiagonalMetric::solution_to_polynomial_equations_or_empty_string(const ex
 	auto basis_of_KerMDeltaTranspose=basis_from_generic_element<Unknown>(X());
 	if (basis_of_KerMDeltaTranspose.size()!=1) return {};
 	auto coeff=basis_of_KerMDeltaTranspose.front();
-	multiset<ex,ex_is_less> as_multiset{coeff.begin(),coeff.end()};
-	if (as_multiset.count(1)==2 && as_multiset.count(-1)==2 && as_multiset.count(0)==coeff.size()-4) {
-		ex lhs=raise_each_and_multiply(X(),coeff);
-		ex rhs=raise_each_and_multiply(csquared,coeff);
-		try {
-			auto solutions=solve_second_degree_equation((lhs-rhs).numer());
-			solutions.splice(solutions.end(),	solve_second_degree_equation((lhs+rhs).numer()));
-			if (solutions.empty()) s<<"no solution"<<endl;
-			else for (auto sol: solutions) {
-				exvector Xsol;
-				transform(X().begin(),X().end(),back_inserter(Xsol),[&sol] (ex x) {return x.subs(sol);});
-				s<<"X="<<horizontal(Xsol);
-				s<<"-> ("<<sign_configuration_from_vector(Xsol)<<")"<<endl;
-			}
-		}
-		catch (std::exception& e) {
-			std::cerr<<e.what()<<endl;
-			std::cerr<<X()<<endl;
-			std::cerr<<csquared<<endl;
-			std::cerr<<coeff<<endl;
-
-			std::cerr<<lhs<<endl;
-			std::cerr<<rhs<<endl;
-			std::cerr<<(lhs-rhs).numer()<<endl;
-			std::cerr<<(lhs+rhs).numer()<<endl;
-			throw;
-		}
+	ex lhs=raise_each_and_multiply(X(),coeff);
+	ex rhs=raise_each_and_multiply(csquared,coeff);
+	auto solutions1=PolynomialSolver<Unknown>{(lhs-rhs).numer()};
+	auto solutions2=PolynomialSolver<Unknown>{(lhs+rhs).numer()};
+	if (solutions1.can_solve() && solutions2.can_solve()) {
+		auto solutions=solutions1.substitute_solutions(X());
+		solutions.splice(solutions.end(),solutions2.substitute_solutions(X()));
+		for (auto Xsol : solutions) {
+			s<<"X="<<horizontal(Xsol);
+			s<<"-> ("<<sign_configuration_from_vector(Xsol)<<")"<<endl;
+		}		
+		if (solutions.empty()) s<<"no solution"<<endl;
 	}
 	return s.str();
 }
