@@ -30,21 +30,31 @@ using namespace Wedge;
 class Derivations {
 	ex generic_derivation_;
 	set<ex,ex_is_less> remaining_equations_;
+	VectorSpace<DifferentialForm> space_of_diagonal_derivations_,space_containing_offdiagonal_derivations_,space_contained_in_offdiagonal_derivations_;
+
+	void compute_offdiag(const GL& gl, const LieGroup& G);
+	void compute_diag(const GL& gl, const LieGroup& G);
 public:
-	Derivations(ex generic_element, const lst& eqns);
-	ex generic_derivation() const {
-		return generic_derivation_;
-	}
+	Derivations(const GL& gl, const LieGroup& niceLieGroup);
 	exvector remaining_equations() const {
 		return {remaining_equations_.begin(), remaining_equations_.end()};
 	}
+	static exvector remaining_equations(const GL& gl, const LieGroup& niceLieGroup,ex generic_element); 
 	bool always_a_derivation() const {
 		return remaining_equations_.empty();
 	}
-	int dimension() const {
-		exvector symbols;
-		GetSymbols<VectorSpace<DifferentialForm>::Coordinate> (symbols,generic_derivation_);
-		return symbols.size();
+	pair<int,int> dimension() const {
+		return make_pair(space_of_diagonal_derivations_.Dimension()+space_contained_in_offdiagonal_derivations_.Dimension(),
+			space_of_diagonal_derivations_.Dimension()+space_containing_offdiagonal_derivations_.Dimension());
+	}
+	VectorSpace<DifferentialForm> space_containing_offdiagonal_derivations() const {
+		return space_containing_offdiagonal_derivations_;
+	}
+	VectorSpace<DifferentialForm> space_contained_in_offdiagonal_derivations() const {
+		return space_contained_in_offdiagonal_derivations_;
+	}
+	VectorSpace<DifferentialForm> diagonal_derivations() const {
+		return space_of_diagonal_derivations_;
 	}
 };
 

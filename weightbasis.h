@@ -77,6 +77,7 @@ public:
  			auto polynomial_equations=metric->polynomial_equations_for_existence(csquared);
 			if (!polynomial_equations.empty())	result+=" when structure constants satisfy: "+horizontal(polynomial_equations)+"\n";
 			else result+=" always\n";
+			result +=metric->solution_to_polynomial_equations_or_empty_string(csquared);
 		}
  		return result; 		
  	}

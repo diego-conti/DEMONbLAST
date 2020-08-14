@@ -101,6 +101,19 @@ public:
 	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
 	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
 	using AbstractPolynomialEquations<Variable>::solution;
+	lst always_solution() const {
+		lst solution;
+		list<ex> surviving_variables;
+		for (auto eq : this->equations)
+			GetSymbols<Variable>(surviving_variables,eq);
+		lst to_zero;
+		for (auto x: surviving_variables) to_zero.append(x==0);
+		for (auto x: this->sol)
+			solution.append(x.lhs()==x.rhs().subs(to_zero));
+		for (auto x: to_zero)
+			solution.append(x);
+		return solution;
+	}
 };
 
 

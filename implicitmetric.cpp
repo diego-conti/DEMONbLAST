@@ -18,7 +18,7 @@
 #include "implicitmetric.h"
 #include "weightmatrix.h"
 #include "linearinequalities.h"
-
+using std::multiset;
 
 template<typename NumType>
 auto equals_zero () {
@@ -86,8 +86,33 @@ list<pair<SignConfiguration,SignConfiguration>> signatures_compatible_with_X(con
 }
 
 
+exvector multiply_signs (const vector<Z2>& epsilon, exvector X) {
+	auto mul = [] (Z2 x, ex y) {return x.to_Z_star()*y;};
+	transform(epsilon.begin(),epsilon.end(),X.begin(), X.begin(),mul);
+	return X;
+}
+
+//condition 2'' (unused!)
+list<pair<SignConfiguration,SignConfiguration>> signatures_compatible_with_X_and_kerMDelta_transpose(const WeightMatrix& weight_matrix,const exvector& X)
+{
+	assert(weight_matrix.rows()==0 || !X.empty());
+	auto MDelta=weight_matrix.M_Delta();
+	auto gram = to_matrix( matrix_product(MDelta,transpose(MDelta)));
+	exvector ones(MDelta.rows(),ex{1});
+	list<pair<SignConfiguration,SignConfiguration>> result;
+	for (auto epsilon : SignConfiguration::all_configurations(weight_matrix.cols())) {
+		auto MDelta2epsilon=weight_matrix.image_of(sign_configuration_to_vector(weight_matrix.cols(),epsilon));
+		auto epsilonX=multiply_signs(MDelta2epsilon,X);
+//		if (all_of(MDelta2epsilon.begin(),MDelta2epsilon.end(),[](Z2 z) {return z==0;})) continue;	//do not consider "trivial" sign configurations
+		if (affinespace_intersects_orthant<Unknown>((MDelta2epsilon), X) && gram.image_of(epsilonX)==ones)
+			result.push_back(make_pair(epsilon,vector_to_sign_configuration(MDelta2epsilon)));
+	}
+	return result;
+}
+
+
 /*
-//condition 2''
+//condition 2'' (some old version)
 list<SignConfiguration> signatures_compatible_with_X_and_kerMDelta_transpose(const WeightMatrix& weight_matrix,const exvector& X)
 {
 	assert(weight_matrix.rows()==0 || !X.empty());
@@ -102,9 +127,82 @@ list<SignConfiguration> signatures_compatible_with_X_and_kerMDelta_transpose(con
 	return result;
 }*/
 
+//TODO write  a function that attempts to solve a generic polynomial equation (and fails if degree exceeds 2)
+list<ex> solve_second_degree_equation(ex eq) {
+	list<ex> variables;
+	GetSymbols<Unknown> (variables,eq);
+	if (variables.empty()) {
+		ex x=Unknown{N.x};
+		if (eq.is_zero()) return {x==x}; else return {};
+	}
+	else if (variables.size()>1) {
+			std::cerr<<eq<<endl;
+			throw std::invalid_argument("equation with more than one variable");
+	}
+	auto x=variables.front();
+	auto a=eq.coeff(x,2);
+	auto b=eq.coeff(x,1);
+	auto c=eq.coeff(x,0);
+	auto delta=b*b-4*a*c;
+	switch (eq.degree(x)) {
+		case 1: return {x==-c/b};
+		case 2: 
+			if (delta.is_zero()) return {x==-b/(2*a)} ;
+			else if (delta<0) return {};
+			else return  {x==(-b+sqrt(delta))/(2*a),x==(-b-sqrt(delta))/(2*a)};
+		default:
+				std::cerr<<eq<<endl;
+			 throw std::invalid_argument("not a polynomial of degree 1 or 2");
+		}
+}
+
+SignConfiguration sign_configuration_from_vector(const exvector& X) {
+	vector<int> signs;
+	transform(X.begin(),X.end(),back_inserter(signs),[](ex x) {return x>0? 1 : -1;});
+	return {signs};
+}
+
+string DiagonalMetric::solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const {
+	stringstream s;
+	auto basis_of_KerMDeltaTranspose=basis_from_generic_element<Unknown>(X());
+	if (basis_of_KerMDeltaTranspose.size()!=1) return {};
+	auto coeff=basis_of_KerMDeltaTranspose.front();
+	multiset<ex,ex_is_less> as_multiset{coeff.begin(),coeff.end()};
+	if (as_multiset.count(1)==2 && as_multiset.count(-1)==2 && as_multiset.count(0)==coeff.size()-4) {
+		ex lhs=raise_each_and_multiply(X(),coeff);
+		ex rhs=raise_each_and_multiply(csquared,coeff);
+		try {
+			auto solutions=solve_second_degree_equation((lhs-rhs).numer());
+			solutions.splice(solutions.end(),	solve_second_degree_equation((lhs+rhs).numer()));
+			if (solutions.empty()) s<<"no solution"<<endl;
+			else for (auto sol: solutions) {
+				exvector Xsol;
+				transform(X().begin(),X().end(),back_inserter(Xsol),[&sol] (ex x) {return x.subs(sol);});
+				s<<"X="<<horizontal(Xsol);
+				s<<"-> ("<<sign_configuration_from_vector(Xsol)<<")"<<endl;
+			}
+		}
+		catch (std::exception& e) {
+			std::cerr<<e.what()<<endl;
+			std::cerr<<X()<<endl;
+			std::cerr<<csquared<<endl;
+			std::cerr<<coeff<<endl;
+
+			std::cerr<<lhs<<endl;
+			std::cerr<<rhs<<endl;
+			std::cerr<<(lhs-rhs).numer()<<endl;
+			std::cerr<<(lhs+rhs).numer()<<endl;
+			throw;
+		}
+	}
+	return s.str();
+}
 
 
-DiagonalMetric::DiagonalMetric(const string& name,const WeightMatrix& weight_matrix, const exvector& X_ijk) : ImplicitMetric{name,X_ijk},	signatures{signatures_compatible_with_X(weight_matrix,X_ijk)} {}	
+DiagonalMetric::DiagonalMetric(const string& name,const WeightMatrix& weight_matrix, const exvector& X_ijk) :
+	ImplicitMetric{name,X_ijk},	
+	potential_signatures{signatures_compatible_with_X(weight_matrix,X_ijk)}
+	 {}	
 
 
 ostream& operator<<(ostream& os,SignConfiguration sign_configuration) {
