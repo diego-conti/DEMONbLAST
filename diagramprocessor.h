@@ -174,9 +174,11 @@ public:
 class DiagramProcessorWithLieAlgebras : public DiagramProcessorImpl {
   virtual ProcessedDiagram process_list(const LabeledTree& diagram,const list<NiceLieGroup>& groups) const {  
     string lie_algebras;      
+    auto& weight_basis=diagram.weight_basis(diagram_data_options());
 		for (auto& group : groups) {
 			lie_algebras+=to_string(group)+"\n";
-			lie_algebras+=polynomial_equations_for_existence_of_special_metrics(diagram.weight_basis(diagram_data_options()), group);
+			lie_algebras+=polynomial_equations_for_existence_of_special_metrics(weight_basis, group)+"\n";
+			lie_algebras+=weight_basis.properties().classification_of_metrics(group.csquared(weight_basis))+"\n";
 		}
     if (groups.empty()) lie_algebras="no Lie algebra";
 		return {diagram.to_dot_string(),lie_algebras};
@@ -274,18 +276,23 @@ public:
 
 class DiagramProcessorTableOfLieAlgebras : public DiagramProcessorWithLieAlgebras {
 public:
-  ProcessedDiagram process_list(const LabeledTree& diagram,const list<NiceLieGroup>& groups) const override {  
-    string lie_algebras;     
-    ProgressiveLetter progressive_letter; 
-		for (auto group : groups)		{
-			string progressive{++progressive_letter};
-			if (groups.size()==1) progressive.clear();
-		  lie_algebras+=horizontal(lower_central_series(diagram),"")+":"+diagram.name()+progressive+"&"+to_string(group)+"&"+horizontal(upper_central_series(diagram),"");
-			lie_algebras+="&"+polynomial_equations_for_existence_of_special_metrics(diagram.weight_basis(diagram_data_options()), group);
-		  lie_algebras+="\\\\\n";
+  ProcessedDiagram process(const LabeledTree& diagram) const override {
+      auto& weight_basis=diagram.weight_basis(diagram_data_options());
+      auto groups=NiceLieGroup::from_weight_basis(weight_basis);  
+      if (groups.empty() && only_if_lie_algebras()) return {};
+ 	   	string lie_algebras;     
+ 		  ProgressiveLetter progressive_letter; 
+			for (auto group : groups)		{
+				string progressive{++progressive_letter};
+				if (groups.size()==1) progressive.clear();
+			  lie_algebras+=horizontal(lower_central_series(diagram),"")+":"+diagram.name()+progressive+"&"+to_string(group)+"&"+horizontal(upper_central_series(diagram),"");
+			  if (with_diagram_data())
+				  lie_algebras+="&("+horizontal(weight_basis.properties().nikolayevsky_derivation())+")";
+				lie_algebras+="&"+weight_basis.properties().classification_of_metrics(group.csquared(weight_basis));
+			  lie_algebras+="\\\\\n";
 		 }
-    return {lie_algebras,{}};
-  }
+    	return {lie_algebras,{}};
+   }
 };
 
 class DiagramProcessorClassifyingMetricLieAlgebras : public DiagramProcessorImpl {

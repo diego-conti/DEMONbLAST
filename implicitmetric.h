@@ -25,11 +25,14 @@
 #include "gauss.h"
 #include <wedge/liegroup.h>
 #include "horizontal.h"
+#include <optional>
 
 
 
 using namespace GiNaC;
 using namespace Wedge;
+using std::optional;
+using std::nullopt;
 
 class WeightMatrix;
 
@@ -95,6 +98,7 @@ public:
 	}
 	const exvector& X() const {return X_ijk;}
 	exvector polynomial_equations_for_existence(const exvector& csquared) const;	//return empty if there is no metric, the Lie algebra is abelian or M_Delta is surjective
+	virtual string classification(const exvector& csquared) const {return "cannot classify";}
 	virtual string solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const {return {};}	
 	bool is_in_coordinate_hyperplane() const {return in_coordinate_hyperplane;}
 	string name() const {return name_;}
@@ -103,20 +107,20 @@ public:
 
 class DiagonalMetric : public ImplicitMetric {
 	list<pair<SignConfiguration,SignConfiguration>> potential_signatures;	//first element of each pair is the signature, the other is M_Delta of it.
-	list<pair<SignConfiguration,SignConfiguration>> signatures;	//first element of each pair is the signature, the other is M_Delta of it.
+	optional<SignConfiguration> sign_configuration_from_image(const SignConfiguration& image) const;
+	optional<set<vector<int>>> exact_signatures_for_codimension_one(const exvector& csquared) const;
+	int dimension_coker_MDelta;
 protected:
 	void dump_extra(ostream& os) const override {
 			if (potential_signatures.empty()) os<<"no metric (any signature)"<<endl;
-			if (signatures.empty()) 
-			  for (auto x: potential_signatures) 
-			  	os<<"(potential) signature: ("<<x.first<<") -> ("<<x.second<<")"<<endl;
-			else for (auto x: signatures) 
-		  	os<<"signature: ("<<x.first<<") -> ("<<x.second<<")"<<endl;
+			for (auto x: potential_signatures) 
+			  os<<"(potential) signature: ("<<x.first<<") -> ("<<x.second<<")"<<endl;
 	}
 public:
 	DiagonalMetric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk);
 	bool no_metric_regardless_of_polynomial_conditions() const override {return is_in_coordinate_hyperplane()|| potential_signatures.empty();}
 	string solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const override;	
+	string classification(const exvector& csquared) const override;
 };
 
 class SigmaCompatibleMetric : public ImplicitMetric {

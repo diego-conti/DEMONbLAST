@@ -86,6 +86,13 @@ public:
 	}
 	bool has_nontrivial_automorphisms() const {return !automorphisms.empty();}
 	
+	string classification_of_metrics(const exvector& csquared) const {
+		string result;
+		for (auto& metric : metrics)
+			result+=metric->name()+"&"+metric->classification(csquared);
+		return result;
+	}
+	
 	const ImplicitMetric* diagonal_nilsoliton_metric() const {
 		auto it=find_if(metrics.begin(),metrics.end(),[] (auto& metric) {return metric->name()==NILSOLITON_DIAGONAL();});
 		return it!=metrics.end()? it->get() : nullptr;

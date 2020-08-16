@@ -124,13 +124,19 @@ class PolynomialSolver {
 					can_solve_=false;
 			}
 	}	
-public:
+	PolynomialSolver()=default;
+public:	
 	PolynomialSolver(ex equation) {
 		list<ex> variables;
 		GetSymbols<Unknown> (variables,equation);
 		if (variables.empty()) solve_no_variables(equation);
 		else if (variables.size()>1) can_solve_=false;
 		else solve_in_variable(equation,variables.front());
+	}
+	static PolynomialSolver solver_that_cannot_solve() {
+		PolynomialSolver result;
+		result.can_solve_=false;
+		return result;	
 	}
 	bool can_solve() const {return can_solve_;}
 	bool has_solution() const {return solutions.size();}
@@ -149,6 +155,11 @@ public:
 		transform(solutions.begin(),solutions.end(),back_inserter(result),subs_into_vector);
 		return result;
 	}
+
+	void add_solutions_from(const PolynomialSolver& solver) {
+		if (!solver.can_solve()) can_solve_=false;
+		solutions.insert(solutions.end(),solver.solutions.begin(),solver.solutions.end());
+	}	
 };
 
 
@@ -159,23 +170,90 @@ SignConfiguration sign_configuration_from_vector(const exvector& X) {
 	return {signs};
 }
 
+
+PolynomialSolver<Unknown> solutions_to_polynomial_problem_for_codimension_one(const exvector&  X,const exvector& csquared) {
+	auto basis_of_KerMDeltaTranspose=basis_from_generic_element<Unknown>(X);
+	assert (basis_of_KerMDeltaTranspose.size()==1);
+	auto coeff=basis_of_KerMDeltaTranspose.front();
+	ex lhs=raise_each_and_multiply(X,coeff);
+	ex rhs=raise_each_and_multiply(csquared,coeff);
+	auto solutions=PolynomialSolver<Unknown>{(lhs-rhs).numer()};
+	solutions.add_solutions_from(PolynomialSolver<Unknown>{(lhs+rhs).numer()});
+	return solutions;
+}
+
+vector<int> negative_signs(const SignConfiguration& sign_configuration) {
+	vector<int> result;
+	for (int i=0;i<sign_configuration.size();++i)
+		if (sign_configuration[i]<0) result.push_back(i);
+	return result;
+}
+
+string negative_signs_to_string(const vector<int>& negative_signs) {
+	if (negative_signs.empty()) return "\\emptyset";
+	else return horizontal(incremented(negative_signs),"");
+}
+
+string sign_configurations_to_string(const set<vector<int>>& negative_signs) {
+	stringstream s;
+	s<<"S=\\{";
+		if (!negative_signs.empty()) {
+			auto i=negative_signs.begin();
+			s<<negative_signs_to_string(*i);
+			while (++i!=negative_signs.end())
+						s<<","<<negative_signs_to_string(*i);
+		}
+	s<<"\\}";
+	return s.str();
+}
+
+optional<SignConfiguration> DiagonalMetric::sign_configuration_from_image(const SignConfiguration& image) const {
+	for (auto& pair : potential_signatures)
+		if (pair.second==image) return pair.first;
+	return nullopt;
+}
+
+optional<set<vector<int>>> DiagonalMetric::exact_signatures_for_codimension_one(const exvector& csquared) const {
+	set<vector<int>> signatures;
+	auto solutions=solutions_to_polynomial_problem_for_codimension_one(X(),csquared);
+	if (!solutions.can_solve()) return nullopt;
+	for (auto Xsol : solutions.substitute_solutions(X())) {
+		auto conf=sign_configuration_from_vector(Xsol);
+		auto signature=sign_configuration_from_image(conf);
+		if (signature) signatures.insert(negative_signs(signature.value()));
+	}
+	return signatures;
+}
+
+string DiagonalMetric::classification(const exvector& csquared) const {
+	optional<set<vector<int>>> signatures;
+	if (no_metric_regardless_of_polynomial_conditions())
+			signatures.emplace();	//assign empty set: no valid signature
+	else if (dimension_coker_MDelta==0) {
+			signatures.emplace();
+			for (auto& signature : potential_signatures) signatures.value().insert(negative_signs(signature.first));
+	}
+	else if (dimension_coker_MDelta==1)  
+			signatures=exact_signatures_for_codimension_one(csquared);
+	return  signatures? sign_configurations_to_string(signatures.value()) : ImplicitMetric::classification(csquared);
+}
+
+//TODO fai scrivere le segnature
 string DiagonalMetric::solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const {
 	stringstream s;
-	auto basis_of_KerMDeltaTranspose=basis_from_generic_element<Unknown>(X());
-	if (basis_of_KerMDeltaTranspose.size()!=1) return {};
-	auto coeff=basis_of_KerMDeltaTranspose.front();
-	ex lhs=raise_each_and_multiply(X(),coeff);
-	ex rhs=raise_each_and_multiply(csquared,coeff);
-	auto solutions1=PolynomialSolver<Unknown>{(lhs-rhs).numer()};
-	auto solutions2=PolynomialSolver<Unknown>{(lhs+rhs).numer()};
-	if (solutions1.can_solve() && solutions2.can_solve()) {
-		auto solutions=solutions1.substitute_solutions(X());
-		solutions.splice(solutions.end(),solutions2.substitute_solutions(X()));
-		for (auto Xsol : solutions) {
-			s<<"X="<<horizontal(Xsol);
-			s<<"-> ("<<sign_configuration_from_vector(Xsol)<<")"<<endl;
-		}		
-		if (solutions.empty()) s<<"no solution"<<endl;
+	if (dimension_coker_MDelta==0) {
+		s<<"X="<<horizontal(X());
+		s<<"-> ("<<sign_configuration_from_vector(X())<<")"<<endl;
+	}
+	else if (dimension_coker_MDelta==1)	{
+		auto solutions=solutions_to_polynomial_problem_for_codimension_one(X(),csquared);
+		if (solutions.can_solve()) {
+			for (auto Xsol : solutions.substitute_solutions(X())) {
+				s<<"X="<<horizontal(Xsol);
+				s<<"-> ("<<sign_configuration_from_vector(Xsol)<<")"<<endl;
+			}		
+			if (!solutions.has_solution()) s<<"no solution"<<endl;
+		}
 	}
 	return s.str();
 }
@@ -183,7 +261,8 @@ string DiagonalMetric::solution_to_polynomial_equations_or_empty_string(const ex
 
 DiagonalMetric::DiagonalMetric(const string& name,const WeightMatrix& weight_matrix, const exvector& X_ijk) :
 	ImplicitMetric{name,X_ijk},	
-	potential_signatures{signatures_compatible_with_X(weight_matrix,X_ijk)}
+	potential_signatures{signatures_compatible_with_X(weight_matrix,X_ijk)},
+	dimension_coker_MDelta{weight_matrix.rows()-weight_matrix.rank_over_Q()}
 	 {}	
 
 
