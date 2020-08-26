@@ -34,7 +34,8 @@ enum class DiagramDataOption : unsigned int {
   analyze_diagram=16,
   with_matrix_data=32,
   with_antidiagonal_ricci_flat_sigma=64,
-  with_automorphisms=128
+  with_automorphisms=128,
+  do_not_use_automorphisms_to_eliminate_signs=256
 };
 
 class Filter;
@@ -50,6 +51,7 @@ struct DiagramDataOptions : Options<DiagramDataOption> {
 	bool with_antidiagonal_ricci_flat_sigma() const {return has(DiagramDataOption::with_antidiagonal_ricci_flat_sigma);}
 	bool with_metrics() const {return with_diagonal_ricci_flat_metrics() || with_diagonal_nilsoliton_metrics() || with_sigma_compatible_ricci_flat_metrics();}
   bool with_automorphisms() const {return has(DiagramDataOption::with_automorphisms);}
+	bool use_automorphisms_to_eliminate_signs() const {return !has(DiagramDataOption::do_not_use_automorphisms_to_eliminate_signs);}
 	int ricci_flat_antidiagonal_limit=10000;
 	void adapt_to_filter(const Filter& filter);
 };

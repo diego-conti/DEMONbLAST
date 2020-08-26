@@ -109,6 +109,9 @@ class DiagonalMetric : public ImplicitMetric {
 	list<pair<SignConfiguration,SignConfiguration>> potential_signatures;	//first element of each pair is the signature, the other is M_Delta of it.
 	optional<SignConfiguration> sign_configuration_from_image(const SignConfiguration& image) const;
 	optional<set<vector<int>>> exact_signatures_for_codimension_one(const exvector& csquared) const;
+	pair<bool,set<vector<int>>> riemannian_like_signatures() const;
+	optional<set<vector<int>>> exact_signatures(const exvector& csquared) const;
+
 	int dimension_coker_MDelta;
 protected:
 	void dump_extra(ostream& os) const override {

@@ -202,7 +202,10 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("list-diagram-automorphisms")) {
       diagram_processor.set(ProcessingOption::with_automorphisms);
       diagram_processor.set(DiagramDataOption::with_automorphisms);
+      if (command_line_variables.count("do-not-use-automorphisms"))
+      	 throw invalid_argument("--list-diagram-automorphisms and --do-not-use-automorphisms are not compatible options");
     }
+    
 
     if (command_line_variables.count("derivations")) diagram_processor.set(ProcessingOption::with_derivations);
     if (command_line_variables.count("polynomial")) diagram_processor.set(ProcessingOption::with_polynomial_conditions);
@@ -214,12 +217,13 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("all-nice-diagrams") || command_line_variables.count("all-diagrams")) diagram_processor.set(ProcessingOption::include_diagrams_no_lie_algebra);
     if (command_line_variables.count("analyze-diagram")) diagram_processor.set(DiagramDataOption::analyze_diagram);
     if (command_line_variables.count("antidiagonal-ricci-flat-sigma")) diagram_processor.set(DiagramDataOption::with_antidiagonal_ricci_flat_sigma);
+    if (command_line_variables.count("do-not-use-automorphisms")) diagram_processor.set(DiagramDataOption::do_not_use_automorphisms_to_eliminate_signs);
     if (command_line_variables.count("legacy-weight-order")) diagram_processor.set(ProcessingOption::do_not_reorder);
     
     Filter filter;
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
-    if (command_line_variables.count("kernel-root-matrix-dimension")) filter.only_kernel_MDelta_dimension(command_line_variables["kernel-root-matrix-dimension"].as<int>());
-    if (command_line_variables.count("cokernel-root-matrix-dimension")) filter.only_cokernel_MDelta_dimension(command_line_variables["cokernel-root-matrix-dimension"].as<int>());
+    if (command_line_variables.count("kernel-root-matrix-dimension")) filter.only_kernel_MDelta_dimension(command_line_variables["kernel-root-matrix-dimension"].as<string>());
+    if (command_line_variables.count("cokernel-root-matrix-dimension")) filter.only_cokernel_MDelta_dimension(command_line_variables["cokernel-root-matrix-dimension"].as<string>());
     if (command_line_variables.count("all-diagrams")) filter.N1N2N3();
     if (command_line_variables.count("only-with-nontrivial-automorphisms")) 
       filter.only_nontrivial_automorphisms();
@@ -285,6 +289,7 @@ int main(int argc, char* argv[]) {
             
             ("delta-otimes-delta", "include \\Delta\\otimes\\Delta")                  
             ("list-diagram-automorphisms", "list the automorphisms of each diagram")
+            ("do-not-use-automorphisms", "do not compute diagram automorphisms in order to eliminate equivalent families associated to the same diagram; may result in redundant output")
             ("invert",  "invert node numbering") 
             ("parallel-mode",  "use multiple threads") 
             ("matrix-data",  "include data depending on the root matrix (rank, etc.)") 
@@ -299,8 +304,8 @@ int main(int argc, char* argv[]) {
             ("legacy-weight-order","maintain the weight order coming from the classification algorithm. This option is independent from --invert.")
             
             ("only-traceless-derivations", "exclude diagrams where (1...1) is not in the span of the rows of M_Delta")
-            ("kernel-root-matrix-dimension", po::value<int>(), "filter diagrams where the root matrix has kernel of dimension")
-            ("cokernel-root-matrix-dimension", po::value<int>(), "filter diagrams where the root matrix has cokernel of dimension")
+            ("kernel-root-matrix-dimension", po::value<string>(), "filter diagrams where the root matrix has kernel of dimension (=n,<n,>n)")
+            ("cokernel-root-matrix-dimension", po::value<string>(), "filter diagrams where the root matrix has cokernel of dimension  (=n,<n,>n)")
             ("only-with-nontrivial-automorphisms", "only diagrams with nontrivial automorphisms)")           
             ("only-with-metric", "only diagrams which potentially admit a metric (conditions H and L)")           
             ("only-with-ad-invariant-metric", "only diagrams which satisfy the necessary condition on generalized lower/upper central series for the existence of an ad-invariant metric")

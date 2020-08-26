@@ -22,13 +22,37 @@
 #include "includes.h"
 #include "adinvariantobstruction.h"
 
+class EqualityOrInequality {
+	enum class Operand : char {NO_CONDITION, EQUALS='=',LESS_THAN='<',GREATER_THAN='>'};
+	Operand operand = Operand::NO_CONDITION;
+	int op=0;
+public:
+	EqualityOrInequality()=default;
+	EqualityOrInequality(string s) {
+			operand=static_cast<Operand>(s[0]);
+			op=stoi(s.substr(1));
+	}
+	bool verified_by(int op1) const {
+		switch (operand) {
+			case Operand::NO_CONDITION : return true;
+			case Operand::EQUALS : return op1==op;
+			case Operand::LESS_THAN : return op1<op;
+			case Operand::GREATER_THAN : return op1>op;
+			default:
+				throw 0;
+		}
+	}
+	bool nontrivial() const {return operand!=Operand::NO_CONDITION;}
+};
+
+
 //TODO derive from Options
 class Filter {
 	friend void DiagramDataOptions::adapt_to_filter(const Filter& filter);
   bool allow_nonnice=false;
   bool only_traceless_derivations_=false;
-  int kernel_dimension_=-1;
-  int cokernel_dimension_=-1;  
+  EqualityOrInequality kernel_dimension_;
+  EqualityOrInequality cokernel_dimension_;  
   bool only_nontrivial_automorphisms_=false;
   bool only_with_metric_=false;
 	bool only_passing_obstruction_for_ad_invariant_metric_=false;
@@ -40,17 +64,17 @@ public:
 	void only_passing_obstruction_for_ad_invariant_metric() {only_passing_obstruction_for_ad_invariant_metric_=true;}
   void N1N2N3() {allow_nonnice=true;}
   void simple_nikolayevsky(tribool choice) {simple_nikolayevsky_=choice;}
- 	void only_kernel_MDelta_dimension(int kernel_dimension) {kernel_dimension_=kernel_dimension;}
- 	void only_cokernel_MDelta_dimension(int cokernel_dimension) {cokernel_dimension_=cokernel_dimension;}
+ 	void only_kernel_MDelta_dimension(EqualityOrInequality kernel_dimension) {kernel_dimension_=kernel_dimension;}
+ 	void only_cokernel_MDelta_dimension(EqualityOrInequality cokernel_dimension) {cokernel_dimension_=cokernel_dimension;}
   bool trivial() const {
-  	return !(only_traceless_derivations_||kernel_dimension_>=0||cokernel_dimension_>=0||only_nontrivial_automorphisms_ | only_with_metric_ | only_passing_obstruction_for_ad_invariant_metric_) && indeterminate(simple_nikolayevsky_);}
+  	return !(only_traceless_derivations_||kernel_dimension_.nontrivial()||cokernel_dimension_.nontrivial()||only_nontrivial_automorphisms_ | only_with_metric_ | only_passing_obstruction_for_ad_invariant_metric_) && indeterminate(simple_nikolayevsky_);}
   bool meets(const LabeledTree& diagram, DiagramDataOptions options) const {
   	if (!allow_nonnice && !satisfies_formal_jacobi(diagram)) return false;
   	if (trivial()) return true;
     auto& properties = diagram.weight_basis(options).properties();
     if (only_traceless_derivations_ && !properties.are_all_derivations_traceless()) return false;
-    if (kernel_dimension_>=0 && properties.dimension_kernel_M_Delta()!=kernel_dimension_) return false;
-    if (cokernel_dimension_>=0 && properties.dimension_cokernel_M_Delta()!=cokernel_dimension_) return false;
+    if (!kernel_dimension_.verified_by(properties.dimension_kernel_M_Delta())) return false;
+    if (!cokernel_dimension_.verified_by(properties.dimension_cokernel_M_Delta())) return false;
     if (only_nontrivial_automorphisms_ && !properties.has_nontrivial_automorphisms()) return false;
     if (only_with_metric_ && !properties.potentially_admits_metrics()) return false;
     if (only_passing_obstruction_for_ad_invariant_metric_ && !passes_obstruction_for_ad_invariant_metric(diagram)) return false;

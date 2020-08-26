@@ -126,6 +126,7 @@ class PolynomialSolver {
 	}	
 	PolynomialSolver()=default;
 public:	
+//FIXME what happens if there are parameters?
 	PolynomialSolver(ex equation) {
 		list<ex> variables;
 		GetSymbols<Unknown> (variables,equation);
@@ -196,7 +197,7 @@ string negative_signs_to_string(const vector<int>& negative_signs) {
 
 string sign_configurations_to_string(const set<vector<int>>& negative_signs) {
 	stringstream s;
-	s<<"S=\\{";
+	s<<"\\{";
 		if (!negative_signs.empty()) {
 			auto i=negative_signs.begin();
 			s<<negative_signs_to_string(*i);
@@ -225,7 +226,8 @@ optional<set<vector<int>>> DiagonalMetric::exact_signatures_for_codimension_one(
 	return signatures;
 }
 
-string DiagonalMetric::classification(const exvector& csquared) const {
+
+optional<set<vector<int>>> DiagonalMetric::exact_signatures(const exvector& csquared) const {
 	optional<set<vector<int>>> signatures;
 	if (no_metric_regardless_of_polynomial_conditions())
 			signatures.emplace();	//assign empty set: no valid signature
@@ -235,7 +237,29 @@ string DiagonalMetric::classification(const exvector& csquared) const {
 	}
 	else if (dimension_coker_MDelta==1)  
 			signatures=exact_signatures_for_codimension_one(csquared);
-	return  signatures? sign_configurations_to_string(signatures.value()) : ImplicitMetric::classification(csquared);
+	return signatures;
+}
+
+//result.first is true if this gives a classification
+pair<bool,set<vector<int>>> DiagonalMetric::riemannian_like_signatures() const {
+	bool missing_signatures=false;
+	set<vector<int>> riemannian_like_signatures;
+	for (auto& signature: potential_signatures)
+		if (all_of(signature.second.begin(),signature.second.end(),[](int sign) {return sign>0;}))
+			riemannian_like_signatures.insert(negative_signs(signature.first));
+		else missing_signatures=true;
+	return make_pair(!missing_signatures,riemannian_like_signatures);
+}
+
+string DiagonalMetric::classification(const exvector& csquared) const {
+	optional<set<vector<int>>> signatures=exact_signatures(csquared);
+	if (signatures) return "S="+sign_configurations_to_string(signatures.value());
+	else {
+		auto riemannian=riemannian_like_signatures();	
+		if (riemannian.first) return "S="+sign_configurations_to_string(riemannian.second);
+		else if (!riemannian.second.empty()) return "S\\supset"+sign_configurations_to_string(riemannian.second);
+		else return ImplicitMetric::classification(csquared);
+	}
 }
 
 //TODO fai scrivere le segnature
