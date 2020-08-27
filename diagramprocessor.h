@@ -183,19 +183,6 @@ class DiagramProcessorWithLieAlgebras : public DiagramProcessorImpl {
     if (groups.empty()) lie_algebras="no Lie algebra";
 		return {diagram.to_dot_string(),lie_algebras};
   }
-  ProcessedDiagram process_list_and_automorphisms(const LabeledTree& diagram,const list<NiceLieGroup>& groups) const {
-    auto result=process_list(diagram,groups);
-//    if (groups.size()<2) return result; //no need to apply automorphisms, since we only have one Lie algebra
-    auto automorphisms=diagram.nontrivial_automorphisms();
-    if (automorphisms.empty()) return result;
-    result.append_extra("More than one Lie algebra and more than one automorphism:");
- 		for (auto automorphism : automorphisms) {
- 		  result.append_extra("sigma = "+permutation_to_string(automorphism));
-  		for (auto group : groups) 
-	  	  result.append_extra(to_string(change_basis(group,automorphism)));
-    }
-    return result;
-  }
   void append_enhanced_lie_algebras(ProcessedDiagram& processed_diagram, OrderTwoAutomorphism sigma, const EnhancedWeightBasis& weight_basis) const {
      auto lie_algebras = NiceLieGroup::from_weight_basis(weight_basis);
      if (lie_algebras.empty()) return;     
@@ -220,7 +207,7 @@ public:
       auto& weight_basis=diagram.weight_basis(diagram_data_options());
       auto lie_algebras=NiceLieGroup::from_weight_basis(weight_basis);  
       if (lie_algebras.empty() && only_if_lie_algebras()) return {};
-      auto result= with_automorphisms() ? process_list_and_automorphisms(diagram,lie_algebras) : process_list(diagram,lie_algebras);
+      auto result= process_list(diagram,lie_algebras);
       append_derivations(result,lie_algebras);
  			append_extra(result,diagram);
       if (with_enhanced_lie_algebras()) append_enhanced_lie_algebras(diagram, result,weight_basis);

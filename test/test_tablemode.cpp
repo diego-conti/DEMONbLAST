@@ -12,7 +12,9 @@
 #include "../weightmatrix.cpp"
 #include "../antidiagonal.cpp"
 #include "../implicitmetric.cpp"
-
+#include "../adinvariantobstruction.cpp"
+#include "../parsetree.cpp"
+#include "../automorphisms.cpp"
 #include "dump.h"
 
 void test_table_mode(vector<int> partition,ostream& os) {
