@@ -24,6 +24,8 @@
 
 #include <boost/logic/tribool.hpp>
 
+#include <optional>
+
 using std::ostream;
 using std::istream;
 using std::ofstream;
@@ -49,6 +51,8 @@ using std::numeric_limits;
 using std::swap;
 using std::move;
 
+using std::optional;
+using std::nullopt;
 
 using boost::logic::tribool;
 using boost::logic::indeterminate;

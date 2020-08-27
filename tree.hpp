@@ -1,3 +1,4 @@
+#include "automorphisms.h"
 
 template<typename ArrowType>
 string TreeBase<ArrowType>::to_dot_string(string extra_data) const {
@@ -15,6 +16,8 @@ namespace tree_impl {
 	class NodePathData {
 	public:
     int hash() const {    
+    	if ((no_outgoing_concatenated_arrows.size()+no_incoming_concatenated_arrows.size()*4+2)>std::numeric_limits<unsigned>::digits)
+    		nice_log<<"not enough digits in an int!: "<<no_outgoing_concatenated_arrows.size()<<" "<<no_incoming_concatenated_arrows.size()<<endl;    
       int result =no_outgoing_concatenated_arrows.size();
       for (int i=0;i<no_outgoing_concatenated_arrows.size();++i)
         result=result<<4 | no_outgoing_concatenated_arrows[i];
@@ -130,9 +133,9 @@ template<typename Arrow> bool TreeBase<Arrow>::is_equivalent_to(const TreeBase& 
 	  );
 }
 
-
 template<typename Arrow> list<vector<int>> TreeBase<Arrow>::nontrivial_automorphisms() const {
   list<vector<int>> automorphisms;
+  nice_log<<"hash = "<<horizontal(node_hash())<<endl;
 	auto permutations =PermutationsPreservingHash{node_hash(), node_hash()}.all_permutations(); 
   copy_if(permutations.begin(),permutations.end(),back_inserter(automorphisms),
     [this] (const vector<int>& sigma) {return matches(*this,sigma);}
@@ -141,6 +144,8 @@ template<typename Arrow> list<vector<int>> TreeBase<Arrow>::nontrivial_automorph
   return automorphisms;
 }
 
+//optimized specialization for labeled trees. TODO optimize also for unlabeled trees.
+template<> list<vector<int>> TreeBase<LabeledArrow>::nontrivial_automorphisms() const;
 
 template<typename Arrow> bool TreeBase<Arrow>::matches(const TreeBase& tree, const vector<int>& permutation) const {
 	for (Arrow arrow: arrows()) {
