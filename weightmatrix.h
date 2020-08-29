@@ -232,6 +232,10 @@ public:
 		 MDelta{MDelta}, sign_configurations_{SignConfiguration::all_configurations(MDelta.rows()-MDelta.rank_over_Z2())} {
 		factor_out_automorphisms(nontrivial_automorphisms);
 	}
+	SignConfigurations(const WeightMatrix& MDelta,const list<vector<int>>& nontrivial_automorphisms, int limit) :
+		 MDelta{MDelta}, sign_configurations_{SignConfiguration::all_configurations(MDelta.rows()-MDelta.rank_over_Z2(),limit)} {
+		factor_out_automorphisms(nontrivial_automorphisms);
+	}
 	
 	list<SignConfiguration> sign_configurations() && {return move(sign_configurations_);}
 };

@@ -87,6 +87,7 @@ public:
   }
 	void set(ProcessingOption option) {processing_options().set(option);}
   void set(DiagramDataOption option) {diagram_data_options().set(option);}
+ 	void set_sign_configuration_limit(int limit) {diagram_data_options().sign_configurations_limit=limit;}
   void clear(ProcessingOption option) {processing_options().clear(option);}
   void clear(DiagramDataOption option) {diagram_data_options().clear(option);}
   void adapt_to_filter(Filter filter) {diagram_data_options().adapt_to_filter(filter);}
@@ -127,6 +128,7 @@ public:
   const Filter& filter() const {return filter_;}
   void set(ProcessingOption option) {processor->set(option);}
   void set(DiagramDataOption option) {processor->set(option);}
+ 	void set_sign_configuration_limit(int limit) {processor->set_sign_configuration_limit(limit);}
   void clear(ProcessingOption option) {processor->clear(option);}
   void clear(DiagramDataOption option) {processor->clear(option);}
   operator DiagramDataOptions() const {return static_cast<DiagramDataOptions>(*processor);}

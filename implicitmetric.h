@@ -25,8 +25,7 @@
 #include "gauss.h"
 #include <wedge/liegroup.h>
 #include "horizontal.h"
-#include <optional>
-
+#include "log.h"
 
 
 using namespace GiNaC;
@@ -56,11 +55,20 @@ public:
 	bool has_next() const {
 		return any_of(signs.begin(),signs.end(),[](int sign) {return sign==1;});
 	}
-	static list<SignConfiguration> all_configurations(int signs) {
+	static list<SignConfiguration> all_configurations(int signs) {		
 		list<SignConfiguration> result;
 		SignConfiguration conf{signs}; 
 		result.push_back(conf); 
 		while (conf.has_next())	result.push_back(++conf);
+		return result;
+	}
+	static list<SignConfiguration> all_configurations(int signs,int limit) {		
+		list<SignConfiguration> result;
+		SignConfiguration conf{signs}; 
+		result.push_back(conf); 
+ 		if ((1<<signs)>limit) 
+				nice_log<<"SignConfiguration::all_configurations invoked with signs="<<signs<<"; ignoring all sign configurations after the first "<<limit<<endl;
+		while (conf.has_next() && result.size()<limit)	result.push_back(++conf);
 		return result;
 	}
 	int size() const {return signs.size();}

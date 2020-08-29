@@ -219,6 +219,7 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("antidiagonal-ricci-flat-sigma")) diagram_processor.set(DiagramDataOption::with_antidiagonal_ricci_flat_sigma);
     if (command_line_variables.count("do-not-use-automorphisms")) diagram_processor.set(DiagramDataOption::do_not_use_automorphisms_to_eliminate_signs);
     if (command_line_variables.count("legacy-weight-order")) diagram_processor.set(ProcessingOption::do_not_reorder);
+		if (command_line_variables.count("sign-configuration-limit")) diagram_processor.set_sign_configuration_limit(command_line_variables["sign-configuration-limit"].as<int>());
     
     Filter filter;
     if (command_line_variables.count("only-traceless-derivations")) filter.only_traceless_derivations();
@@ -302,7 +303,8 @@ int main(int argc, char* argv[]) {
             ("analyze-diagram","include data depending on diagram combinatorics")
             ("antidiagonal-ricci-flat-sigma","include order two automorphisms inducing antidiagonal ricci-flat metrics")
             ("legacy-weight-order","maintain the weight order coming from the classification algorithm. This option is independent from --invert.")
-            
+            ("sign-configuration-limit", po::value<int>(), "for each nice diagram, discard sign configurations after the indicated limit")
+                        
             ("only-traceless-derivations", "exclude diagrams where (1...1) is not in the span of the rows of M_Delta")
             ("kernel-root-matrix-dimension", po::value<string>(), "filter diagrams where the root matrix has kernel of dimension (=n,<n,>n)")
             ("cokernel-root-matrix-dimension", po::value<string>(), "filter diagrams where the root matrix has cokernel of dimension  (=n,<n,>n)")

@@ -53,6 +53,7 @@ struct DiagramDataOptions : Options<DiagramDataOption> {
   bool with_automorphisms() const {return has(DiagramDataOption::with_automorphisms);}
 	bool use_automorphisms_to_eliminate_signs() const {return !has(DiagramDataOption::do_not_use_automorphisms_to_eliminate_signs);}
 	int ricci_flat_antidiagonal_limit=10000;
+	int sign_configurations_limit=0;
 	void adapt_to_filter(const Filter& filter);
 };
 

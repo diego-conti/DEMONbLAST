@@ -131,7 +131,7 @@ class WeightBasis {
   int number_of_nodes_;	
 protected:
 	vector<WeightAndCoefficient> weights;
-	explicit WeightBasis(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms); 
+	explicit WeightBasis(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions diagram_data_options); 
 public:
 	explicit WeightBasis(const LabeledTree& tree); 
 	vector<WeightAndCoefficient> weights_and_coefficients() const {return weights;}

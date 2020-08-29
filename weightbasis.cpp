@@ -94,7 +94,7 @@ DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const l
   rank_over_Q{weight_matrix.rank_over_Q()},
   rank_over_Z2{weight_matrix.rank_over_Z2()},
   automorphisms{automorphisms},
- 	imMDelta2{image_mod2(weight_matrix).to_string()}, 	
+  imMDelta2{options.sign_configurations_limit? "not computed" : image_mod2(weight_matrix).to_string()}, 	
  	ricci_flat_antidiagonal{options.with_antidiagonal_ricci_flat_sigma()? ricci_flat_sigma(weight_matrix) : list<OrderTwoAutomorphism>{}},
  	diagram_analyzer{options.analyze_diagram()? DiagramAnalyzer{weight_matrix.cols(),vector<WeightAndCoefficient>{weight_matrix.weight_begin(),weight_matrix.weight_end()}} : DiagramAnalyzer{}},
   kernel_of_MDelta_transpose{X_solving_Ricciflat(weight_matrix)}
@@ -199,8 +199,9 @@ list<exvector> affine_space_over_Z2(const exvector& generic_element) {
   }
 }*/
 
-WeightBasis::WeightBasis(const WeightMatrix& weight_matrix,const list<vector<int>>& automorphisms ) : number_of_nodes_{weight_matrix.cols()} {
-  configurations=SignConfigurations{weight_matrix,automorphisms}.sign_configurations();
+WeightBasis::WeightBasis(const WeightMatrix& weight_matrix,const list<vector<int>>& automorphisms, DiagramDataOptions diagram_data_options) : number_of_nodes_{weight_matrix.cols()} {
+  configurations=diagram_data_options.sign_configurations_limit? 
+  	SignConfigurations{weight_matrix,automorphisms,diagram_data_options.sign_configurations_limit}.sign_configurations() : SignConfigurations{weight_matrix,automorphisms}.sign_configurations();  
   weights.insert(weights.end(), weight_matrix.weight_begin(),weight_matrix.weight_end());
   if (!configurations.empty()) {
   		for (auto w: weights) nice_log<<w<<", ";
@@ -209,11 +210,10 @@ WeightBasis::WeightBasis(const WeightMatrix& weight_matrix,const list<vector<int
 				nice_log<<sc<<endl;
 	}
 }
-
-WeightBasis::WeightBasis(const LabeledTree& tree) : WeightBasis{WeightMatrix{tree.weights(),tree.number_of_nodes()},tree.nontrivial_automorphisms()} {}
+WeightBasis::WeightBasis(const LabeledTree& tree) : WeightBasis{WeightMatrix{tree.weights(),tree.number_of_nodes()},tree.nontrivial_automorphisms(),{}} {}
 
 WeightBasisAndProperties::WeightBasisAndProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options) 
-	: WeightBasis{weight_matrix,automorphisms}
+	: WeightBasis{weight_matrix,automorphisms,options}
 {
     diagram_properties = make_unique< DiagramProperties>(weight_matrix,automorphisms,options);
 }
@@ -227,7 +227,7 @@ WeightBasisAndProperties::WeightBasisAndProperties(const WeightMatrix& weight_ma
 WeightBasisAndProperties::WeightBasisAndProperties(const LabeledTree& tree, DiagramDataOptions options) 
 	: WeightBasisAndProperties{WeightMatrix{tree.weights(),tree.number_of_nodes()},tree,options} {}
 
-EnhancedWeightBasis::EnhancedWeightBasis(const LabeledTree& tree, OrderTwoAutomorphism sigma) : WeightBasis{weight_matrix(tree,sigma), automorphisms(tree,sigma)} {}
+EnhancedWeightBasis::EnhancedWeightBasis(const LabeledTree& tree, OrderTwoAutomorphism sigma) : WeightBasis{weight_matrix(tree,sigma), automorphisms(tree,sigma),{}} {}
 
 WeightMatrix EnhancedWeightBasis::weight_matrix(const LabeledTree& tree, OrderTwoAutomorphism sigma) {
 		list<Weight> weights=tree.weights();
