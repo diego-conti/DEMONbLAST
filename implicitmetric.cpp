@@ -126,13 +126,17 @@ class PolynomialSolver {
 	}	
 	PolynomialSolver()=default;
 public:	
-//FIXME what happens if there are parameters?
 	PolynomialSolver(ex equation) {
-		list<ex> variables;
-		GetSymbols<Unknown> (variables,equation);
-		if (variables.empty()) solve_no_variables(equation);
-		else if (variables.size()>1) can_solve_=false;
-		else solve_in_variable(equation,variables.front());
+		list<ex> parameters;		
+		GetSymbols<StructureConstant> (parameters,equation);
+		if (parameters.empty()) {
+			list<ex> variables;		
+			GetSymbols<Unknown> (variables,equation);
+			if (variables.empty()) solve_no_variables(equation);
+			else if (variables.size()>1) can_solve_=false;
+			else solve_in_variable(equation,variables.front());
+		}
+		else can_solve_=false;
 	}
 	static PolynomialSolver solver_that_cannot_solve() {
 		PolynomialSolver result;
@@ -262,14 +266,13 @@ string DiagonalMetric::classification(const exvector& csquared) const {
 	}
 }
 
-//TODO fai scrivere le segnature
 string DiagonalMetric::solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const {
 	stringstream s;
 	if (dimension_coker_MDelta==0) {
 		s<<"X="<<horizontal(X());
 		s<<"-> ("<<sign_configuration_from_vector(X())<<")"<<endl;
 	}
-	else if (dimension_coker_MDelta==1)	{
+	else if (dimension_coker_MDelta==1)	{	
 		auto solutions=solutions_to_polynomial_problem_for_codimension_one(X(),csquared);
 		if (solutions.can_solve()) {
 			for (auto Xsol : solutions.substitute_solutions(X())) {
