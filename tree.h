@@ -94,6 +94,9 @@ public:
 	  if (name_.empty()) return std::to_string(number_)+ "#"+std::to_string(tree_hash);
 	  else  return std::to_string(number_)+ "#"+std::to_string(tree_hash)+ " : "+name_;
 	}
+	string number() const {
+		return std::to_string(number_);
+	}
 	void set_name(string new_name) {name_=move(new_name);}
 	void add_number_to_name(int n) {number_=n;}
 	int number_of_nodes() const {return no_nodes;}

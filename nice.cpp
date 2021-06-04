@@ -137,20 +137,22 @@ void test_speed() {
 }
 
 
-void process_partitions_to_table(int dimension,const DiagramProcessor& processor) {
+void process_partitions_to_table(int dimension,const DiagramProcessor& processor, bool with_lcs) {
 		for (auto& partition: partitions(dimension)) { 
 		  stringstream output;
     	enumerate_nice_diagrams_in_partition(partition,output,processor);	
     	if (!output.str().empty()) {
-     	 cout<<"&&"<<horizontal(partition,"")<<":\\\\"<<endl<<output.str();
+    		if (with_lcs) cout<<"&&"<<horizontal(partition,"")<<":\\\\"<<endl;
+    		cout<<output.str();
     	 }
 		}
 }
 
+
 void process_all_partitions(const po::variables_map& command_line_variables,const DiagramProcessor& processor) {
   int dimension=command_line_variables["all-partitions"].as<int>();
   if (command_line_variables["mode"].as<string>()=="table") {
-     process_partitions_to_table(dimension,processor);   
+     process_partitions_to_table(dimension,processor,command_line_variables.count("lcs-and-ucs"));   
      return;
    }
   create_directory(dimension);
@@ -210,6 +212,8 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("derivations")) diagram_processor.set(ProcessingOption::with_derivations);
     if (command_line_variables.count("polynomial")) diagram_processor.set(ProcessingOption::with_polynomial_conditions);
     if (command_line_variables.count("enhanced")) diagram_processor.set(ProcessingOption::with_enhanced_lie_algebras);       
+    if (command_line_variables.count("lcs-and-ucs")) diagram_processor.set(ProcessingOption::with_lcs_and_ucs);       
+    if (command_line_variables.count("full-diagram-name")) diagram_processor.set(ProcessingOption::full_diagram_name);       
     if (command_line_variables.count("matrix-data")) diagram_processor.set(DiagramDataOption::with_matrix_data);
     if (command_line_variables.count("diagonal-ricci-flat-metrics")) diagram_processor.set(DiagramDataOption::with_diagonal_ricci_flat_metrics);
     if (command_line_variables.count("diagonal-nilsoliton-metrics")) diagram_processor.set(DiagramDataOption::with_diagonal_nilsoliton_metrics);
@@ -290,6 +294,8 @@ int main(int argc, char* argv[]) {
             
             ("delta-otimes-delta", "include \\Delta\\otimes\\Delta")                  
             ("list-diagram-automorphisms", "list the automorphisms of each diagram")
+            ("lcs-and-ucs", "in table mode, write lower and upper central series dimension")
+            ("full-diagram-name", "in table mode, use full diagram name, including the hash code")
             ("do-not-use-automorphisms", "do not compute diagram automorphisms in order to eliminate equivalent families associated to the same diagram; may result in redundant output")
             ("invert",  "invert node numbering") 
             ("parallel-mode",  "use multiple threads") 

@@ -47,7 +47,9 @@ enum class ProcessingOption : unsigned int {
   with_derivations=8,
   with_polynomial_conditions=16,
   with_enhanced_lie_algebras=32,
-  do_not_reorder=64
+  do_not_reorder=64,
+  with_lcs_and_ucs=128,
+  full_diagram_name=256
 };
 
 
@@ -97,6 +99,8 @@ public:
   bool with_derivations() const {return processing_options().has(ProcessingOption::with_derivations);}
   bool with_polynomial_conditions() const {return processing_options().has(ProcessingOption::with_polynomial_conditions);}
   bool with_enhanced_lie_algebras() const {return processing_options().has(ProcessingOption::with_enhanced_lie_algebras);}
+  bool full_diagram_name() const {return processing_options().has(ProcessingOption::full_diagram_name);}
+  bool with_lcs_and_ucs() const {return processing_options().has(ProcessingOption::with_lcs_and_ucs);}
   operator DiagramDataOptions() const {return diagram_data_options();}
 };
 
@@ -274,7 +278,11 @@ public:
 			for (auto group : groups)		{
 				string progressive{++progressive_letter};
 				if (groups.size()==1) progressive.clear();
-			  lie_algebras+=horizontal(lower_central_series(diagram),"")+":"+diagram.name()+progressive+"&"+to_string(group)+"&"+horizontal(upper_central_series(diagram),"");
+			 	lie_algebras+=horizontal(lower_central_series(diagram),"")+":";
+			 	lie_algebras+=full_diagram_name()? diagram.name() : diagram.number();
+			 	lie_algebras+=progressive+"&"+to_string(group);
+			 	if (with_lcs_and_ucs()) 
+			 		lie_algebras+="&"+horizontal(upper_central_series(diagram),"");
 			  if (with_diagram_data())
 				  lie_algebras+="&("+horizontal(weight_basis.properties().nikolayevsky_derivation())+")";
 				lie_algebras+="&"+weight_basis.properties().classification_of_metrics(group.csquared(weight_basis));

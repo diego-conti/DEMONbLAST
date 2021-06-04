@@ -52,7 +52,7 @@ exvector polynomial_equations_for_existence (const exvector& X, const exvector& 
 	auto basis_of_KerMDeltaTranspose=basis_from_generic_element<Unknown>(X);
 	exvector equations;
 	transform(basis_of_KerMDeltaTranspose.begin(),basis_of_KerMDeltaTranspose.end(),back_inserter(equations),
-		[&X,&csquared] (auto& coeff) {return abs(raise_each_and_multiply(X,coeff))==
+		[&X,&csquared] (auto& coeff) {return raise_each_and_multiply(X,coeff)==
 			raise_each_and_multiply(csquared,coeff)
 		;});			
 	return equations;
