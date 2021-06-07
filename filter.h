@@ -21,6 +21,7 @@
 #include "labeled_tree.h"
 #include "includes.h"
 #include "adinvariantobstruction.h"
+#include "components.h"
 
 class EqualityOrInequality {
 	enum class Operand : char {NO_CONDITION, EQUALS='=',LESS_THAN='<',GREATER_THAN='>'};
@@ -46,6 +47,7 @@ public:
 };
 
 
+
 //TODO derive from Options
 class Filter {
 	friend void DiagramDataOptions::adapt_to_filter(const Filter& filter);
@@ -57,6 +59,7 @@ class Filter {
   bool only_with_metric_=false;
 	bool only_passing_obstruction_for_ad_invariant_metric_=false;
 	tribool simple_nikolayevsky_=indeterminate;
+	bool only_irreducible_=false;
 public:
   void only_traceless_derivations()  {only_traceless_derivations_=true;}
 	void only_nontrivial_automorphisms() {only_nontrivial_automorphisms_=true;}
@@ -66,8 +69,9 @@ public:
   void simple_nikolayevsky(tribool choice) {simple_nikolayevsky_=choice;}
  	void only_kernel_MDelta_dimension(EqualityOrInequality kernel_dimension) {kernel_dimension_=kernel_dimension;}
  	void only_cokernel_MDelta_dimension(EqualityOrInequality cokernel_dimension) {cokernel_dimension_=cokernel_dimension;}
+ 	void only_irreducible() {only_irreducible_=true;}
   bool trivial() const {
-  	return !(only_traceless_derivations_||kernel_dimension_.nontrivial()||cokernel_dimension_.nontrivial()||only_nontrivial_automorphisms_ | only_with_metric_ | only_passing_obstruction_for_ad_invariant_metric_) && indeterminate(simple_nikolayevsky_);}
+  	return !(only_traceless_derivations_||kernel_dimension_.nontrivial()||cokernel_dimension_.nontrivial()||only_nontrivial_automorphisms_ || only_with_metric_ || only_passing_obstruction_for_ad_invariant_metric_ || only_irreducible_ ) && indeterminate(simple_nikolayevsky_);}
   bool meets(const LabeledTree& diagram, DiagramDataOptions options) const {
   	if (!allow_nonnice && !satisfies_formal_jacobi(diagram)) return false;
   	if (trivial()) return true;
@@ -80,6 +84,7 @@ public:
     if (only_passing_obstruction_for_ad_invariant_metric_ && !passes_obstruction_for_ad_invariant_metric(diagram)) return false;
     if (simple_nikolayevsky_ && !properties.simple_nikolayevsky_derivation()) return false;
     if (!simple_nikolayevsky_ && properties.simple_nikolayevsky_derivation()) return false;
+    if (only_irreducible_ && Components(diagram).size()>1) return false;
     return true;
   }
   
