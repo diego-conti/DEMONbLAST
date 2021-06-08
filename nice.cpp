@@ -30,6 +30,7 @@
 #include <boost/exception/diagnostic_information.hpp> 
 #include "diagramprocessor.h"
 #include "nicediagramsinpartition.h"
+#include "expressionparser.h"
 
 namespace po = boost::program_options;
 using namespace GiNaC;
@@ -96,14 +97,33 @@ void process_single_diagram(const vector<int>& partition, int hash,const Diagram
   	cout<<"diagram not found"<<endl;  
 }
 
+void process_single_digraph(const DiagramProcessor& processor, LabeledTree& diagram, const string& fixed_coefficients) {
+	ExpressionParser<StructureConstant> expression_parser;
+	exvector coefficients=expression_parser.parse_vector(fixed_coefficients,",");
+	if (diagram.weights().size()!=coefficients.size()) {		
+		cerr<<coefficients.size()<<" coefficients passed, "<< diagram.weights().size()<<" expected"<<endl;
+		return;
+	}
+	CoefficientLists coefficients_lists{coefficients};
+ 	auto processed=processor.process(diagram,coefficients_lists);
+  cout<<processed.data;
+	cout<<processed.extra_data<<endl;
+}
+void process_single_digraph(const DiagramProcessor& processor, LabeledTree& diagram) {
+ 	auto processed=processor.process(diagram);
+  cout<<processed.data;
+	cout<<processed.extra_data<<endl;
+}
+
 void process_single_digraph(const po::variables_map& command_line_variables,const DiagramProcessor& processor) {
 	auto tree_description=command_line_variables["digraph"].as<string>();
 	stringstream s{tree_description};
 	auto diagram = LabeledTree::from_stream(s);
 	if (!diagram) {cerr<<"no diagram specified"<<endl; return;}
- 	auto processed=processor.process(*diagram);
-  cout<<processed.data;
-	cout<<processed.extra_data;
+	if (command_line_variables.count("coefficients"))
+		process_single_digraph(processor,*diagram,command_line_variables["coefficients"].as<string>());
+	else 
+		process_single_digraph(processor,*diagram);	
 }
 
 void non_parallel_enumerate_nice_diagrams(int dimension,const DiagramProcessor& processor) {
@@ -292,7 +312,7 @@ int main(int argc, char* argv[]) {
                                           "diagram:\t only list diagrams\n"
                                           "table:\t list Lie algebras in LaTeX table\n"
                                           "lie-algebra [default]:\t list diagrams and Lie algebras")
-            
+            ("coefficients",po::value<string>(),"when processing a single diagram, assign structure constants as a comma-separated vector")
             ("delta-otimes-delta", "include \\Delta\\otimes\\Delta")                  
             ("list-diagram-automorphisms", "list the automorphisms of each diagram")
             ("lcs-and-ucs", "in table mode, write lower and upper central series dimension")

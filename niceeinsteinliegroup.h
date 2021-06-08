@@ -24,6 +24,7 @@
 #include "weightbasis.h"
 #include "liegroupsfromdiagram.h"
 #include "horizontal.h"
+#include "coefficientconfiguration.h"
 
 using namespace Wedge;
 

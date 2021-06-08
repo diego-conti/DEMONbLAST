@@ -23,20 +23,22 @@
 #include "liegroupsfromdiagram.h"
 #include "xginac.h"
 #include "weightbasis.h"
+#include "coefficientconfiguration.h"
 
 using namespace Wedge;
 
 class CoefficientConfiguration;
 
 class NiceLieGroup : public LieGroupsFromDiagram {
-	NiceLieGroup(const CoefficientConfigurationWithoutRedundantParameter& configuration);	
-	static void insert_new_lie_group(list<NiceLieGroup>& out_list, const CoefficientConfigurationWithoutRedundantParameter& configuration);
+	NiceLieGroup(const CoefficientConfiguration& configuration);	
+	static void insert_new_lie_group(list<NiceLieGroup>& out_list, const CoefficientConfiguration& configuration);
   void DeclareConditions(const lst& list_of_equations) override {
     LieGroupsFromDiagram::DeclareConditions(list_of_equations);
 	  for (auto& X : X_ijk) X=X.subs(list_of_equations);
   }
 public:
 	static list<NiceLieGroup> from_weight_basis(const WeightBasis& weight_basis);
+	static list<NiceLieGroup> from_coefficient_configuration(CoefficientConfiguration&& configuration);
   exvector X_ijk;
 };
 

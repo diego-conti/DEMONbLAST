@@ -29,6 +29,7 @@
 #include "filter.h"
 #include "options.h"
 #include "diagramanalyzer.h"
+#include "coefficientconfiguration.h"
 
 struct ProcessedDiagram {
   string data;
@@ -83,6 +84,10 @@ public:
 			append_extra(result,diagram);
 			return result;
   }
+  virtual ProcessedDiagram process (const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const {
+  	//redefined by processor that use the coefficient configuration 
+  	throw std::logic_error("fixed coefficient_lists passed to incompatible processor");
+  }
   virtual void canonicalize_order(LabeledTree& diagram) const {
   	if (!processing_options().has(ProcessingOption::do_not_reorder))
 	  	diagram.canonicalize_order_increasing();
@@ -120,8 +125,11 @@ public:
   DiagramProcessor(with_nilsoliton_metrics_tag);  
   DiagramProcessor(with_ricciflat_metrics_tag);  
   ProcessedDiagram process(LabeledTree& diagram) const {  
- 			processor->canonicalize_order(diagram);
+  		processor->canonicalize_order(diagram);	//do not reorder if a fixed coefficient_lists was removed
       return processor->process(diagram);
+  }
+  ProcessedDiagram process(LabeledTree& diagram,const CoefficientLists& coefficient_lists) const {  
+      return processor->process(diagram,coefficient_lists);
   }
   void invert_nodes();
   void with_delta_otimes_delta();
@@ -144,6 +152,9 @@ public:
 	ProcessedDiagram process (const LabeledTree& diagram) const override {
 		return base_processor->process(diagram);
 	}
+  ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
+  		return base_processor->process(diagram,coefficient_lists);
+	}
 protected:
   virtual ProcessingOptions& processing_options() override {return base_processor->processing_options();}
   virtual DiagramDataOptions& diagram_data_options() override {return base_processor->diagram_data_options();}
@@ -162,6 +173,12 @@ public:
       processed_by_base.append_extra(double_tree.to_dot_string());
     return processed_by_base;
   }
+  ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
+    ProcessedDiagram processed_by_base = IndirectDiagramProcessor::process(diagram,coefficient_lists);
+      DoubleArrowsTree double_tree{diagram};
+      processed_by_base.append_extra(double_tree.to_dot_string());
+    return processed_by_base;
+  }
 };
 
 class DiagramProcessorInvertNodes  : public IndirectDiagramProcessor {
@@ -171,6 +188,11 @@ public:
     LabeledTree inverted_diagram{diagram};    //this discards the WeightBasis object, which has a (small) negative impact on performance
     inverted_diagram.invert_nodes();
     return IndirectDiagramProcessor::process(inverted_diagram); 
+  }
+	ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
+    LabeledTree inverted_diagram{diagram};
+    inverted_diagram.invert_nodes();
+    return IndirectDiagramProcessor::process(inverted_diagram,coefficient_lists); 
   }
 	void canonicalize_order(LabeledTree& diagram) const override {
   	diagram.canonicalize_order_decreasing();
@@ -202,6 +224,15 @@ class DiagramProcessorWithLieAlgebras : public DiagramProcessorImpl {
   	for (auto& sigma : weight_basis.properties().automorphisms_giving_ricci_flat()) 
  			append_enhanced_lie_algebras(processed_diagram,sigma,EnhancedWeightBasis{tree,sigma});
   }
+  ProcessedDiagram process_diagram_and_configuration(const LabeledTree& diagram,const WeightBasisAndProperties& weight_basis, CoefficientConfiguration&& coefficient_configuration) const {
+      auto lie_algebras=NiceLieGroup::from_coefficient_configuration(std::move(coefficient_configuration));
+      if (lie_algebras.empty() && only_if_lie_algebras()) return {};
+      auto result= process_list(diagram,lie_algebras);
+      append_derivations(result,lie_algebras);
+ 			append_extra(result,diagram);
+      if (with_enhanced_lie_algebras()) append_enhanced_lie_algebras(diagram, result,weight_basis);
+		  return result;  
+  }
 protected:
 	string polynomial_equations_for_existence_of_special_metrics(const WeightBasisAndProperties& weight_basis, const NiceLieGroup& group) const {
 		if (!with_polynomial_conditions()) return {};
@@ -211,14 +242,14 @@ protected:
 public:
   ProcessedDiagram process(const LabeledTree& diagram) const override {
       auto& weight_basis=diagram.weight_basis(diagram_data_options());
-      auto lie_algebras=NiceLieGroup::from_weight_basis(weight_basis);  
-      if (lie_algebras.empty() && only_if_lie_algebras()) return {};
-      auto result= process_list(diagram,lie_algebras);
-      append_derivations(result,lie_algebras);
- 			append_extra(result,diagram);
-      if (with_enhanced_lie_algebras()) append_enhanced_lie_algebras(diagram, result,weight_basis);
-		  return result;
+      CoefficientConfigurationWithoutRedundantParameter configuration{weight_basis};
+			return process_diagram_and_configuration(diagram,weight_basis,std::move(configuration));
   }
+  ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
+      auto& weight_basis=diagram.weight_basis(diagram_data_options());
+			FixedCoefficientConfiguration configuration{weight_basis,coefficient_lists};
+			return process_diagram_and_configuration(diagram,weight_basis,std::move(configuration));
+	}
 };
 
 
@@ -268,10 +299,8 @@ public:
 };
 
 class DiagramProcessorTableOfLieAlgebras : public DiagramProcessorWithLieAlgebras {
-public:
-  ProcessedDiagram process(const LabeledTree& diagram) const override {
-      auto& weight_basis=diagram.weight_basis(diagram_data_options());
-      auto groups=NiceLieGroup::from_weight_basis(weight_basis);  
+  ProcessedDiagram process_diagram_and_configuration(const LabeledTree& diagram,const WeightBasisAndProperties& weight_basis, CoefficientConfiguration&& coefficient_configuration) const {
+      auto groups=NiceLieGroup::from_coefficient_configuration(move(coefficient_configuration));  
       if (groups.empty() && only_if_lie_algebras()) return {};
  	   	string lie_algebras;     
  		  ProgressiveLetter progressive_letter; 
@@ -289,6 +318,17 @@ public:
 			  lie_algebras+="\\\\\n";
 		 }
     	return {lie_algebras,{}};
+	}
+public:
+  ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
+      auto& weight_basis=diagram.weight_basis(diagram_data_options());
+			FixedCoefficientConfiguration configuration{weight_basis,coefficient_lists};
+			return process_diagram_and_configuration(diagram,weight_basis,std::move(configuration));
+	}
+  ProcessedDiagram process(const LabeledTree& diagram) const override {
+      auto& weight_basis=diagram.weight_basis(diagram_data_options());
+			CoefficientConfigurationWithoutRedundantParameter configuration{WeightBasis{weight_basis}};
+			return process_diagram_and_configuration(diagram,weight_basis,std::move(configuration));
    }
 };
 
