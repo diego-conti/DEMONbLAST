@@ -51,7 +51,7 @@ exvector LieGroupsFromDiagram::csquared(const WeightBasis& weight_basis) const {
 exvector LieGroupsFromDiagram::c(const WeightBasis& weight_basis) const {
 		exvector result;
 		for (auto& weight: weight_basis.weights_and_coefficients()) 
-			result.push_back(c_ijk(weight.node_in1,weight.node_in2,weight.node_out));
+			result.push_back(-c_ijk(weight.node_in1,weight.node_in2,weight.node_out));
 		return result;
 }
 
