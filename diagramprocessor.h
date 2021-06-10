@@ -247,7 +247,7 @@ public:
   }
   ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
       auto& weight_basis=diagram.weight_basis(diagram_data_options());
-			FixedCoefficientConfiguration configuration{weight_basis,coefficient_lists};
+			FixedCoefficientConfiguration configuration{diagram.number_of_nodes(),diagram.weights(),coefficient_lists};
 			return process_diagram_and_configuration(diagram,weight_basis,std::move(configuration));
 	}
 };
@@ -295,7 +295,7 @@ class DiagramProcessorTableOfLieAlgebras : public DiagramProcessorWithLieAlgebra
 public:
   ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
       auto& weight_basis=diagram.weight_basis(diagram_data_options());
-			FixedCoefficientConfiguration configuration{weight_basis,coefficient_lists};
+			FixedCoefficientConfiguration configuration{diagram.number_of_nodes(),diagram.weights(),coefficient_lists};
 			return process_diagram_and_configuration(diagram,weight_basis,std::move(configuration));
 	}
   ProcessedDiagram process(const LabeledTree& diagram) const override {

@@ -141,13 +141,12 @@ public:
 };
 
 class FixedCoefficientConfiguration : public CoefficientConfiguration {
-	vector<Weight> weights_;
+	list<Weight> weights_;
 	CoefficientLists coefficients_lists;
 	vector<exvector>::const_iterator current;
 public:
-	FixedCoefficientConfiguration(const WeightBasisAndProperties& weight_basis, const CoefficientLists& coefficients_lists)  : 
-		CoefficientConfiguration{weight_basis.number_of_nodes()}, coefficients_lists{coefficients_lists} {
-		for (auto& w: weight_basis.weights_and_coefficients()) weights_.push_back(w);
+	FixedCoefficientConfiguration(int nodes, const list<Weight>& weights, const CoefficientLists& coefficients_lists)  : 
+		CoefficientConfiguration{nodes}, weights_{weights}, coefficients_lists{coefficients_lists} {
 		current=this->coefficients_lists.begin();
 	}
 

@@ -81,7 +81,7 @@ protected:
 		CoefficientConfigurationWithoutRedundantParameter configuration{WeightBasis{weight_basis}};	
 		vector<exvector> coefficients;
 		for (auto& group : NiceLieGroup::from_coefficient_configuration(move(configuration)))
-			coefficients.push_back(group.c(weight_basis));
+			coefficients.push_back(group.c(diagram.weights()));
 		stored_coefficients[diagram]=move(coefficients);
 		return PartitionProcessor::process_single_diagram(diagram);
 	}
