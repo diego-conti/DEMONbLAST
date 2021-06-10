@@ -134,6 +134,8 @@ public:
 	CoefficientLists()=default;
 	CoefficientLists(const CoefficientLists& c)=default;
 	CoefficientLists(std::initializer_list<exvector> c) : coefficient_lists{move(c)} {}
+	CoefficientLists(vector<exvector>&& c) : coefficient_lists{move(c)} {}
+	CoefficientLists& operator=(vector<exvector>&& c) { coefficient_lists=move(c); return *this;}
 	auto begin() const {return coefficient_lists.begin();}
 	auto end() const {return coefficient_lists.end();}	
 };
@@ -162,6 +164,7 @@ public:
 		auto w=weights_.begin();
 		for (auto c=current->begin();c!=current->end();++w,++c)		
 			result.emplace_back(*w,*c);
+		if (w!=weights_.end()) throw std::runtime_error("FixedCoefficientConfiguration::size mismatch between coefficient list and weight vector");
 		return result;
 	}
 };

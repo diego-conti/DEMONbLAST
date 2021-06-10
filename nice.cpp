@@ -29,8 +29,8 @@
 #include <boost/program_options.hpp>
 #include <boost/exception/diagnostic_information.hpp> 
 #include "diagramprocessor.h"
-#include "nicediagramsinpartition.h"
-#include "expressionparser.h"
+#include "partitionprocessor.h"
+
 
 namespace po = boost::program_options;
 using namespace GiNaC;
@@ -44,167 +44,98 @@ void create_directory(int n) {
     cerr<<"cannot create directory"<<endl;
 }
 
-string output_path(const vector<int>& partition, string filename) {
-  int dimension = std::accumulate(partition.begin(),partition.end(),0);
-  return "output"+to_string(dimension)+"/"+filename;
-}
-string output_path(const vector<int>& partition) {
-  int dimension = std::accumulate(partition.begin(),partition.end(),0);
-  return "output"+to_string(dimension)+"/part"+get_label(partition,"_")+".dot";
-}
-
-string output_path(const vector<int>& partition, const LabeledTree& diagram) {
-  int dimension = std::accumulate(partition.begin(),partition.end(),0);
-  return "output"+to_string(dimension)+"/graph"+diagram.name()+".dot";
-}
 
 
-int enumerate_nice_diagrams_in_partition(const vector<int>& partition,ostream& stream,const DiagramProcessor& processor) {
-    nice_log<<"enumerating diagrams in partition "<<horizontal(partition)<<endl;
-			auto diagrams =nice_diagrams_in_partition(partition,processor.filter(),processor);
-				for (auto diagram= diagrams.begin_process(processor);diagram!=diagrams.end_process(processor);++diagram) {
-			    auto processed=diagram.process();
-	        stream<<processed.data;
-	        if (!processed.empty() && !processed.extra_data.empty()) stream<<"/*"<<processed.extra_data<<"*/"<<endl;
-	        ofstream{output_path(partition,*diagram),std::ofstream::out | std::ofstream::trunc}<<processed.data;
- 		    }
-		return diagrams.count();
-}
-
-int enumerate_nice_diagrams(const list<vector<int>>& partitions,const DiagramProcessor& processor) {
+int enumerate_nice_diagrams(const list<vector<int>>& partitions,const ProcessorCreator& processor_creator) {
 		int count=0;
 		for (auto& partition: partitions) {
-		  stringstream output;
-			count+=enumerate_nice_diagrams_in_partition(partition,output,processor);
-			if (!output.str().empty())
-  			ofstream{output_path(partition),std::ofstream::out | std::ofstream::trunc}<<output.str();
+			auto partition_processor=processor_creator.create(partition);
+			count+=partition_processor->process_all();		 	
 		}
 		return count;
 }
 
-void process_single_diagram(const vector<int>& partition, int hash,const DiagramProcessor& processor) {
-  int dimension = std::accumulate(partition.begin(),partition.end(),0);
-  auto diagrams = nice_diagrams(partition,processor.filter(),processor);
-  bool found=false;
-	for (auto& diagram : diagrams) 
-	  if (diagram.hash()==hash) {
-	        found=true;
-	        auto processed=processor.process(diagram);
-	        cout<<processed.data;
-	        cout<<processed.extra_data;
-		}
-  if (!found)
-  	cout<<"diagram not found"<<endl;  
+void non_parallel_enumerate_nice_diagrams(int dimension,const ProcessorCreator& processor_creator) {
+  enumerate_nice_diagrams(partitions(dimension),processor_creator);
 }
 
-void process_single_digraph(const DiagramProcessor& processor, LabeledTree& diagram, const string& fixed_coefficients) {
-	ExpressionParser<StructureConstant> expression_parser;
-	exvector coefficients=expression_parser.parse_vector(fixed_coefficients,",");
-	if (diagram.weights().size()!=coefficients.size()) {		
-		cerr<<coefficients.size()<<" coefficients passed, "<< diagram.weights().size()<<" expected"<<endl;
-		return;
-	}
-	CoefficientLists coefficients_lists{coefficients};
- 	auto processed=processor.process(diagram,coefficients_lists);
-  cout<<processed.data;
-	cout<<processed.extra_data<<endl;
-}
-void process_single_digraph(const DiagramProcessor& processor, LabeledTree& diagram) {
- 	auto processed=processor.process(diagram);
-  cout<<processed.data;
-	cout<<processed.extra_data<<endl;
-}
-
-void process_single_digraph(const po::variables_map& command_line_variables,const DiagramProcessor& processor) {
-	auto tree_description=command_line_variables["digraph"].as<string>();
-	stringstream s{tree_description};
-	auto diagram = LabeledTree::from_stream(s);
-	if (!diagram) {cerr<<"no diagram specified"<<endl; return;}
-	if (command_line_variables.count("coefficients"))
-		process_single_digraph(processor,*diagram,command_line_variables["coefficients"].as<string>());
-	else 
-		process_single_digraph(processor,*diagram);	
-}
-
-void non_parallel_enumerate_nice_diagrams(int dimension,const DiagramProcessor& processor) {
-  enumerate_nice_diagrams(partitions(dimension),processor);
-}
-
-void parallel_enumerate_nice_diagrams(list<vector<int>> partitions,const DiagramProcessor& processor) {
+void parallel_enumerate_nice_diagrams(list<vector<int>> partitions,const ProcessorCreator& processor_creator) {
   if (partitions.empty()) return;
   int dimension=accumulate(partitions.begin()->begin(),partitions.begin()->end(),0);
-  string (&output_path) (const vector<int>&) = ::output_path;
-  auto process_nice_diagrams_in_partition = [&processor](const vector<int>& partition,ostream& stream) {
-     return enumerate_nice_diagrams_in_partition(partition,stream,processor);
+  auto output_path = [](const vector<int>& partition) {return PartitionProcessor::output_path(partition);};
+  auto process_nice_diagrams_in_partition = [&processor_creator](const vector<int>& partition,ostream& stream) {
+ 		auto partition_processor=processor_creator.create(partition);
+		return partition_processor->process_all(stream);
   };
   TaskRunner runner(process_nice_diagrams_in_partition, output_path, partitions);
   runner.run_and_write_to_file();
 }
 
 
-void parallel_enumerate_nice_diagrams(int dimension,const DiagramProcessor& processor) {
-  parallel_enumerate_nice_diagrams(partitions(dimension),processor);
+void parallel_enumerate_nice_diagrams(int dimension,const ProcessorCreator& processor_creator) {
+  parallel_enumerate_nice_diagrams(partitions(dimension),processor_creator);
 }
-
-
 
 
 void test_speed() {
   auto all_partitions = partitions(9);
   list<vector<int>> some_partitions;
   copy_n(all_partitions.begin(),10,back_inserter(some_partitions));
-  parallel_enumerate_nice_diagrams(some_partitions,DiagramProcessor{with_lie_algebra});
+  auto creator=ProcessorCreator::compute_coefficients(DiagramProcessor{with_lie_algebra});
+  parallel_enumerate_nice_diagrams(some_partitions,creator);
 }
 
 
-void process_partitions_to_table(int dimension,const DiagramProcessor& processor, bool with_lcs) {
-		for (auto& partition: partitions(dimension)) { 
+void process_partitions_to_table(int dimension,const ProcessorCreator& processor_creator, bool with_lcs) {
+		for (auto& partition: partitions(dimension)) {
+			auto partition_processor=processor_creator.create(partition);
 		  stringstream output;
-    	enumerate_nice_diagrams_in_partition(partition,output,processor);	
+		  partition_processor->process_all(output);
     	if (!output.str().empty()) {
     		if (with_lcs) cout<<"&&"<<horizontal(partition,"")<<":\\\\"<<endl;
-    		cout<<output.str();
+    		cout<<output.str();	
     	 }
 		}
 }
 
-
-void process_all_partitions(const po::variables_map& command_line_variables,const DiagramProcessor& processor) {
+void process_all_partitions(const po::variables_map& command_line_variables,const ProcessorCreator& processor_creator) {
   int dimension=command_line_variables["all-partitions"].as<int>();
   if (command_line_variables["mode"].as<string>()=="table") {
-     process_partitions_to_table(dimension,processor,command_line_variables.count("lcs-and-ucs"));   
+     process_partitions_to_table(dimension,processor_creator,command_line_variables.count("lcs-and-ucs"));   
      return;
    }
   create_directory(dimension);
   if (command_line_variables.count("parallel-mode")) 
-    parallel_enumerate_nice_diagrams(dimension,processor);
+    parallel_enumerate_nice_diagrams(dimension,processor_creator);
   else 
-    non_parallel_enumerate_nice_diagrams(dimension,processor);
+    non_parallel_enumerate_nice_diagrams(dimension,processor_creator);
 }
 
 
-void process_single_partition(const po::variables_map& command_line_variables,const DiagramProcessor& processor) {
+void process_single_partition(const po::variables_map& command_line_variables,const ProcessorCreator& processor_creator) {
   auto partition= command_line_variables["partition"].as<vector<int>>();
-  if (command_line_variables.count("diagram"))  {
-       int diagram_hash=command_line_variables["diagram"].as<int>();
-       cout<<"processing diagram(s) with hash "<<diagram_hash<<endl<<" partition "<<horizontal(partition)<<endl;
-       process_single_diagram(partition,diagram_hash,processor);
-   }
-   else if (command_line_variables.count("partition"))
-    {
-      cout<<"processing partition "<<horizontal(partition)<<endl;
-      ofstream file{output_path(partition),std::ofstream::out | std::ofstream::trunc};
-      cout<<enumerate_nice_diagrams_in_partition(partition,file,processor)<< " diagrams processed"<<endl;
-    }    
+  cout<<"processing partition "<<horizontal(partition)<<endl;
+  cout<<enumerate_nice_diagrams({partition},processor_creator)<< " diagrams processed"<<endl;
 }
 
-void process(const po::variables_map& command_line_variables,const DiagramProcessor& processor) {
+void process_single_digraph(const po::variables_map& command_line_variables,const ProcessorCreator& processor_creator) {
+	auto tree_description=command_line_variables["digraph"].as<string>();
+	stringstream s{tree_description};
+	auto diagram = LabeledTree::from_stream(s);
+	if (!diagram) {cerr<<"no diagram specified"<<endl; return;}
+	auto partition=lower_central_series(*diagram);
+	for (int i=0;i<partition.size()-1;++i) partition[i]-=partition[i+1];
+	auto partition_processor=processor_creator.create(partition);
+	partition_processor->process(*diagram,cout);
+}
+
+void process(const po::variables_map& command_line_variables,const ProcessorCreator& processor_creator) {
         if (command_line_variables.count("all-partitions")) 
-          process_all_partitions(command_line_variables,processor);
+          process_all_partitions(command_line_variables,processor_creator);
         else if (command_line_variables.count("partition")) 
-          process_single_partition(command_line_variables,processor);
+          process_single_partition(command_line_variables,processor_creator);
         else if (command_line_variables.count("digraph")) 
-					process_single_digraph(command_line_variables,processor);
+					process_single_digraph(command_line_variables,processor_creator);
         else cerr<<"Either --all-partitions, --partition or --digraph must be specified"<<endl;        
 }
 
@@ -216,7 +147,7 @@ tribool boolean_value(const po::variables_map& command_line_variables,const stri
 	throw invalid_argument("unrecognized state: "+value);	
 }
 
-DiagramProcessor with_options(const po::variables_map& command_line_variables,DiagramProcessor diagram_processor) {
+ProcessorCreator with_options(const po::variables_map& command_line_variables,DiagramProcessor diagram_processor) {
     if (command_line_variables.count("delta-otimes-delta"))
       diagram_processor.with_delta_otimes_delta();
     if (command_line_variables.count("invert"))
@@ -258,7 +189,12 @@ DiagramProcessor with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("irreducible")) filter.only_irreducible();
 		filter.simple_nikolayevsky(boolean_value(command_line_variables,"simple-nikolayevsky"));
     diagram_processor.setFilter(filter);
-    return diagram_processor;
+
+		auto coefficients=command_line_variables["coefficients"].as<string>();
+		if (coefficients=="compute") return ProcessorCreator::compute_coefficients(std::move(diagram_processor));
+		else if (coefficients=="load") return ProcessorCreator::load_coefficients(std::move(diagram_processor));
+		else if (coefficients=="store") return ProcessorCreator::compute_and_store_coefficients(std::move(diagram_processor));
+		else return ProcessorCreator::fixed_coefficients(std::move(diagram_processor),coefficients);		
 }
 
 DiagramProcessor create_diagram_processor(const po::variables_map& command_line_variables) {
@@ -298,8 +234,6 @@ int main(int argc, char* argv[]) {
                   "all partitions of dimension <arg>")
             ("partition", po::value<vector<int>>()->multitoken(),
                   "only process partition arg")
-            ("diagram", po::value<int>(),
-                  "only process diagram with hash <arg>")
             ("digraph", po::value<string>(),
                   "only process diagram indicated by <arg>")
                   
@@ -312,7 +246,12 @@ int main(int argc, char* argv[]) {
                                           "diagram:\t only list diagrams\n"
                                           "table:\t list Lie algebras in LaTeX table\n"
                                           "lie-algebra [default]:\t list diagrams and Lie algebras")
-            ("coefficients",po::value<string>(),"when processing a single diagram, assign structure constants as a comma-separated vector")
+//in prospettiva farei che il valore di default è invece usare le tabelle sul disco. 
+            ("coefficients",po::value<string>()->default_value("compute"),"select one of the following:\n"
+																				"compute:\t The structure constants are computed\n"
+																				"store:\t The structure constants are computed and stored to disk\n"
+																				"load:\t The structure constants are loaded from disk\n"
+																				"a comma-separated vector containing the structure constants (for use with --digraph)")
             ("delta-otimes-delta", "include \\Delta\\otimes\\Delta")                  
             ("list-diagram-automorphisms", "list the automorphisms of each diagram")
             ("lcs-and-ucs", "in table mode, write lower and upper central series dimension")

@@ -76,6 +76,7 @@ public:
 	string derivations() const;	
 	
 	exvector csquared(const WeightBasis& weight_basis) const;
+	exvector c(const WeightBasis& weight_basis) const;
 };
 
 
