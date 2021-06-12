@@ -182,6 +182,34 @@ public:
 };
 
 class DiagramProcessorInvertNodes  : public IndirectDiagramProcessor {
+	static Weight invert(Weight weight, int nodes) {
+		Weight result;
+		result.node_in1=nodes-1-weight.node_in2;
+		result.node_in2=nodes-1-weight.node_in1;
+		result.node_out=nodes-1-weight.node_out;
+		return result;
+	}
+	static bool symmetric(Weight w1, Weight w2, int nodes) {
+		int n=nodes-1;
+		return w1.node_in1+w2.node_in2 == n && w2.node_in1+w1.node_in2 == n && w1.node_out+w2.node_out == n;
+	}
+	static exvector invert(int nodes, const exvector& coefficients, const list<Weight>& weights,  const list<Weight>& inverted_weights) {
+		exvector result;
+		for (auto weight : weights) {
+			int i=0;
+			for (auto j=inverted_weights.begin();j!=inverted_weights.end();++j,++i) 
+				if (symmetric(*j,weight,nodes)) break;
+			result.push_back(coefficients[i]);
+		}
+		return result;
+	}
+	static CoefficientLists invert(int nodes, const list<Weight>& weights,  const list<Weight>& inverted_weights,const CoefficientLists& coefficient_lists)  {
+		vector<exvector> result;
+		for (auto& v: coefficient_lists) {
+			result.push_back(invert(nodes, v,weights,inverted_weights));
+		}
+		return CoefficientLists{move(result)};
+	}
 public:
   using IndirectDiagramProcessor::IndirectDiagramProcessor;
   ProcessedDiagram process(const LabeledTree& diagram) const override {
@@ -192,7 +220,7 @@ public:
 	ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
     LabeledTree inverted_diagram{diagram};
     inverted_diagram.invert_nodes();
-    return IndirectDiagramProcessor::process(inverted_diagram,coefficient_lists); 
+    return IndirectDiagramProcessor::process(inverted_diagram,invert(diagram.number_of_nodes(),diagram.weights(),inverted_diagram.weights(),coefficient_lists)); 
   }
 	void canonicalize_order(LabeledTree& diagram) const override {
   	diagram.canonicalize_order_decreasing();
