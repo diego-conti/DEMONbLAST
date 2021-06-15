@@ -43,7 +43,9 @@ public:
 		for (ex x : {
 			Parameter{N.a},Parameter{N.b},Parameter{N.c},Parameter{N.d},Parameter{N.e},Parameter{N.f},Parameter{N.g},Parameter{N.h},Parameter{N.i},
 			Parameter{N.j},Parameter{N.k},Parameter{N.l},Parameter{N.m},Parameter{N.n},Parameter{N.o},Parameter{N.p},Parameter{N.q},Parameter{N.r},
-			Parameter{N.s},Parameter{N.t},Parameter{N.u},Parameter{N.v},Parameter{N.w},Parameter{N.x},Parameter{N.y},Parameter{N.z}
+			Parameter{N.s},Parameter{N.t},Parameter{N.u},Parameter{N.v},Parameter{N.w},Parameter{N.x},Parameter{N.y},Parameter{N.z},
+			Parameter{N.A},Parameter{N.B},Parameter{N.C},Parameter{N.D},Parameter{N.E},Parameter{N.F},Parameter{N.G},Parameter{N.H},Parameter{N.I},
+			Parameter{N.alpha},Parameter{N.beta},Parameter{N.gamma},Parameter{N.delta},Parameter{N.lambda},Parameter{N.mu},Parameter{N.xi},Parameter{N.chi}
 		})
 			parameters.append(x);
 		this->parameters=parameters;
