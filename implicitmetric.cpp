@@ -212,10 +212,11 @@ string sign_configurations_to_string(const set<vector<int>>& negative_signs) {
 	return s.str();
 }
 
-optional<SignConfiguration> DiagonalMetric::sign_configuration_from_image(const SignConfiguration& image) const {
+list<SignConfiguration> DiagonalMetric::sign_configurations_from_image(const SignConfiguration& image) const {
+	list<SignConfiguration> result;
 	for (auto& pair : potential_signatures)
-		if (pair.second==image) return pair.first;
-	return nullopt;
+		if (pair.second==image) result.push_back(pair.first);
+	return result;
 }
 
 optional<set<vector<int>>> DiagonalMetric::exact_signatures_for_codimension_one(const exvector& csquared) const {
@@ -224,8 +225,8 @@ optional<set<vector<int>>> DiagonalMetric::exact_signatures_for_codimension_one(
 	if (!solutions.can_solve()) return nullopt;
 	for (auto Xsol : solutions.substitute_solutions(X())) {
 		auto conf=sign_configuration_from_vector(Xsol);
-		auto signature=sign_configuration_from_image(conf);
-		if (signature) signatures.insert(negative_signs(signature.value()));
+		for (auto signature : sign_configurations_from_image(conf))
+ 			signatures.insert(negative_signs(signature));
 	}
 	return signatures;
 }
