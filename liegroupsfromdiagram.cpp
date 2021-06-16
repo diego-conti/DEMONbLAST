@@ -37,8 +37,8 @@ bool LieGroupsFromDiagram::solve_linear_ddzero() {
 		lst eqns;
 		GetEquations_ddZero(eqns);
     lst eqns2;
-    for (ex eq : eqns) eqns2.append(eq.expand());
-		return impose_polynomial_eqns<StructureConstant>(*this, move(eqns), is_solution_in_positive_orthant);
+    for (ex eq : eqns) eqns2.append(eq.expand().numer());
+		return impose_polynomial_eqns<StructureConstant>(*this, move(eqns2), is_solution_in_positive_orthant);
 }
 
 
@@ -57,22 +57,38 @@ exvector LieGroupsFromDiagram::c(const list<Weight>& weights) const {
 
 
 
-template<typename IteratorBegin, typename IteratorEnd>
-string ddzero(IteratorBegin begin, IteratorEnd end) {
-  stringstream ss;
-  while (begin!=end) ss<<*begin++<<"=0; ";
-  return ss.str();
-}
+class ContainerOfEquations {
+	exvector eqns;
+public:
+	template<typename Container>
+	ContainerOfEquations(Container&& container) {
+		for (auto eq: container) insert(eq);
+	}
+	void insert(ex eq) {
+		eq=eq.expand().numer();
+		if (eq.is_zero()) return;
+		if (find(eqns.begin(),eqns.end(),eq)!=eqns.end()) return;
+		if (find(eqns.begin(),eqns.end(),-eq)!=eqns.end()) return;
+		eqns.push_back(eq);
+	}
+	auto begin() const {return eqns.begin();}
+	auto end() const {return eqns.end();}
+	bool empty() const {return eqns.empty();}
+	string to_string() const {
+	  stringstream ss;
+	  ss<<latex;
+	  for (auto eq:eqns) ss<<eq<<"=0; ";
+ 	  return ss.str();	
+	}
+};
 
 string to_string(const LieGroupHasParameters<true>& G) {
   string structure_constants =horizontal(G.StructureConstants());
   set<ex,ex_is_less> eqns;
 	G.GetEquations_ddZero(eqns);
-	eqns.erase(0);
-	return eqns.empty()?  structure_constants :  structure_constants+" d^2=0 when "+ddzero(eqns.begin(),eqns.end());
+	auto eqns2=ContainerOfEquations{eqns};
+	return eqns2.empty()?  structure_constants :  structure_constants+" d^2=0 when "+eqns2.to_string();
 }
-
-
 
 bool LieGroupsFromDiagram::is_dd_nonzero() const {
 		lst eqns;
