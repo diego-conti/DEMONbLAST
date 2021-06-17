@@ -257,13 +257,12 @@ pair<bool,set<vector<int>>> DiagonalMetric::riemannian_like_signatures() const {
 }
 
 string DiagonalMetric::classification(const exvector& csquared) const {
-	optional<set<vector<int>>> signatures=exact_signatures(csquared);
+	optional<set<vector<int>>> signatures=compute_exact_signatures ? exact_signatures(csquared) : nullopt;
 	if (signatures) return "S="+sign_configurations_to_string(signatures.value());
 	else {
 		auto riemannian=riemannian_like_signatures();	
 		if (riemannian.first) return "S="+sign_configurations_to_string(riemannian.second);
-		else if (!riemannian.second.empty()) return "S\\supset"+sign_configurations_to_string(riemannian.second);
-		else return ImplicitMetric::classification(csquared);
+		else return "S\\supset"+sign_configurations_to_string(riemannian.second);
 	}
 }
 
@@ -286,13 +285,15 @@ string DiagonalMetric::solution_to_polynomial_equations_or_empty_string(const ex
 	return s.str();
 }
 
-
 DiagonalMetric::DiagonalMetric(const string& name,const WeightMatrix& weight_matrix, const exvector& X_ijk) :
 	ImplicitMetric{name,X_ijk},	
 	potential_signatures{signatures_compatible_with_X(weight_matrix,X_ijk)},
 	dimension_coker_MDelta{weight_matrix.rows()-weight_matrix.rank_over_Q()}
 	 {}	
 
+DiagonalMetric::DiagonalMetric(const string& name,const WeightMatrix& weight_matrix, const exvector& X_ijk, only_riemannian_like_metrics_t) : DiagonalMetric{name,weight_matrix,X_ijk} {
+	compute_exact_signatures=false;
+}
 
 ostream& operator<<(ostream& os,SignConfiguration sign_configuration) {
 	string sep;

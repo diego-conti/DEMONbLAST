@@ -85,7 +85,9 @@ exvector symmetrize(const exvector& X, const vector<int>& sigma) {
 }
 
 
-
+unique_ptr<DiagonalMetric> make_diagonal_metric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk, DiagramDataOptions options) {
+	return options.only_riemannian_like_metrics()? make_unique<DiagonalMetric>(name,weight_matrix,X_ijk,only_riemannian_like_metrics) :  make_unique<DiagonalMetric>(name,weight_matrix,X_ijk);
+}
 
 DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const list<vector<int>>& automorphisms, DiagramDataOptions options) : 
  	options{options},
@@ -104,9 +106,9 @@ DiagramProperties:: DiagramProperties(const WeightMatrix& weight_matrix, const l
 	B=accumulate(b.begin(),b.end(),ex{0});
 	auto diagonal_ricci_flat_X=X_solving_Ricciflat(weight_matrix);
 	if (options.with_diagonal_nilsoliton_metrics())
-		metrics.push_back(make_unique<DiagonalMetric>(NILSOLITON_DIAGONAL(), weight_matrix,nilsoliton_X));
+		metrics.push_back(make_diagonal_metric(NILSOLITON_DIAGONAL(), weight_matrix,nilsoliton_X,options));
 	if (options.with_diagonal_ricci_flat_metrics())
-		metrics.push_back(make_unique<DiagonalMetric>(RICCI_FLAT_DIAGONAL(), weight_matrix,diagonal_ricci_flat_X));
+		metrics.push_back(make_diagonal_metric(RICCI_FLAT_DIAGONAL(), weight_matrix,diagonal_ricci_flat_X,options));
 	nikolayevsky=to_matrix(transpose(weight_matrix.M_Delta())).image_of(nilsoliton_X);
 	for (auto& x: nikolayevsky) ++x;
 	if (options.with_sigma_compatible_ricci_flat_metrics()) 

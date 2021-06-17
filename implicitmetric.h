@@ -113,13 +113,15 @@ public:
 	virtual bool no_metric_regardless_of_polynomial_conditions() const {return is_in_coordinate_hyperplane();}
 };
 
+constexpr class only_riemannian_like_metrics_t {} only_riemannian_like_metrics;
+
 class DiagonalMetric : public ImplicitMetric {
 	list<pair<SignConfiguration,SignConfiguration>> potential_signatures;	//first element of each pair is the signature, the other is M_Delta of it.
 	list<SignConfiguration> sign_configurations_from_image(const SignConfiguration& image) const;
 	optional<set<vector<int>>> exact_signatures_for_codimension_one(const exvector& csquared) const;
 	pair<bool,set<vector<int>>> riemannian_like_signatures() const;
 	optional<set<vector<int>>> exact_signatures(const exvector& csquared) const;
-
+	bool compute_exact_signatures=true;
 	int dimension_coker_MDelta;
 protected:
 	void dump_extra(ostream& os) const override {
@@ -129,6 +131,7 @@ protected:
 	}
 public:
 	DiagonalMetric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk);
+	DiagonalMetric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk, only_riemannian_like_metrics_t);
 	bool no_metric_regardless_of_polynomial_conditions() const override {return is_in_coordinate_hyperplane()|| potential_signatures.empty();}
 	string solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const override;	
 	string classification(const exvector& csquared) const override;

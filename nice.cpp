@@ -168,7 +168,8 @@ ProcessorCreator with_options(const po::variables_map& command_line_variables,Di
     if (command_line_variables.count("matrix-data")) diagram_processor.set(DiagramDataOption::with_matrix_data);
     if (command_line_variables.count("diagonal-ricci-flat-metrics")) diagram_processor.set(DiagramDataOption::with_diagonal_ricci_flat_metrics);
     if (command_line_variables.count("diagonal-nilsoliton-metrics")) diagram_processor.set(DiagramDataOption::with_diagonal_nilsoliton_metrics);
-    if (command_line_variables.count("sigma-compatible-ricci-flat-metrics")) diagram_processor.set(DiagramDataOption::with_sigma_compatible_ricci_flat_metrics);       
+    if (command_line_variables.count("sigma-compatible-ricci-flat-metrics")) diagram_processor.set(DiagramDataOption::with_sigma_compatible_ricci_flat_metrics);
+    if (command_line_variables.count("only-riemannian-like")) diagram_processor.set(DiagramDataOption::only_riemannian_like_metrics);           
     if (command_line_variables.count("all-nice-diagrams") || command_line_variables.count("all-diagrams")) diagram_processor.set(ProcessingOption::include_diagrams_no_lie_algebra);
     if (command_line_variables.count("analyze-diagram")) diagram_processor.set(DiagramDataOption::analyze_diagram);
     if (command_line_variables.count("antidiagonal-ricci-flat-sigma")) diagram_processor.set(DiagramDataOption::with_antidiagonal_ricci_flat_sigma);
@@ -264,6 +265,7 @@ int main(int argc, char* argv[]) {
             ("diagonal-ricci-flat-metrics", "include diagonal Ricci-flat metrics")
             ("diagonal-nilsoliton-metrics", "include diagonal nilsoliton metrics")
             ("sigma-compatible-ricci-flat-metrics", "include sigma-compatible Ricci-flat metrics")
+            ("only-riemannian-like", "for diagonal metrics, only include Riemannian metrics and those obtained by changing the signs by an element of the kernel of the mod 2 root matrix")
             ("polynomial", "include polynomial conditions for the existence of the indicated metrics")
             ("enhanced","include list of sigma-enhanced Lie algebras")         
             ("analyze-diagram","include data depending on diagram combinatorics")
