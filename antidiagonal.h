@@ -48,10 +48,9 @@ struct Couple {
 	}
 };
 
-class OrderTwoAutomorphism {
+class CoupleList {
+	int n;	
 	list<Couple> couples;
-	int n;
-	
 	bool compatible_from(list<Couple>::iterator i) {
 		for (;i!=couples.end();++i) {
 			auto j=i;
@@ -76,22 +75,17 @@ class OrderTwoAutomorphism {
 		}
 		return true;
 	}
-	static int apply(int k, Couple trasposition) {
-		if (k==trasposition.first) k= trasposition.second;
-		else if (k==trasposition.second) k= trasposition.first;
-		return k;
-	}
 public:
-	OrderTwoAutomorphism() : n{0} {};
-	OrderTwoAutomorphism(int n, int k) : n{n} {
+	CoupleList() : n{0} {};
+	CoupleList(int n, int k) : n{n} {
 		assert(n>=2*k);
 		while (k--) {
 			couples.push_front({0,1});
 			if (!compatible_from(couples.begin())) advance_till_compatible(couples.begin());
 		}		
 	}
-	OrderTwoAutomorphism(int n,std::initializer_list<Couple> list) : couples{list},n{n} {}
-	OrderTwoAutomorphism& operator++() {
+	CoupleList(int n,std::initializer_list<Couple> list) : n{n},couples{list} {}
+	CoupleList& operator++() {
 		auto iter=couples.begin();	
 		assert(iter!=couples.end());
 		while (!advance_till_compatible(iter)) {
@@ -100,6 +94,28 @@ public:
 				break;
 			}
 		}
+		return *this;
+	}
+	auto begin() const {return couples.begin();}
+	auto end() const {return couples.end();}
+	bool empty() const {return couples.empty();}
+};
+
+class OrderTwoAutomorphism {
+	int n;
+	CoupleList couples;	
+	static int apply(int k, Couple trasposition) {
+		if (k==trasposition.first) k= trasposition.second;
+		else if (k==trasposition.second) k= trasposition.first;
+		return k;
+	}
+public:
+	OrderTwoAutomorphism() : n{0} {};
+	OrderTwoAutomorphism(int n, int k) : n{n}, couples{n,k} {
+	}
+	OrderTwoAutomorphism(int n,std::initializer_list<Couple> list) : n{n},couples{n,list} {}
+	OrderTwoAutomorphism& operator++() {
+		++couples;
 		return *this;
 	}
 	operator bool() const {return !couples.empty();}
@@ -139,7 +155,6 @@ public:
 		}
 		return sigma;
 	}	
-	
 };
 
 inline ostream& operator<<(ostream& os, const OrderTwoAutomorphism& sigma) {
