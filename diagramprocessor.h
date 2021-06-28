@@ -300,6 +300,24 @@ public:
 };
 
 class DiagramProcessorTableOfLieAlgebras : public DiagramProcessorWithLieAlgebras {
+	static string extract_denominators(const exvector& N) {
+		stringstream res;
+		ex lcm=1;
+		ex gcd = N.empty()? 1 : numer(N[0]);
+		for (auto x: N) {
+			lcm=GiNaC::lcm(lcm,denom(x));
+			gcd=GiNaC::gcd(gcd,numer(x));
+		}
+		ex factor=gcd/lcm;
+		if (factor!=1) res<<factor;
+		res<<"(";
+		auto i=N.begin();
+		if (i!=N.end()) res<<*i++/factor;
+		while (i!=N.end()) res<<","<<*i++/factor;
+		res<<")";
+		return res.str();
+	}
+
   ProcessedDiagram process_diagram_and_configuration(const LabeledTree& diagram,const WeightBasisAndProperties& weight_basis, CoefficientConfiguration&& coefficient_configuration) const {
       auto groups=NiceLieGroup::from_coefficient_configuration(move(coefficient_configuration));  
       if (groups.empty() && only_if_lie_algebras()) return {};
@@ -314,7 +332,7 @@ class DiagramProcessorTableOfLieAlgebras : public DiagramProcessorWithLieAlgebra
 			 	if (with_lcs_and_ucs()) 
 			 		lie_algebras+="&"+horizontal(upper_central_series(diagram),"");
 			  if (with_diagram_data())
-				  lie_algebras+="&("+horizontal(weight_basis.properties().nikolayevsky_derivation())+")";
+				  lie_algebras+="&"+extract_denominators(weight_basis.properties().nikolayevsky_derivation());
 				lie_algebras+="&"+weight_basis.properties().classification_of_metrics(group.csquared(weight_basis));
 			  lie_algebras+="\\\\\n";
 		 }
