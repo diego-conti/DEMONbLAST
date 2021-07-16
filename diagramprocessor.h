@@ -304,6 +304,7 @@ class DiagramProcessorTableOfLieAlgebras : public DiagramProcessorWithLieAlgebra
 		stringstream res;
 		ex lcm=1;
 		ex gcd = N.empty()? 1 : numer(N[0]);
+		if (gcd.is_zero()) gcd=1;
 		for (auto x: N) {
 			lcm=GiNaC::lcm(lcm,denom(x));
 			gcd=GiNaC::gcd(gcd,numer(x));
