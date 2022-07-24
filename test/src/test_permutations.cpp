@@ -1,4 +1,4 @@
-#include "../permutations.h"
+#include "permutations.h"
 #include <cassert>
 #include <iostream>
 

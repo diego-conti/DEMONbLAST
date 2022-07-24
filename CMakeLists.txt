@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
-project(demonblast VERSION 0.2)
+project(demonblast VERSION 0.3)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_compile_options(-g -Wctor-dtor-privacy -Wreorder -Wold-style-cast -Wsign-promo -Wchar-subscripts -Winit-self -Wmissing-braces -Wparentheses -Wreturn-type -Wswitch -Wtrigraphs -Wextra -Wno-sign-compare -Wno-narrowing -Wno-attributes)
 
 
-set(SOURCES_NO_MAIN partitions.cpp tree.cpp labeled_tree.cpp weightbasis.cpp niceliegroup.cpp liegroupsfromdiagram.cpp gauss.cpp log.cpp niceeinsteinliegroup.cpp ricci.cpp filter.cpp permutations.cpp weightmatrix.cpp implicitmetric.cpp antidiagonal.cpp adinvariantobstruction.cpp parsetree.cpp automorphisms.cpp partitionprocessor.cpp diagramprocessor.cpp nicediagramsinpartition.cpp)
+set(SOURCES_NO_MAIN src/partitions.cpp src/tree.cpp src/labeled_tree.cpp src/weightbasis.cpp src/niceliegroup.cpp src/liegroupsfromdiagram.cpp src/gauss.cpp src/log.cpp src/niceeinsteinliegroup.cpp src/ricci.cpp src/filter.cpp src/permutations.cpp src/weightmatrix.cpp src/implicitmetric.cpp src/antidiagonal.cpp src/adinvariantobstruction.cpp src/parsetree.cpp src/automorphisms.cpp src/partitionprocessor.cpp src/diagramprocessor.cpp src/nicediagramsinpartition.cpp)
 
-set(SOURCES nice.cpp ${SOURCES_NO_MAIN})
+set(SOURCES src/nice.cpp ${SOURCES_NO_MAIN})
 
-set (INCLUDES arrow.h labeled_tree.h partitions.h liegroupsfromdiagram.h  permutations.h diagramprocessor.h linearinequalities.h ricci.h double_arrows_tree.h linearsolve.h taskrunner.h filter.h log.h tree.h gauss.h niceeinsteinliegroup.h weightbasis.h horizontal.h niceliegroup.h weightmatrix.h  xginac.h tree.hpp matrixbuilder.h options.h implicitmetric.h antidiagonal.h nicediagramsinpartition.h adinvariantobstruction.h includes.h diagramanalyzer.h parsetree.h automorphisms.h components.h coefficientconfiguration.h expressionparser.h partitionprocessor.h coefficientconfiguration.h)
+set (INCLUDES src/arrow.h src/labeled_tree.h src/partitions.h src/liegroupsfromdiagram.h src/ permutations.h src/diagramprocessor.h src/linearinequalities.h src/ricci.h src/double_arrows_tree.h src/linearsolve.h src/taskrunner.h src/filter.h src/log.h src/tree.h src/gauss.h src/niceeinsteinliegroup.h src/weightbasis.h src/horizontal.h src/niceliegroup.h src/weightmatrix.h src/ xginac.h src/tree.hpp matrixbuilder.h src/options.h src/implicitmetric.h src/antidiagonal.h src/nicediagramsinpartition.h src/adinvariantobstruction.h src/includes.h src/diagramanalyzer.h src/parsetree.h src/automorphisms.h src/components.h src/coefficientconfiguration.h src/expressionparser.h src/partitionprocessor.h src/coefficientconfiguration.h)
 
 link_libraries(ginac wedge cocoa gmp boost_filesystem boost_system boost_program_options)
 link_directories (/usr/local/lib)

@@ -1,4 +1,4 @@
-#include "../partitions.cpp"
+#include "partitions.cpp"
 #include <cassert>
 #include <iostream>
 

@@ -1,5 +1,5 @@
-#include "../gauss.cpp"
-#include "../matrixbuilder.h"
+#include "gauss.cpp"
+#include "matrixbuilder.h"
 #include <cassert>
 #include <iostream>
 #include <ginac/ginac.h>

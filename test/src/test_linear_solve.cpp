@@ -1,4 +1,4 @@
-#include "../linearsolve.h"
+#include "linearsolve.h"
 #include <cassert>
 #include <iostream>
 #include <wedge/liegroup.h>

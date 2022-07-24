@@ -1,5 +1,5 @@
-#include "../tree.cpp"
-#include "../partitions.cpp"
+#include "tree.cpp"
+#include "partitions.cpp"
 #include <iostream>
 #include "dump.h"
 

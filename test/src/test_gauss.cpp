@@ -1,4 +1,4 @@
-#include "../gauss.cpp"
+#include "gauss.cpp"
 #include <cassert>
 #include <iostream>
 #include <ginac/ginac.h>
