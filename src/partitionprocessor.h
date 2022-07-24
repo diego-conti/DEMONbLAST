@@ -54,15 +54,15 @@ public:
   }
 	static string output_path(const vector<int>& partition, const string& filename) {
   	int dimension = std::accumulate(partition.begin(),partition.end(),0);
-	  return "output"+std::to_string(dimension)+"/"+filename;
+	  return "output/"+std::to_string(dimension)+"/"+filename;
 	}
 	static string output_path(const vector<int>& partition) {
   	int dimension = std::accumulate(partition.begin(),partition.end(),0);
-	  return "output"+std::to_string(dimension)+"/part"+get_label(partition,"_")+".dot";
+	  return "output/"+std::to_string(dimension)+"/part"+get_label(partition,"_")+".dot";
 	}
 	static string output_path(const vector<int>& partition, const LabeledTree& diagram) {
 	  int dimension = std::accumulate(partition.begin(),partition.end(),0);
-  	return "output"+std::to_string(dimension)+"/graph"+diagram.name()+".dot";
+  	return "output/"+std::to_string(dimension)+"/graph"+diagram.name()+".dot";
 	}
 	virtual ~PartitionProcessor()=default;
 };

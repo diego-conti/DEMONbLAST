@@ -19,7 +19,7 @@
 #include <fstream>
 #include <ginac/ginac.h>
 #include <future>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include "tree.h"
 #include "labeled_tree.h"
 #include "wedge/liesubgroup.h"
@@ -37,10 +37,12 @@ using namespace GiNaC;
 using namespace std;
 
 void create_directory(int n) {
-  boost::filesystem::path dir("output"+to_string(n));
-  if (boost::filesystem::is_directory(dir)) 
-    boost::filesystem::remove_all(dir);
-  if (!boost::filesystem::create_directories(dir))
+	std::filesystem::create_directory("output");
+	
+	std::filesystem::path dir("output/"+to_string(n));
+	if (std::filesystem::is_directory(dir))
+    std::filesystem::remove_all(dir);
+  if (!std::filesystem::create_directory(dir))
     cerr<<"cannot create directory"<<endl;
 }
 
