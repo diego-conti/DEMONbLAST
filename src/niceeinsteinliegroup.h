@@ -19,7 +19,6 @@
 #define NICE_EINSTEIN_LIE_GROUP_H
 #include "tree.h"
 #include "labeled_tree.h"
-#include <wedge/liegroup.h>
 #include "xginac.h"
 #include "weightbasis.h"
 #include "liegroupsfromdiagram.h"

@@ -46,11 +46,11 @@ public:
 class PartitionProcessorUsingStoredCoefficients : public PartitionProcessor {
 	StoredCoefficients stored_coefficients;
 	StoredCoefficients load_stored_coefficients(const vector<int>& partition) {  
-	  boost::filesystem::path dir("coefficients");
-	  if (!boost::filesystem::is_directory(dir))
+	  std::filesystem::path dir("coefficients");
+	  if (!std::filesystem::is_directory(dir))
   		throw std::runtime_error("directory 'coefficients' does not exist");
-		boost::filesystem::path part("coefficients/part"+get_label(partition,"_")+".coeff");
-		if (!boost::filesystem::is_regular_file(part))
+		std::filesystem::path part("coefficients/part"+get_label(partition,"_")+".coeff");
+		if (!std::filesystem::is_regular_file(part))
   		throw std::runtime_error("coefficient file "+part.generic_string()+" not found");
 		ifstream s{part.generic_string()};
 		return StoredCoefficients{s};
@@ -68,10 +68,10 @@ public:
 class PartitionProcessorStoringCoefficients : public PartitionProcessor {
 	mutable StoredCoefficients stored_coefficients;
 	void store_coefficients() {  
-	  boost::filesystem::path dir("coefficients");
-	  if (!boost::filesystem::is_directory(dir)&& !boost::filesystem::create_directories(dir))
+	  std::filesystem::path dir("coefficients");
+	  if (!std::filesystem::is_directory(dir)&& !std::filesystem::create_directories(dir))
 	  	throw std::runtime_error("cannot create directory 'coefficients'");	  	
-		boost::filesystem::path part("coefficients/part"+get_label(partition,"_")+".coeff");
+		std::filesystem::path part("coefficients/part"+get_label(partition,"_")+".coeff");
 		ofstream stream{part.generic_string(),std::ofstream::out | std::ofstream::trunc};
   	stored_coefficients.to_stream(stream);
 	}	

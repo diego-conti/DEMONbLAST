@@ -19,7 +19,6 @@
 #include "linearsolve.h"
 #include "gauss.h"
 #include "weightbasis.h"
-#include <sstream>
 
 list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_coefficient_configuration (MetricCoefficientConfiguration&& configuration)
 {

@@ -19,10 +19,8 @@
 #define WEIGHT_BASIS_H
 
 #include "includes.h"
-#include <ginac/ginac.h>
 #include "xginac.h"
 #include "gauss.h"
-#include <wedge/liegroup.h>
 #include "labeled_tree.h"
 #include "options.h"
 #include "implicitmetric.h"

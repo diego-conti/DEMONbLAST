@@ -1,7 +1,6 @@
 #ifndef MATRIX_BUILDER_H
 #define MATRIX_BUILDER_H
 #include "gauss.h"
-#include <wedge/named.h>
 #include "includes.h"
 using namespace Wedge;
 

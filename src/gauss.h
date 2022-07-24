@@ -18,9 +18,9 @@
 #ifndef GAUSS_H
 #define GAUSS_H
 
-#include <initializer_list>
-#include "ginac/ginac.h"
-#include <ostream>
+
+#include "includes.h"
+
 
 using std::vector;
 using GiNaC::ex;

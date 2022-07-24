@@ -18,10 +18,8 @@
 #ifndef DIAGRAM_PROCESSOR_H
 #define DIAGRAM_PROCESSOR_H
 
-#include <iostream>
 #include "tree.h"
 #include "labeled_tree.h"
-#include "wedge/liesubgroup.h"
 #include "niceliegroup.h"
 #include "niceeinsteinliegroup.h"
 #include "partitions.h"

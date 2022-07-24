@@ -57,16 +57,13 @@ void test_signs(int n) {
 
 void test_inequalities() {
 	StructureConstant a{N.a}, b{N.b};
-	lst eqns;
-	eqns=2*a+3*b+1, -a+b;
+	lst eqns{2*a+3*b+1, -a+b};
 	LinearInequalities l1{eqns.begin(),eqns.end(),StructureConstant{}};
 	assert((move(l1).has_solution()));
-	eqns.remove_all();
-	eqns = 2*a+2*b-1,a-b,b;
+	eqns = lst{2*a+2*b-1,a-b,b};
 	LinearInequalities l2 {eqns.begin(),eqns.end(),StructureConstant{}};
 	assert((move(l2).has_solution()));
-	eqns.remove_all();
-	eqns = 2*a+2*b-1,-a-b;
+	eqns = lst{ 2*a+2*b-1,-a-b};
 	LinearInequalities l3 {eqns.begin(),eqns.end(),StructureConstant{}};	
 	assert((!move(l3).has_solution()));
 }

@@ -16,8 +16,6 @@
     along with DEMONbLAST.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "weightbasis.h"
-#include <wedge/ginaclinalg.h>
-#include <sstream>
 #include "liegroupsfromdiagram.h"
 #include "horizontal.h"
 #include "weightmatrix.h"

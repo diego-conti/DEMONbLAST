@@ -1,12 +1,12 @@
 #include "nicediagramsinpartition.h"
 
 NiceDiagramsInPartition nice_diagrams_in_partition(const vector<int>& partition) {
-  boost::filesystem::path dir("diagrams");
-  if (!boost::filesystem::is_directory(dir) && !boost::filesystem::create_directories(dir))
+  std::filesystem::path dir("diagrams");
+  if (!std::filesystem::is_directory(dir) && !std::filesystem::create_directories(dir))
   	throw std::runtime_error("cannot create directory 'diagrams'");
   	
-  boost::filesystem::path part("diagrams/part"+get_label(partition,"_")+".diag");
-	if (boost::filesystem::is_regular_file(part)) 
+  std::filesystem::path part("diagrams/part"+get_label(partition,"_")+".diag");
+	if (std::filesystem::is_regular_file(part))
 		return NiceDiagramsInPartition::from_stream(ifstream{part.generic_string()},partition);
 	else {
   	auto result=NiceDiagramsInPartition::compute(partition);

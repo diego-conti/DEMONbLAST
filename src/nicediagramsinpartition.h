@@ -4,7 +4,6 @@
 #include "filter.h"
 #include "partitions.h"
 #include "diagramprocessor.h"
-#include <boost/filesystem.hpp>
 
 class NiceDiagramsInPartition {
 	const vector<int> partition;

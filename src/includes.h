@@ -4,12 +4,15 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <sstream>
+#include <filesystem>
 
 #include <vector>
 #include <list>
 #include <map>
 #include <utility>
 #include <set>
+#include <initializer_list>
 
 #include <string>
 
@@ -25,6 +28,7 @@
 #include <boost/logic/tribool.hpp>
 
 #include <optional>
+#include <wedge/wedge.h>
 
 using std::ostream;
 using std::istream;
@@ -40,6 +44,7 @@ using std::map;
 using std::pair;
 using std::make_pair;
 using std::set;
+using std::initializer_list;
 
 using std::string;
 using namespace std::string_literals;
@@ -57,4 +62,6 @@ using std::nullopt;
 using boost::logic::tribool;
 using boost::logic::indeterminate;
 
+using namespace Wedge;
 #endif
+

@@ -15,14 +15,10 @@
     You should have received a copy of the GNU General Public License
     along with DEMONbLAST.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
-#include <fstream>
-#include <ginac/ginac.h>
 #include <future>
 #include <filesystem>
 #include "tree.h"
 #include "labeled_tree.h"
-#include "wedge/liesubgroup.h"
 #include "niceliegroup.h"
 #include "partitions.h"
 #include "taskrunner.h"

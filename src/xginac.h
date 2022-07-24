@@ -1,7 +1,7 @@
 #ifndef XGINAC_H
 #define XGINAC_H
 
-#include <ginac/ginac.h>
+#include "includes.h"
 
 //allow range-based for loops for objects of type ex (or convertible to ex, like matrix and lst).
 

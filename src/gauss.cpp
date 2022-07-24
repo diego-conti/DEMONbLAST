@@ -16,8 +16,6 @@
     along with DEMONbLAST.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "gauss.h"
-#include <iostream>
-#include <cassert>
 #include "log.h"
 
 using namespace std;

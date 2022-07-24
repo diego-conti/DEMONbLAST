@@ -19,11 +19,8 @@
 #define IMPLICIT_METRIC_H
 
 #include "includes.h"
-#include <ginac/ginac.h>
 #include "xginac.h"
-#include <algorithm>
 #include "gauss.h"
-#include <wedge/liegroup.h>
 #include "horizontal.h"
 #include "log.h"
 

@@ -2,7 +2,6 @@
 #include "matrixbuilder.h"
 #include <cassert>
 #include <iostream>
-#include <ginac/ginac.h>
 
 using namespace std;
 using namespace GiNaC;

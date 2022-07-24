@@ -1,11 +1,8 @@
 #ifndef DIAGRAMANALYZER_H
 #define DIAGRAMANALYZER_H
-#include <iostream>
-#include <list>
-#include <ginac/ginac.h>
 #include "xginac.h"
-#include <algorithm>
 #include "labeled_tree.h"
+#include "includes.h"
 
 
 //Represents a path in a diagram that does not strictly contain a cycle

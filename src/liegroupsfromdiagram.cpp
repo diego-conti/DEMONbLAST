@@ -19,8 +19,6 @@
 #include "linearsolve.h"
 #include "gauss.h"
 #include "weightbasis.h"
-#include "wedge/liesubgroup.h"
-#include "wedge/repgl.h"
 #include "horizontal.h"
 #include "linearinequalities.h"
 

@@ -18,9 +18,7 @@
 #ifndef LINEARSOLVE_H
 #define LINEARSOLVE_H
 
-#include <wedge/parameters.h>
-#include <wedge/expressions.h>
-#include <wedge/lambda.h>
+#include "includes.h"
 #include "log.h"
 namespace Wedge {
 namespace linear_impl {

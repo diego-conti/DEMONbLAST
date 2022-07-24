@@ -18,13 +18,9 @@
 #ifndef ANTIDIAGONAL_H
 #define ANTIDIAGONAL_H
 
-#include <iostream>
-#include <list>
-#include <ginac/ginac.h>
+#include "includes.h"
 #include "xginac.h"
-#include <algorithm>
 #include "gauss.h"
-#include <wedge/liegroup.h>
 #include "labeled_tree.h"
 #include "options.h"
 #include "implicitmetric.h"
