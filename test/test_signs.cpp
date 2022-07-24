@@ -18,6 +18,11 @@
 #include "../automorphisms.cpp"
 #include "dump.h"
 
+string hash_to_h(string s) {
+	std::replace(s.begin(),s.end(),'#','h');
+	return s;
+}
+
 void test_tree(LabeledTree tree) {
 	tree.invert_nodes();
 	CoefficientConfigurationWithoutRedundantParameter configuration{tree.weight_basis(DiagramDataOptions{})};		
@@ -31,7 +36,7 @@ void test_tree(LabeledTree tree) {
 		++configuration;
 		os<<endl;
 	}
-	dump("signs"+tree.name(),os.str());
+	dump("signs"+hash_to_h(tree.name()),os.str());
 }
 
 void test_tree(vector<int> partition, int hash) {
