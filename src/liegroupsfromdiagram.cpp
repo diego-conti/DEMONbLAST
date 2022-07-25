@@ -147,7 +147,7 @@ void Derivations::compute_offdiag(const GL& gl, const LieGroup& G) {
 	auto X=Xbrackets(G,GLRepresentation<VectorField>(&gl,G.e()),V.GenericElement());
 	lst eqns;
 	GetCoefficients<VectorField>(eqns,X);
-	Wedge::linear_impl::LinearEquationsWithParameters<VectorSpace<DifferentialForm>::Coordinate,StructureConstant> equations{eqns};
+	Wedge::linear_impl::LinearEquationsWithParameters<VectorSpace<DifferentialForm>::Coordinate,StructureConstant> equations(eqns);
 	while (equations.eliminate_linear_equations()) ;
 	auto sol=equations.solution();
 	space_containing_offdiagonal_derivations_=SubspaceFromSolutions(V,sol);

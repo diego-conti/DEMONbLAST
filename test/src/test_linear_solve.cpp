@@ -21,7 +21,7 @@ void test7() {
 
   StructureConstant a1(N.a(1)),a2(N.a(2)),a3(N.a(3)),a4(N.a(4)),a5(N.a(5)),a6(N.a(6)),a7(N.a(7)),a8(N.a(8));
   lst eq{a6-a4*a1,a5-a3+a7,a4-a2+a7,a5-a2,-1+a3,-1-a1,-1+a6};
-  linear_impl::PolynomialEquations<StructureConstant> equations{move(eq)};
+  linear_impl::PolynomialEquations<StructureConstant> equations(move(eq));
   assert(equations.eliminate_linear_equations());
   assert(equations.eliminate_linear_equations());
   assert(!equations.eliminate_linear_equations());
@@ -33,8 +33,16 @@ void test3() {
   cout<<"testing PolynomialEquations...";
   StructureConstant a(N.a), b(N.b), c(N.c);
   lst eq {a*b+a*c+a, b+c-1};
+  auto vars=linear_impl::get_variables<StructureConstant>(eq);
+  for (auto x: vars) {
+	  assert(is_a<symbol>(x));
+	  assert(x.info(info_flags::symbol));
+  }
+  cout<<vars<<endl;
+  cout<<"sol="<<lsolve(lst{},vars)<<endl;
+
   assert(eq.op(0).is_polynomial(lst{a,b,c}));
-  linear_impl::PolynomialEquations<StructureConstant> equations{move(eq)};
+  linear_impl::PolynomialEquations<StructureConstant> equations(move(eq));
   assert(equations.eliminate_linear_equations());
   assert(equations.eliminate_linear_equations());
   assert(!equations.eliminate_linear_equations());

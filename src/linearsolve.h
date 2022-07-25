@@ -69,12 +69,14 @@ protected:
   lst variables;
   lst sol;
   virtual lst linear_equations() const =0;
+  template<typename T>
+  AbstractPolynomialEquations(std::initializer_list<T>)=delete;	//disable construction with {} to avoid ambiguities
 public:
-  template< typename ListOfEquations>
-  AbstractPolynomialEquations(ListOfEquations&& eqns) : 
-    equations{expand(std::forward<ListOfEquations>(eqns))},
-    variables{linear_impl::get_variables<Variable>(equations)}, 
-    sol{DefaultLinAlgAlgorithms::lsolve(lst{},variables)} 
+  template<typename ListOfEquations>
+  AbstractPolynomialEquations(ListOfEquations&& eqns) :
+    equations(std::forward<ListOfEquations>(eqns)),
+    variables(linear_impl::get_variables<Variable>(equations)),
+    sol(DefaultLinAlgAlgorithms::lsolve(lst{},variables))
   {
   }
   bool eliminate_linear_equations() {
@@ -84,6 +86,11 @@ public:
     return true;
   }
   lst solution() const {return sol;}
+  void dbgprint(ostream& os) const {
+	  os<<"equations: "<<equations<<endl;
+	  os<<"variables: "<<variables<<endl;
+	  os<<"sol: "<<sol<<endl;
+  }
 };
 
 
@@ -99,6 +106,7 @@ public:
 	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
 	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
 	using AbstractPolynomialEquations<Variable>::solution;
+	using AbstractPolynomialEquations<Variable>::dbgprint;
 	lst always_solution() const {
 		lst solution;
 		list<ex> surviving_variables;
@@ -127,6 +135,7 @@ public:
 	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
 	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
 	using AbstractPolynomialEquations<Variable>::solution;
+	using AbstractPolynomialEquations<Variable>::dbgprint;
 };
 }
 
@@ -134,7 +143,7 @@ public:
 template<typename Variable, typename ParametrizedClass, typename ListOfEquations, typename IsAdmissibleSolution> 
 bool impose_polynomial_eqns(ParametrizedClass& parametrized_object, ListOfEquations&& eqns,const IsAdmissibleSolution& isAdmissibleSolution)
 {
-  linear_impl::PolynomialEquations<Variable> equations{std::forward<ListOfEquations>(eqns)};
+  linear_impl::PolynomialEquations<Variable> equations(std::forward<ListOfEquations>(eqns));
   while (equations.eliminate_linear_equations()) 
     if (equations.solution()==lst{}) return false;
   auto solution=equations.solution();

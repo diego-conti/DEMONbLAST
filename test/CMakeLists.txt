@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-add_compile_options(-O0)
+add_compile_options(-g -O0)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 set (TESTPROGRAMS test_automorphisms test_gauss test_linear_solve test_listofarrows test_matrixbuilder test_niceliegroup test_partitions test_permutations test_signs test_tablemode test_tree)
