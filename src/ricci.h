@@ -18,6 +18,12 @@
 #ifndef RICCI_H
 #define RICCI_H
 
+<<<<<<< HEAD:src/ricci.h
+=======
+#include <wedge/bilinearform.h>
+#include <wedge/pseudolevicivita.h>
+#include <wedge/pseudoriemannianstructure.h>
+>>>>>>> e1b35850f1511f73a83d575c4b36cfdbbb0af0e4:ricci.h
 #include "includes.h"
 
 using namespace Wedge;

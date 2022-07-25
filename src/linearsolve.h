@@ -69,6 +69,7 @@ protected:
   lst variables;
   lst sol;
   virtual lst linear_equations() const =0;
+<<<<<<< HEAD:src/linearsolve.h
   template<typename T>
   AbstractPolynomialEquations(std::initializer_list<T>)=delete;	//disable construction with {} to avoid ambiguities
 public:
@@ -77,6 +78,14 @@ public:
     equations(std::forward<ListOfEquations>(eqns)),
     variables(linear_impl::get_variables<Variable>(equations)),
     sol(DefaultLinAlgAlgorithms::lsolve(lst{},variables))
+=======
+public:
+  template< typename ListOfEquations>
+  AbstractPolynomialEquations(ListOfEquations&& eqns) : 
+    equations{expand(std::forward<ListOfEquations>(eqns))},
+    variables{linear_impl::get_variables<Variable>(equations)}, 
+    sol{DefaultLinAlgAlgorithms::lsolve(lst{},variables)} 
+>>>>>>> e1b35850f1511f73a83d575c4b36cfdbbb0af0e4:linearsolve.h
   {
   }
   bool eliminate_linear_equations() {
@@ -136,6 +145,49 @@ public:
 	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
 	using AbstractPolynomialEquations<Variable>::solution;
 	using AbstractPolynomialEquations<Variable>::dbgprint;
+};
+
+
+template<class Variable,class Parameter>
+class LinearEquationsWithParameters : protected AbstractPolynomialEquations<Variable> {
+ 	lst linear_equations() const override {	
+		list<ex> linear;
+		for (auto eq: this->equations) 
+		  if (eq.is_polynomial(this->variables) && Degree<Poly<Variable>>(eq)<=1 && Degree<Poly<Parameter>>(eq)==0  && !eq.is_zero()) linear.push_back(eq==0);
+		return linear;
+	}
+public:
+	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
+	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
+	using AbstractPolynomialEquations<Variable>::solution;
+	lst always_solution() const {
+		lst solution;
+		list<ex> surviving_variables;
+		for (auto eq : this->equations)
+			GetSymbols<Variable>(surviving_variables,eq);
+		lst to_zero;
+		for (auto x: surviving_variables) to_zero.append(x==0);
+		for (auto x: this->sol)
+			solution.append(x.lhs()==x.rhs().subs(to_zero));
+		for (auto x: to_zero)
+			solution.append(x);
+		return solution;
+	}
+};
+
+
+template<class Variable>
+class PolynomialEquations : protected AbstractPolynomialEquations<Variable>  {
+ 	lst linear_equations() const override {	
+		list<ex> linear;
+		for (auto eq: this->equations) 
+		  if (eq.is_polynomial(this->variables) && Degree<Poly<Variable>>(eq)<=1 && !eq.is_zero()) linear.push_back(eq==0);		
+		return linear;
+	}
+public:
+	using AbstractPolynomialEquations<Variable>::AbstractPolynomialEquations;
+	using AbstractPolynomialEquations<Variable>::eliminate_linear_equations;
+	using AbstractPolynomialEquations<Variable>::solution;
 };
 }
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD:test/src/test_niceliegroup.cpp
 #include "weightbasis.cpp"
 #include "niceliegroup.cpp"
 #include "labeled_tree.cpp"
@@ -12,6 +13,22 @@
 #include "adinvariantobstruction.cpp"
 #include "parsetree.cpp"
 #include "automorphisms.cpp"
+=======
+#include "../weightbasis.cpp"
+#include "../niceliegroup.cpp"
+#include "../labeled_tree.cpp"
+#include "../tree.cpp"
+#include "../partitions.cpp"
+#include "../gauss.cpp"
+#include "../liegroupsfromdiagram.cpp"
+#include "../filter.cpp"
+#include "../weightmatrix.cpp"
+#include "../antidiagonal.cpp"
+#include "../implicitmetric.cpp"
+#include "../adinvariantobstruction.cpp"
+#include "../parsetree.cpp"
+#include "../automorphisms.cpp"
+>>>>>>> e1b35850f1511f73a83d575c4b36cfdbbb0af0e4:test/test_niceliegroup.cpp
 #include "dump.h"
 
 void test_weight_basis() {
