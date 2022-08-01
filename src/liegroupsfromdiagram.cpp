@@ -81,11 +81,14 @@ public:
 };
 
 string to_string(const LieGroupHasParameters<true>& G) {
-  string structure_constants =horizontal(G.StructureConstants());
-  set<ex,ex_is_less> eqns;
+	stringstream s;
+	s<<latex;
+	G.canonical_print(s);
+	set<ex,ex_is_less> eqns;
 	G.GetEquations_ddZero(eqns);
 	auto eqns2=ContainerOfEquations{eqns};
-	return eqns2.empty()?  structure_constants :  structure_constants+" d^2=0 when "+eqns2.to_string();
+	if (!eqns2.empty()) s<<" d^2=0 when "<<eqns2.to_string();
+	return s.str();
 }
 
 bool LieGroupsFromDiagram::is_dd_nonzero() const {

@@ -17,13 +17,8 @@
 */
 #ifndef LIE_GROUPS_FROM_DIAGRAM_H
 #define LIE_GROUPS_FROM_DIAGRAM_H
-<<<<<<< HEAD:src/liegroupsfromdiagram.h
+
 #include "includes.h"
-=======
-#include <wedge/liegroup.h>
-#include <wedge/liesubgroup.h>
-#include <wedge/gl.h>
->>>>>>> e1b35850f1511f73a83d575c4b36cfdbbb0af0e4:liegroupsfromdiagram.h
 #include "ricci.h"
 #include "log.h"
 #include "weightbasis.h"

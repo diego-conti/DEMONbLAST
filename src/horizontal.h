@@ -18,11 +18,6 @@
 #ifndef HORIZONTAL_H
 #define HORIZONTAL_H
 #include "includes.h"
-<<<<<<< HEAD:src/horizontal.h
-=======
-#include <ginac/ex.h>
-#include <ginac/operators.h>
->>>>>>> e1b35850f1511f73a83d575c4b36cfdbbb0af0e4:horizontal.h
 
 using namespace GiNaC;
 

@@ -18,11 +18,7 @@
 #ifndef LINEARINEQUALITIES_H
 #define LINEARINEQUALITIES_H
 
-<<<<<<< HEAD:src/linearinequalities.h
 #include "includes.h"
-=======
-#include <ginac/ginac.h>
->>>>>>> e1b35850f1511f73a83d575c4b36cfdbbb0af0e4:linearinequalities.h
 
 using namespace GiNaC;
 
