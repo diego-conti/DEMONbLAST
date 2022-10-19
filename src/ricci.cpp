@@ -18,7 +18,7 @@
 #include "ricci.h"
 
 ex ricci_tensor(const Manifold& G, matrix metric_on_coframe) {
-	SomePseudoRiemannianStructure P(&G,G.e(),metric_on_coframe);
+	auto P=PseudoRiemannianStructureByMatrix::FromMatrixOnCoframe (&G,G.e(),metric_on_coframe);
 	PseudoLeviCivitaConnection omega(&G,P);
 	matrix ricci_tensor=omega.RicciAsMatrix();
 	assert(ricci_tensor.cols()==G.Dimension());

@@ -21,7 +21,7 @@ target_compile_options(demonblast PUBLIC -O3)
 target_compile_options(debug PUBLIC -O0)
 
 #add targets in subdirectory programs, if it exists. This can be used to build other programs that use the code of demonblast
-if (EXISTS programs)
+if (EXISTS ${CMAKE_SOURCE_DIR}/programs)	
 	add_subdirectory(programs EXCLUDE_FROM_ALL)
 endif()
 add_subdirectory(test)
