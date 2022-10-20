@@ -113,26 +113,44 @@ public:
 constexpr class only_riemannian_like_metrics_t {} only_riemannian_like_metrics;
 
 class DiagonalMetric : public ImplicitMetric {
-	list<pair<SignConfiguration,SignConfiguration>> potential_signatures;	//first element of each pair is the signature, the other is M_Delta of it.
-	list<SignConfiguration> sign_configurations_from_image(const SignConfiguration& image) const;
-	optional<set<vector<int>>> exact_signatures_for_codimension_one(const exvector& csquared) const;
-	pair<bool,set<vector<int>>> riemannian_like_signatures() const;
-	optional<set<vector<int>>> exact_signatures(const exvector& csquared) const;
-	bool compute_exact_signatures=true;
-	int dimension_coker_MDelta;
+public:
+	class Signatures {
+		bool complete;
+		set<vector<int>> negative_signs_in_each_signature;
+		int dimension;
+		Signatures(bool complete, const set<vector<int>>& negative_signs_in_each_signature, int dimension) :
+			complete{complete}, negative_signs_in_each_signature{negative_signs_in_each_signature}, dimension{dimension} {}
+	public:
+		static Signatures complete_list(const set<vector<int>>& negative_signs_in_each_signature, int dimension);
+		static Signatures incomplete_list(const set<vector<int>>& negative_signs_in_each_signature, int dimension);
+		string as_string() const;
+		vector<vector<int>> as_vectors() const;
+		bool is_complete_list() const {return complete;}
+	};
+	DiagonalMetric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk);
+	DiagonalMetric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk, only_riemannian_like_metrics_t);
+	bool no_metric_regardless_of_polynomial_conditions() const override {return is_in_coordinate_hyperplane()|| potential_signatures.empty();}
+	string solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const override;	
+	string classification(const exvector& csquared) const override;
+	Signatures signatures(const exvector& csquared) const;
 protected:
 	void dump_extra(ostream& os) const override {
 			if (potential_signatures.empty()) os<<"no metric (any signature)"<<endl;
 			for (auto x: potential_signatures) 
 			  os<<"(potential) signature: ("<<x.first<<") -> ("<<x.second<<")"<<endl;
 	}
-public:
-	DiagonalMetric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk);
-	DiagonalMetric(const string& name, const WeightMatrix& weight_matrix, const exvector& X_ijk, only_riemannian_like_metrics_t);
-	bool no_metric_regardless_of_polynomial_conditions() const override {return is_in_coordinate_hyperplane()|| potential_signatures.empty();}
-	string solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const override;	
-	string classification(const exvector& csquared) const override;
+private:
+	list<pair<SignConfiguration,SignConfiguration>> potential_signatures;	//first element of each pair is the signature, the other is M_Delta of it.
+	list<SignConfiguration> sign_configurations_from_image(const SignConfiguration& image) const;
+	optional<set<vector<int>>> exact_signatures_for_codimension_one(const exvector& csquared) const;
+	Signatures riemannian_like_signatures() const;
+	optional<set<vector<int>>> exact_signatures(const exvector& csquared) const;
+	bool compute_exact_signatures=true;
+	int dimension_coker_MDelta;
+	int dimension;
 };
+
+
 
 class SigmaCompatibleMetric : public ImplicitMetric {
 	vector<int> automorphism;

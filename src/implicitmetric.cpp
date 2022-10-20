@@ -199,19 +199,6 @@ string negative_signs_to_string(const vector<int>& negative_signs) {
 	else return horizontal(incremented(negative_signs),"");
 }
 
-string sign_configurations_to_string(const set<vector<int>>& negative_signs) {
-	stringstream s;
-	s<<"\\{";
-		if (!negative_signs.empty()) {
-			auto i=negative_signs.begin();
-			s<<negative_signs_to_string(*i);
-			while (++i!=negative_signs.end())
-						s<<","<<negative_signs_to_string(*i);
-		}
-	s<<"\\}";
-	return s.str();
-}
-
 list<SignConfiguration> DiagonalMetric::sign_configurations_from_image(const SignConfiguration& image) const {
 	list<SignConfiguration> result;
 	for (auto& pair : potential_signatures)
@@ -245,25 +232,24 @@ optional<set<vector<int>>> DiagonalMetric::exact_signatures(const exvector& csqu
 	return signatures;
 }
 
-//result.first is true if this gives a classification
-pair<bool,set<vector<int>>> DiagonalMetric::riemannian_like_signatures() const {
+DiagonalMetric::Signatures DiagonalMetric::riemannian_like_signatures() const {
 	bool missing_signatures=false;
 	set<vector<int>> riemannian_like_signatures;
 	for (auto& signature: potential_signatures)
 		if (all_of(signature.second.begin(),signature.second.end(),[](int sign) {return sign>0;}))
 			riemannian_like_signatures.insert(negative_signs(signature.first));
 		else missing_signatures=true;
-	return make_pair(!missing_signatures,riemannian_like_signatures);
+	return missing_signatures ? Signatures::incomplete_list(riemannian_like_signatures, dimension) : Signatures::complete_list(riemannian_like_signatures, dimension);	
+}
+
+DiagonalMetric::Signatures DiagonalMetric::signatures(const exvector& csquared) const {
+	optional<set<vector<int>>> signatures=compute_exact_signatures ? exact_signatures(csquared) : nullopt;
+	if (signatures) return Signatures::complete_list(signatures.value(),dimension);
+	else return riemannian_like_signatures();
 }
 
 string DiagonalMetric::classification(const exvector& csquared) const {
-	optional<set<vector<int>>> signatures=compute_exact_signatures ? exact_signatures(csquared) : nullopt;
-	if (signatures) return "S="+sign_configurations_to_string(signatures.value());
-	else {
-		auto riemannian=riemannian_like_signatures();	
-		if (riemannian.first) return "S="+sign_configurations_to_string(riemannian.second);
-		else return "S\\supset"+sign_configurations_to_string(riemannian.second);
-	}
+	return signatures(csquared).as_string();
 }
 
 string DiagonalMetric::solution_to_polynomial_equations_or_empty_string(const exvector& csquared) const {
@@ -288,7 +274,8 @@ string DiagonalMetric::solution_to_polynomial_equations_or_empty_string(const ex
 DiagonalMetric::DiagonalMetric(const string& name,const WeightMatrix& weight_matrix, const exvector& X_ijk) :
 	ImplicitMetric{name,X_ijk},	
 	potential_signatures{signatures_compatible_with_X(weight_matrix,X_ijk)},
-	dimension_coker_MDelta{weight_matrix.rows()-weight_matrix.rank_over_Q()}
+	dimension_coker_MDelta{weight_matrix.rows()-weight_matrix.rank_over_Q()},
+	dimension{weight_matrix.cols()}
 	 {}	
 
 DiagonalMetric::DiagonalMetric(const string& name,const WeightMatrix& weight_matrix, const exvector& X_ijk, only_riemannian_like_metrics_t) : DiagonalMetric{name,weight_matrix,X_ijk} {
@@ -303,4 +290,40 @@ ostream& operator<<(ostream& os,SignConfiguration sign_configuration) {
 		if (sign_configuration[i]>0) os<<"+"; else os<<"-";
 	}
 	return os;
+}
+
+
+DiagonalMetric::Signatures DiagonalMetric::Signatures::complete_list(const set<vector<int>>& negative_signs_in_each_signature, int dimension) {
+	return Signatures{true, negative_signs_in_each_signature,dimension};
+}
+DiagonalMetric::Signatures DiagonalMetric::Signatures::incomplete_list(const set<vector<int>>& negative_signs_in_each_signature, int dimension) {
+	return Signatures{false, negative_signs_in_each_signature,dimension};
+}
+
+string DiagonalMetric::Signatures::as_string() const {
+	stringstream s;
+	if (complete) s<<"S=";
+	else s<<"S\\supset";
+	s<<"\\{";
+		if (!negative_signs_in_each_signature.empty()) {
+			auto i=negative_signs_in_each_signature.begin();
+			s<<negative_signs_to_string(*i);
+			while (++i!=negative_signs_in_each_signature.end())
+						s<<","<<negative_signs_to_string(*i);
+		}
+	s<<"\\}";
+	return s.str();
+}
+
+vector<vector<int>> DiagonalMetric::Signatures::as_vectors() const {
+	vector<vector<int>> result;
+	result.reserve(negative_signs_in_each_signature.size());
+	auto negative_indices_to_signature = [dimension=dimension] (const vector<int>& negative_signs) {
+		vector<int> signature(dimension,1);
+		for (int i : negative_signs)
+			signature[i]=-1;
+		return signature;
+	};
+	transform(negative_signs_in_each_signature.begin(),negative_signs_in_each_signature.end(),back_inserter(result),negative_indices_to_signature);
+	return result;
 }

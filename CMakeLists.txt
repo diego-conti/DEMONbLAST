@@ -11,7 +11,7 @@ set(SOURCES src/nice.cpp ${SOURCES_NO_MAIN})
 
 set (INCLUDES src/arrow.h src/labeled_tree.h src/partitions.h src/liegroupsfromdiagram.h src/ permutations.h src/diagramprocessor.h src/linearinequalities.h src/ricci.h src/double_arrows_tree.h src/linearsolve.h src/taskrunner.h src/filter.h src/log.h src/tree.h src/gauss.h src/niceeinsteinliegroup.h src/weightbasis.h src/horizontal.h src/niceliegroup.h src/weightmatrix.h src/ xginac.h src/tree.hpp matrixbuilder.h src/options.h src/implicitmetric.h src/antidiagonal.h src/nicediagramsinpartition.h src/adinvariantobstruction.h src/includes.h src/diagramanalyzer.h src/parsetree.h src/automorphisms.h src/components.h src/coefficientconfiguration.h src/expressionparser.h src/partitionprocessor.h src/coefficientconfiguration.h)
 
-link_libraries(ginac wedge cocoa gmp   boost_program_options)
+link_libraries(ginac wedge cocoa gmp cln boost_program_options)
 link_directories (/home/diego/wedge/lib)
 include_directories(/home/diego/wedge/include)
 
