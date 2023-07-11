@@ -1,4 +1,4 @@
-/*  Copyright (C) 2018 by Diego Conti, diego.conti@unimib.it      
+/*  Copyright (C) 2018-2023 by Diego Conti, diego.conti@unipi.it      
                                                                      
     This file is part of DEMONbLAST
 	                                                                     
