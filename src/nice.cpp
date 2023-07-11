@@ -96,17 +96,22 @@ void process_partitions_to_table(int dimension,const ProcessorCreator& processor
 		}
 }
 
-void process_all_partitions(const po::variables_map& command_line_variables,const ProcessorCreator& processor_creator) {
-  int dimension=command_line_variables["all-partitions"].as<int>();
-  if (command_line_variables["mode"].as<string>()=="table") {
-     process_partitions_to_table(dimension,processor_creator,command_line_variables.count("lcs-and-ucs"));   
-     return;
-   }
+void process_to_disk(int dimension, const po::variables_map& command_line_variables,const ProcessorCreator& processor_creator) {  
   create_directory(dimension);
   if (command_line_variables.count("parallel-mode")) 
     parallel_enumerate_nice_diagrams(dimension,processor_creator);
   else 
     non_parallel_enumerate_nice_diagrams(dimension,processor_creator);
+}
+
+void process_all_partitions(const po::variables_map& command_line_variables,const ProcessorCreator& processor_creator) {
+  int dimension=command_line_variables["all-partitions"].as<int>();
+  if (command_line_variables["mode"].as<string>()=="table") 
+     process_partitions_to_table(dimension,processor_creator,command_line_variables.count("lcs-and-ucs"));          
+  else if (command_line_variables["mode"].as<string>()=="list") 
+    process_partitions_to_table(dimension,processor_creator,false);   
+  else 
+    process_to_disk(dimension,command_line_variables,processor_creator);
 }
 
 
@@ -212,6 +217,8 @@ DiagramProcessor create_diagram_processor(const po::variables_map& command_line_
     return DiagramProcessor{only_diagrams};
   else if (mode=="table")
     return DiagramProcessor{lie_algebra_table};
+  else if (mode=="list")
+    return DiagramProcessor{lie_algebra_list};
   else if (mode!="lie-algebra") 
     throw invalid_argument("unrecognized mode");  
   else return DiagramProcessor{with_lie_algebra};
@@ -244,6 +251,7 @@ int main(int argc, char* argv[]) {
                                            "ricciflat:\t normalize structure constants to obtain ricci-flat metrics\n"
                                           "diagram:\t only list diagrams\n"
                                           "table:\t list Lie algebras in LaTeX table\n"
+                                          "list:\t list Lie algebras in Salamon notation (as used by the constructor of Wedge::AbstractLieGroup)\n"
                                           "lie-algebra [default]:\t list diagrams and Lie algebras")
 //in prospettiva farei che il valore di default è invece usare le tabelle sul disco. 
             ("coefficients",po::value<string>()->default_value("compute"),"select one of the following:\n"

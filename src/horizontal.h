@@ -27,15 +27,6 @@ inline string to_string_hex(unsigned int n) {
   return ss.str();
 }
 
-template<typename Vector> string horizontal(const Vector& v, string sep=",") {
-	if (v.empty()) return {};
-	stringstream ss;
-	auto i=v.begin();
-	ss<<latex<<*i;
-	while (++i!=v.end()) ss<<sep<<*i;
-	return ss.str();
-}
-
 inline string to_string(const exvector& v) {
   return "("+horizontal(v)+")\n";
 }

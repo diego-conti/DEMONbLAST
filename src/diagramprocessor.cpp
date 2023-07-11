@@ -15,7 +15,7 @@ DiagramProcessor::DiagramProcessor(with_lie_algebra_tag) : processor{new Diagram
 DiagramProcessor::DiagramProcessor(with_nilsoliton_metrics_tag) : processor{new DiagramProcessorClassifyingMetricLieAlgebras(MetricType::NONFLAT_NILSOLITON)} {} 
 DiagramProcessor::DiagramProcessor(with_ricciflat_metrics_tag) : processor{new DiagramProcessorClassifyingMetricLieAlgebras(MetricType::RICCIFLAT)} {} 
 DiagramProcessor::DiagramProcessor(lie_algebra_table_tag) : processor{new DiagramProcessorTableOfLieAlgebras()} {} 
-
+DiagramProcessor::DiagramProcessor(lie_algebra_list_tag) : processor{new DiagramProcessorListOfLieAlgebras()} {} 
 
 vector<int> upper_central_series(const LabeledTree& diagram,set<int> subspace) {
   set<int> nodes=consecutive_numbers(0,diagram.number_of_nodes());

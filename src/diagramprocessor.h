@@ -112,6 +112,7 @@ constexpr class with_nilsoliton_metrics_tag {} with_einstein_metrics;
 constexpr class with_ricciflat_metrics_tag {} with_ricciflat_metrics;
 constexpr class only_diagrams_tag {} only_diagrams;
 constexpr class lie_algebra_table_tag {} lie_algebra_table;
+constexpr class lie_algebra_list_tag {} lie_algebra_list;
 
 class DiagramProcessor  {
   Filter filter_; //REFACTOR: consider removing the filter from this class (impacts nice.cpp)
@@ -119,9 +120,10 @@ class DiagramProcessor  {
 public:
   DiagramProcessor(only_diagrams_tag) : processor{new DiagramProcessorImpl()} {}
   DiagramProcessor(with_lie_algebra_tag);
-  DiagramProcessor(lie_algebra_table_tag);    
-  DiagramProcessor(with_nilsoliton_metrics_tag);  
-  DiagramProcessor(with_ricciflat_metrics_tag);  
+  DiagramProcessor(lie_algebra_table_tag);
+  DiagramProcessor(lie_algebra_list_tag);
+  DiagramProcessor(with_nilsoliton_metrics_tag);
+  DiagramProcessor(with_ricciflat_metrics_tag);
   ProcessedDiagram process(LabeledTree& diagram) const {  
   		processor->canonicalize_order(diagram);	//do not reorder if a fixed coefficient_lists was removed
       return processor->process(diagram);
@@ -335,6 +337,28 @@ class DiagramProcessorTableOfLieAlgebras : public DiagramProcessorWithLieAlgebra
 				lie_algebras+="&"+weight_basis.properties().classification_of_metrics(group.csquared(weight_basis));
 			  lie_algebras+="\\\\\n";
 		 }
+    	return {lie_algebras,{}};
+	}
+public:
+  ProcessedDiagram process(const LabeledTree& diagram,const CoefficientLists& coefficient_lists) const override {
+      auto& weight_basis=diagram.weight_basis(diagram_data_options());
+			FixedCoefficientConfiguration configuration{diagram.number_of_nodes(),diagram.weights(),coefficient_lists};
+			return process_diagram_and_configuration(diagram,weight_basis,std::move(configuration));
+	}
+  ProcessedDiagram process(const LabeledTree& diagram) const override {
+      auto& weight_basis=diagram.weight_basis(diagram_data_options());
+			CoefficientConfigurationWithoutRedundantParameter configuration{WeightBasis{weight_basis}};
+			return process_diagram_and_configuration(diagram,weight_basis,std::move(configuration));
+   }
+};
+
+class DiagramProcessorListOfLieAlgebras : public DiagramProcessorWithLieAlgebras {	
+  ProcessedDiagram process_diagram_and_configuration(const LabeledTree& diagram,const WeightBasisAndProperties& weight_basis, CoefficientConfiguration&& coefficient_configuration) const {
+      auto groups=NiceLieGroup::from_coefficient_configuration(move(coefficient_configuration));  
+      if (groups.empty() && only_if_lie_algebras()) return {};
+ 	   	string lie_algebras;      		  
+			for (auto group : groups)	
+			 	lie_algebras+=lie_group_to_string(group)+"\n";		 
     	return {lie_algebras,{}};
 	}
 public:
