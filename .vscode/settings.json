@@ -11,6 +11,8 @@
         "string": "cpp",
         "vector": "cpp",
         "map": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "cmath": "cpp",
+        "complex": "cpp"
     }
 }

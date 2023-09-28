@@ -62,11 +62,9 @@ class LinearInequalities {
 	bool remove_constant_inequalities() {
 		auto iter=inequalities.begin();
 		while (iter!=inequalities.end()) {
-			if (is_a<numeric>(*iter)) {
-				if (*iter>0) iter=inequalities.erase(iter);
-				else return false;
-			}
-			else ++iter;
+			if (iter->evalf()>0) iter=inequalities.erase(iter);
+			else if (iter->evalf()<=0) return false;
+			else ++iter;	//this is the case when *iter depends on a parameter
 		}	
 		return true;
 	}

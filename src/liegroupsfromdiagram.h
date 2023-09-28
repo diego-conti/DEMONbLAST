@@ -57,19 +57,25 @@ public:
 	}
 };
 
-class LieGroupsFromDiagram : public LieGroupHasParameters<true>, public ConcreteManifold, public virtual Has_dTable {
+	
+class LieGroupsFromDiagram : public LieGroupHasParameters<true>, virtual public Has_dTable, virtual public Manifold {
+	shared_ptr<ConcreteManifold> M;
 protected:
 	bool solve_linear_ddzero();
 	ex c_ijk(int i, int j, int k) const {
 		return Hook(e()[j]*e()[i],d(e()[k]));
 	}
 public:
-	using ConcreteManifold::ConcreteManifold;
-	using Has_dTable::Declare_d;
+	LieGroupsFromDiagram(int dimension) : M{make_shared<ConcreteManifold>(dimension)} {}
+
+	const Frame& e() const {return M->e();}
+	ex e(OneBased k) const {return M->e(k);} 
+  	using Has_dTable::Declare_d;
+
 	bool is_dd_nonzero() const;
 	void DeclareConditions(const lst& list_of_equations) override {
 		for (exmap::const_iterator i=dTable().begin();i!=dTable().end();i++)					
-			Has_dTable::Declare_d(i->first,i->second.subs(list_of_equations));
+			Declare_d(i->first,i->second.subs(list_of_equations));
 	}
 	Derivations derivations(const GL& gl) const;		//return the derivations as a subset of the Lie algebra gl
 	string derivations() const;	
