@@ -13,6 +13,11 @@
         "map": "cpp",
         "iosfwd": "cpp",
         "cmath": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "chrono": "cpp",
+        "format": "cpp",
+        "span": "cpp"
     }
 }
