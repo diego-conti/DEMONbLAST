@@ -22,8 +22,7 @@
 
 list<NiceEinsteinLieGroup> NiceEinsteinLieGroup::from_coefficient_configuration (MetricCoefficientConfiguration&& configuration)
 {
-		list<NiceEinsteinLieGroup> result;
-		insert_new_lie_group(result,configuration);
+		list<NiceEinsteinLieGroup> result;		
 		while (configuration) {
 			insert_new_lie_group(result,configuration);
 			++configuration;
